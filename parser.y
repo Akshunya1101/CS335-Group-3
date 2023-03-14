@@ -48,7 +48,7 @@
                 if(table.find(lexeme)!=table.end()){
                     string scope1 = table[lexeme].Scope;
                     if(scope == scope1){
-                        cerr<<"Error!!"<<endl;
+                        cerr<<"Error!! "<<lexeme<<' '<<line<<endl;
                         return;
                     }
                 }
@@ -60,6 +60,7 @@
                         return ptr->table[lexeme];
                     }
                 }
+                cerr<<"INVALID SCOPE "<<lexeme<<endl;
                 return Entry("","",-1,-1,"");
             }
             void print(){
@@ -354,8 +355,8 @@
 Goal:
 CompilationUnit
 Name:
-SimpleName {($$).type = ($1).type;} 
-| QualifiedName {($$).type = ($1).type;}
+SimpleName {($$).type = ($1).type; Entry c = head->get($1.type);} 
+| QualifiedName {($$).type = ($1).type; Entry c = head->get($1.type);}
 SimpleName:
 Identifier {($$).type = ($1).str;}
 QualifiedName:
@@ -533,13 +534,13 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier TypeParameters Superr Interfaces {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = ($3.str);
+    scope = ($2.str);
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -567,13 +568,13 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier TypeParameters Superr {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = ($3.str);
+    scope = ($2.str);
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -601,13 +602,13 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier TypeParameters Interfaces {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = ($3.str);
+    scope = ($2.str);
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -635,13 +636,13 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier TypeParameters {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = ($3.str);
+    scope = ($2.str);
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -824,7 +825,7 @@ VariableDeclarator:
 VariableDeclaratorId
 | VariableDeclaratorId Eq VariableInitializer 
 VariableDeclaratorId:
-Identifier {head->set($1.str,"Identifier",tp,yylineno,offset,scope); offset = offset + sz;}
+Identifier  {head->set($1.str,"Identifier",tp,yylineno,offset,scope); offset = offset + sz;}
 | VariableDeclaratorId Lsb Rsb
 VariableInitializer:
 Expression
@@ -870,7 +871,7 @@ FormalParameterList:
 FormalParameter
 | FormalParameterList Comma FormalParameter
 FormalParameter:
-Type VariableDeclaratorId 
+Type VariableDeclaratorId
 | Final_ Type {tp = "Final " + tp;} VariableDeclaratorId
 |Type TypeArguments VariableDeclaratorId
 | Final_ Type TypeArguments VariableDeclaratorId
@@ -920,45 +921,45 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
 }
 ConstructorDeclarator:
 SimpleName Lb {
-    tp = "Constructor"; sz = 0; head->set($1.str,"Identifier",tp,yylineno,offset,scope);tables.push(head);
+    tp = "Constructor"; sz = 0; head->set($1.type,"Identifier",tp,yylineno,offset,scope);tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = ($1.str);
+    scope = ($1.type);
     scope += " Constructor";
 } FormalParameterList Rb
 | SimpleName Lb Rb {
     tp = "Constructor";
     sz = 0;
-    head->set($1.str,"Identifier",tp,yylineno,offset,scope);
+    head->set($1.type,"Identifier",tp,yylineno,offset,scope);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = ($1.str);
+    scope = ($1.type);
     scope += " Constructor";
 }
-|TypeParameters SimpleName Lb {tp = "Constructor"; sz = 0; head->set($1.str,"Identifier",tp,yylineno,offset,scope);
+|TypeParameters SimpleName Lb {tp = "Constructor"; sz = 0; head->set($2.type,"Identifier",tp,yylineno,offset,scope);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = ($1.str);
+    scope = ($2.type);
     scope += " Constructor";
 } FormalParameterList Rb
 | TypeParameters SimpleName Lb Rb {
     tp = "Constructor";
     sz = 0;
-    head->set($1.str,"Identifier",tp,yylineno,offset,scope);
+    head->set($2.type,"Identifier",tp,yylineno,offset,scope);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = ($1.str);
+    scope = ($2.type);
     scope += " Constructor";
 }
 ConstructorBody:
@@ -1519,7 +1520,7 @@ Name Lsb Expression Rsb
 | PrimaryNoNewArray Lsb Expression Rsb
 PostfixExpression:
 Primary
-| Name {($$).type = ($1).type;} 
+| Name
 | PostIncrementExpression
 | PostDecrementExpression
 PostIncrementExpression:
@@ -1586,7 +1587,7 @@ ConditionalExpression
 Assignment:
 LeftHandSide AssignmentOperator AssignmentExpression
 LeftHandSide:
-Name {($$).type = ($1).type;} 
+Name
 |FieldAccess
 |ArrayAccess
 AssignmentOperator:
