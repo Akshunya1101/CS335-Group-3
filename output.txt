@@ -1,0 +1,2211 @@
+Goal:
+CompilationUnit { $$ = nodecount++; labels[$$] = "Goal";
+from.pb($$); to.pb($1);
+}
+Name:
+SimpleName { $$ = nodecount++; labels[$$] = "Name";
+from.pb($$); to.pb($1);
+}
+| QualifiedName { $$ = nodecount++; labels[$$] = "Name";
+from.pb($$); to.pb($1);
+}
+SimpleName:
+Identifier { $$ = nodecount++; labels[$$] = "SimpleName";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+QualifiedName:
+Name Dot Identifier { $$ = nodecount++; labels[$$] = "QualifiedName";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+ClassOrInterfaceType:
+Name { $$ = nodecount++; labels[$$] = "ClassOrInterfaceType";
+from.pb($$); to.pb($1);
+}
+TypeArguments:
+Lt TypeArgumentList Gt { $$ = nodecount++; labels[$$] = "TypeArguments";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+TypeArgumentList:
+TypeArgument Comma TypeArgumentList { $$ = nodecount++; labels[$$] = "TypeArgumentList";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+| TypeArgument { $$ = nodecount++; labels[$$] = "TypeArgumentList";
+from.pb($$); to.pb($1);
+}
+| TypeArgument Comma TypeArguments { $$ = nodecount++; labels[$$] = "TypeArgumentList";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+TypeArgument:
+ReferenceType { $$ = nodecount++; labels[$$] = "TypeArgument";
+from.pb($$); to.pb($1);
+}
+ClassType:
+ClassOrInterfaceType { $$ = nodecount++; labels[$$] = "ClassType";
+from.pb($$); to.pb($1);
+}
+InterfaceType:
+ClassOrInterfaceType { $$ = nodecount++; labels[$$] = "InterfaceType";
+from.pb($$); to.pb($1);
+}
+| ClassOrInterfaceType TypeArguments { $$ = nodecount++; labels[$$] = "InterfaceType";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+Modifiers:
+Modifier { $$ = nodecount++; labels[$$] = "Modifiers";
+from.pb($$); to.pb($1);
+}
+| Atr Override { $$ = nodecount++; labels[$$] = "Modifiers";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+| Modifiers Modifier { $$ = nodecount++; labels[$$] = "Modifiers";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+Modifier:
+Public { $$ = nodecount++; labels[$$] = "Modifier";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Protected { $$ = nodecount++; labels[$$] = "Modifier";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Private { $$ = nodecount++; labels[$$] = "Modifier";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Static { $$ = nodecount++; labels[$$] = "Modifier";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Abstract { $$ = nodecount++; labels[$$] = "Modifier";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Final { $$ = nodecount++; labels[$$] = "Modifier";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Native { $$ = nodecount++; labels[$$] = "Modifier";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Synchronized { $$ = nodecount++; labels[$$] = "Modifier";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Transient { $$ = nodecount++; labels[$$] = "Modifier";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Volatile { $$ = nodecount++; labels[$$] = "Modifier";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Default { $$ = nodecount++; labels[$$] = "Modifier";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+MethodHeader:
+Modifiers TypeParameters Type MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Modifiers TypeParameters Type MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| TypeParameters Type MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| TypeParameters Type MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| Modifiers TypeParameters Void MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Modifiers TypeParameters Void MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+}
+| TypeParameters Void MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| TypeParameters Void MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+| Modifiers Type MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| Modifiers Type MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| Type MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| Type MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+| Modifiers Void MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| Modifiers Void MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+| Void MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| Void MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+| Modifiers TypeParameters Type TypeArguments MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+from.pb($$); to.pb($6);
+}
+| Modifiers TypeParameters Type TypeArguments MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| TypeParameters Type TypeArguments MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| TypeParameters Type TypeArguments MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| Modifiers Type TypeArguments MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Modifiers Type TypeArguments MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| Type TypeArguments MethodDeclarator Throws { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| Type TypeArguments MethodDeclarator { $$ = nodecount++; labels[$$] = "MethodHeader";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+ArrayType:
+PrimitiveType Lsb Rsb { $$ = nodecount++; labels[$$] = "ArrayType";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Name Lsb Rsb { $$ = nodecount++; labels[$$] = "ArrayType";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| ArrayType Lsb Rsb { $$ = nodecount++; labels[$$] = "ArrayType";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+CastExpression:
+Lb PrimitiveType Dims Rb UnaryExpression { $$ = nodecount++; labels[$$] = "CastExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+}
+| Lb PrimitiveType Rb UnaryExpression { $$ = nodecount++; labels[$$] = "CastExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+}
+| Lb Expression Rb UnaryExpressionNotPlusMinus { $$ = nodecount++; labels[$$] = "CastExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+}
+| Lb Name Dims Rb UnaryExpressionNotPlusMinus { $$ = nodecount++; labels[$$] = "CastExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+}
+Type:
+PrimitiveType { $$ = nodecount++; labels[$$] = "Type";
+from.pb($$); to.pb($1);
+}
+| ReferenceType { $$ = nodecount++; labels[$$] = "Type";
+from.pb($$); to.pb($1);
+}
+PrimitiveType:
+NumericType { $$ = nodecount++; labels[$$] = "PrimitiveType";
+from.pb($$); to.pb($1);
+}
+| Bboolean { $$ = nodecount++; labels[$$] = "PrimitiveType";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+NumericType:
+IntegralType { $$ = nodecount++; labels[$$] = "NumericType";
+from.pb($$); to.pb($1);
+}
+| FloatingPointType { $$ = nodecount++; labels[$$] = "NumericType";
+from.pb($$); to.pb($1);
+}
+IntegralType:
+Bbyte { $$ = nodecount++; labels[$$] = "IntegralType";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Short { $$ = nodecount++; labels[$$] = "IntegralType";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Int { $$ = nodecount++; labels[$$] = "IntegralType";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Long { $$ = nodecount++; labels[$$] = "IntegralType";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Char { $$ = nodecount++; labels[$$] = "IntegralType";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+FloatingPointType:
+Float { $$ = nodecount++; labels[$$] = "FloatingPointType";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Double { $$ = nodecount++; labels[$$] = "FloatingPointType";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+ReferenceType:
+ClassOrInterfaceType { $$ = nodecount++; labels[$$] = "ReferenceType";
+from.pb($$); to.pb($1);
+}
+| ArrayType { $$ = nodecount++; labels[$$] = "ReferenceType";
+from.pb($$); to.pb($1);
+}
+CompilationUnit:
+PackageDeclaration ImportDeclarations TypeDeclarations { $$ = nodecount++; labels[$$] = "CompilationUnit";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| PackageDeclaration ImportDeclarations { $$ = nodecount++; labels[$$] = "CompilationUnit";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+| PackageDeclaration TypeDeclarations { $$ = nodecount++; labels[$$] = "CompilationUnit";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+| PackageDeclaration { $$ = nodecount++; labels[$$] = "CompilationUnit";
+from.pb($$); to.pb($1);
+}
+| ImportDeclarations TypeDeclarations { $$ = nodecount++; labels[$$] = "CompilationUnit";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+| ImportDeclarations { $$ = nodecount++; labels[$$] = "CompilationUnit";
+from.pb($$); to.pb($1);
+}
+| TypeDeclarations { $$ = nodecount++; labels[$$] = "CompilationUnit";
+from.pb($$); to.pb($1);
+}
+| { $$ = nodecount++; labels[$$] = "CompilationUnit";
+from.pb($$); to.pb($1);
+}
+ImportDeclarations:
+ImportDeclaration { $$ = nodecount++; labels[$$] = "ImportDeclarations";
+from.pb($$); to.pb($1);
+}
+| ImportDeclarations ImportDeclaration { $$ = nodecount++; labels[$$] = "ImportDeclarations";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+TypeDeclarations:
+TypeDeclaration { $$ = nodecount++; labels[$$] = "TypeDeclarations";
+from.pb($$); to.pb($1);
+}
+| TypeDeclarations TypeDeclaration { $$ = nodecount++; labels[$$] = "TypeDeclarations";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+PackageDeclaration:
+Package Name Semicol { $$ = nodecount++; labels[$$] = "PackageDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+ImportDeclaration:
+SingleTypeImportDeclaration { $$ = nodecount++; labels[$$] = "ImportDeclaration";
+from.pb($$); to.pb($1);
+}
+| TypeImportOnDemandDeclaration { $$ = nodecount++; labels[$$] = "ImportDeclaration";
+from.pb($$); to.pb($1);
+}
+| SingleStaticImportDeclaration { $$ = nodecount++; labels[$$] = "ImportDeclaration";
+from.pb($$); to.pb($1);
+}
+| StaticImportOnDemandDeclaration { $$ = nodecount++; labels[$$] = "ImportDeclaration";
+from.pb($$); to.pb($1);
+}
+SingleStaticImportDeclaration:
+Import Static Name Dot Identifier Semicol { $$ = nodecount++; labels[$$] = "SingleStaticImportDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+StaticImportOnDemandDeclaration:
+Import Static Name Dot Mult Semicol { $$ = nodecount++; labels[$$] = "StaticImportOnDemandDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+SingleTypeImportDeclaration:
+Import Name Semicol { $$ = nodecount++; labels[$$] = "SingleTypeImportDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+TypeImportOnDemandDeclaration:
+Import Name Dot Mult Semicol { $$ = nodecount++; labels[$$] = "TypeImportOnDemandDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+}
+TypeDeclaration:
+ClassDeclaration { $$ = nodecount++; labels[$$] = "TypeDeclaration";
+from.pb($$); to.pb($1);
+}
+| InterfaceDeclaration { $$ = nodecount++; labels[$$] = "TypeDeclaration";
+from.pb($$); to.pb($1);
+}
+| Semicol { $$ = nodecount++; labels[$$] = "TypeDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+ClassDeclaration:
+Modifiers Class Identifier TypeParameters Superr Interfaces ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+from.pb($$); to.pb($6);
+from.pb($$); to.pb($7);
+}
+| Class Identifier TypeParameters Superr Interfaces ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+from.pb($$); to.pb($6);
+}
+| Modifiers Class Identifier TypeParameters Superr ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+from.pb($$); to.pb($6);
+}
+| Class Identifier TypeParameters Superr ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Modifiers Class Identifier TypeParameters Interfaces ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+from.pb($$); to.pb($6);
+}
+| Class Identifier TypeParameters Interfaces ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Modifiers Class Identifier TypeParameters ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Class Identifier TypeParameters ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| Modifiers Class Identifier Superr Interfaces ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+from.pb($$); to.pb($6);
+}
+| Class Identifier Superr Interfaces ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Modifiers Class Identifier Superr ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Class Identifier Superr ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| Modifiers Class Identifier Interfaces ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Class Identifier Interfaces ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| Modifiers Class Identifier ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+}
+| Class Identifier ClassBody { $$ = nodecount++; labels[$$] = "ClassDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+Superr:
+Extends ClassType { $$ = nodecount++; labels[$$] = "Superr";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+Interfaces:
+Implements InterfaceTypeList { $$ = nodecount++; labels[$$] = "Interfaces";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+InterfaceTypeList:
+InterfaceType { $$ = nodecount++; labels[$$] = "InterfaceTypeList";
+from.pb($$); to.pb($1);
+}
+| InterfaceTypeList Comma InterfaceType { $$ = nodecount++; labels[$$] = "InterfaceTypeList";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+ClassBody:
+Lcb ClassBodyDeclarations Rcb { $$ = nodecount++; labels[$$] = "ClassBody";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Lcb Rcb { $$ = nodecount++; labels[$$] = "ClassBody";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+ClassBodyDeclarations:
+ClassBodyDeclaration { $$ = nodecount++; labels[$$] = "ClassBodyDeclarations";
+from.pb($$); to.pb($1);
+}
+| ClassBodyDeclarations ClassBodyDeclaration { $$ = nodecount++; labels[$$] = "ClassBodyDeclarations";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+ClassBodyDeclaration:
+ClassMemberDeclaration { $$ = nodecount++; labels[$$] = "ClassBodyDeclaration";
+from.pb($$); to.pb($1);
+}
+| StaticInitializer { $$ = nodecount++; labels[$$] = "ClassBodyDeclaration";
+from.pb($$); to.pb($1);
+}
+| ConstructorDeclaration { $$ = nodecount++; labels[$$] = "ClassBodyDeclaration";
+from.pb($$); to.pb($1);
+}
+| Block { $$ = nodecount++; labels[$$] = "ClassBodyDeclaration";
+from.pb($$); to.pb($1);
+}
+ClassMemberDeclaration:
+FieldDeclaration { $$ = nodecount++; labels[$$] = "ClassMemberDeclaration";
+from.pb($$); to.pb($1);
+}
+| MethodDeclaration { $$ = nodecount++; labels[$$] = "ClassMemberDeclaration";
+from.pb($$); to.pb($1);
+}
+| ClassDeclaration { $$ = nodecount++; labels[$$] = "ClassMemberDeclaration";
+from.pb($$); to.pb($1);
+}
+| InterfaceDeclaration { $$ = nodecount++; labels[$$] = "ClassMemberDeclaration";
+from.pb($$); to.pb($1);
+}
+| Semicol { $$ = nodecount++; labels[$$] = "ClassMemberDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+FieldDeclaration:
+Modifiers Type VariableDeclarators Semicol { $$ = nodecount++; labels[$$] = "FieldDeclaration";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+| Type VariableDeclarators Semicol { $$ = nodecount++; labels[$$] = "FieldDeclaration";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Modifiers Type TypeArguments VariableDeclarators Semicol { $$ = nodecount++; labels[$$] = "FieldDeclaration";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+}
+| Type TypeArguments VariableDeclarators Semicol { $$ = nodecount++; labels[$$] = "FieldDeclaration";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+VariableDeclarators:
+VariableDeclarator { $$ = nodecount++; labels[$$] = "VariableDeclarators";
+from.pb($$); to.pb($1);
+}
+| VariableDeclarators Comma VariableDeclarator { $$ = nodecount++; labels[$$] = "VariableDeclarators";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+VariableDeclarator:
+VariableDeclaratorId { $$ = nodecount++; labels[$$] = "VariableDeclarator";
+from.pb($$); to.pb($1);
+}
+| VariableDeclaratorId Eq VariableInitializer { $$ = nodecount++; labels[$$] = "VariableDeclarator";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+VariableDeclaratorId:
+Identifier { $$ = nodecount++; labels[$$] = "VariableDeclaratorId";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| VariableDeclaratorId Lsb Rsb { $$ = nodecount++; labels[$$] = "VariableDeclaratorId";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+VariableInitializer:
+Expression { $$ = nodecount++; labels[$$] = "VariableInitializer";
+from.pb($$); to.pb($1);
+}
+| ArrayInitializer { $$ = nodecount++; labels[$$] = "VariableInitializer";
+from.pb($$); to.pb($1);
+}
+MethodDeclaration:
+MethodHeader MethodBody { $$ = nodecount++; labels[$$] = "MethodDeclaration";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+MethodDeclarator:
+Identifier Lb FormalParameterList Rb { $$ = nodecount++; labels[$$] = "MethodDeclarator";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+| Identifier Lb Rb { $$ = nodecount++; labels[$$] = "MethodDeclarator";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| MethodDeclarator Lsb Rsb { $$ = nodecount++; labels[$$] = "MethodDeclarator";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+FormalParameterList:
+FormalParameter { $$ = nodecount++; labels[$$] = "FormalParameterList";
+from.pb($$); to.pb($1);
+}
+| FormalParameterList Comma FormalParameter { $$ = nodecount++; labels[$$] = "FormalParameterList";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+FormalParameter:
+Type VariableDeclaratorId { $$ = nodecount++; labels[$$] = "FormalParameter";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+| Final_ Type VariableDeclaratorId { $$ = nodecount++; labels[$$] = "FormalParameter";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| Type TypeArguments VariableDeclaratorId { $$ = nodecount++; labels[$$] = "FormalParameter";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| Final_ Type TypeArguments VariableDeclaratorId { $$ = nodecount++; labels[$$] = "FormalParameter";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+Final_:
+Final { $$ = nodecount++; labels[$$] = "Final_";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Final_ Final { $$ = nodecount++; labels[$$] = "Final_";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+Throws:
+throws ClassTypeList { $$ = nodecount++; labels[$$] = "Throws";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+ClassTypeList:
+ClassType { $$ = nodecount++; labels[$$] = "ClassTypeList";
+from.pb($$); to.pb($1);
+}
+| ClassTypeList Comma ClassType { $$ = nodecount++; labels[$$] = "ClassTypeList";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+MethodBody:
+Block { $$ = nodecount++; labels[$$] = "MethodBody";
+from.pb($$); to.pb($1);
+}
+| Semicol { $$ = nodecount++; labels[$$] = "MethodBody";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+StaticInitializer:
+Static Block { $$ = nodecount++; labels[$$] = "StaticInitializer";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+ConstructorDeclaration:
+Modifiers ConstructorDeclarator Throws ConstructorBody { $$ = nodecount++; labels[$$] = "ConstructorDeclaration";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| ConstructorDeclarator ConstructorBody { $$ = nodecount++; labels[$$] = "ConstructorDeclaration";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+| Modifiers ConstructorDeclarator ConstructorBody { $$ = nodecount++; labels[$$] = "ConstructorDeclaration";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| ConstructorDeclarator Throws ConstructorBody { $$ = nodecount++; labels[$$] = "ConstructorDeclaration";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+ConstructorDeclarator:
+SimpleName Lb FormalParameterList Rb { $$ = nodecount++; labels[$$] = "ConstructorDeclarator";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+| SimpleName Lb Rb { $$ = nodecount++; labels[$$] = "ConstructorDeclarator";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| TypeParameters SimpleName Lb FormalParameterList Rb { $$ = nodecount++; labels[$$] = "ConstructorDeclarator";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+}
+| TypeParameters SimpleName Lb Rb { $$ = nodecount++; labels[$$] = "ConstructorDeclarator";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+ConstructorBody:
+Lcb ExplicitConstructorInvocation BlockStatements Rcb { $$ = nodecount++; labels[$$] = "ConstructorBody";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+| Lcb ExplicitConstructorInvocation Rcb { $$ = nodecount++; labels[$$] = "ConstructorBody";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Lcb BlockStatements Rcb { $$ = nodecount++; labels[$$] = "ConstructorBody";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Lcb Rcb { $$ = nodecount++; labels[$$] = "ConstructorBody";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+ExplicitConstructorInvocation:
+This Lb ArgumentList Rb Semicol { $$ = nodecount++; labels[$$] = "ExplicitConstructorInvocation";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+}
+| This Lb Rb Semicol { $$ = nodecount++; labels[$$] = "ExplicitConstructorInvocation";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+| Super Lb ArgumentList Rb Semicol { $$ = nodecount++; labels[$$] = "ExplicitConstructorInvocation";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+}
+| Super Lb Rb Semicol { $$ = nodecount++; labels[$$] = "ExplicitConstructorInvocation";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+InterfaceDeclaration:
+Modifiers Interface Identifier ExtendsInterfaces InterfaceBody { $$ = nodecount++; labels[$$] = "InterfaceDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Interface Identifier ExtendsInterfaces InterfaceBody { $$ = nodecount++; labels[$$] = "InterfaceDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| Modifiers Interface Identifier InterfaceBody { $$ = nodecount++; labels[$$] = "InterfaceDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+}
+| Interface Identifier InterfaceBody { $$ = nodecount++; labels[$$] = "InterfaceDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+| Modifiers Interface Identifier TypeParameters ExtendsInterfaces InterfaceBody { $$ = nodecount++; labels[$$] = "InterfaceDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+from.pb($$); to.pb($6);
+}
+| Interface Identifier TypeParameters ExtendsInterfaces InterfaceBody { $$ = nodecount++; labels[$$] = "InterfaceDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Modifiers Interface Identifier TypeParameters InterfaceBody { $$ = nodecount++; labels[$$] = "InterfaceDeclaration";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+}
+| Interface Identifier TypeParameters InterfaceBody { $$ = nodecount++; labels[$$] = "InterfaceDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+ExtendsInterfaces:
+Extends InterfaceType { $$ = nodecount++; labels[$$] = "ExtendsInterfaces";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+| ExtendsInterfaces Comma InterfaceType { $$ = nodecount++; labels[$$] = "ExtendsInterfaces";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+InterfaceBody:
+Lcb InterfaceMemberDeclarations Rcb { $$ = nodecount++; labels[$$] = "InterfaceBody";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Lcb Rcb { $$ = nodecount++; labels[$$] = "InterfaceBody";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+InterfaceMemberDeclarations:
+InterfaceMemberDeclaration { $$ = nodecount++; labels[$$] = "InterfaceMemberDeclarations";
+from.pb($$); to.pb($1);
+}
+| InterfaceMemberDeclarations InterfaceMemberDeclaration { $$ = nodecount++; labels[$$] = "InterfaceMemberDeclarations";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+InterfaceMemberDeclaration:
+ConstantDeclaration { $$ = nodecount++; labels[$$] = "InterfaceMemberDeclaration";
+from.pb($$); to.pb($1);
+}
+| MethodDeclaration { $$ = nodecount++; labels[$$] = "InterfaceMemberDeclaration";
+from.pb($$); to.pb($1);
+}
+| ClassDeclaration { $$ = nodecount++; labels[$$] = "InterfaceMemberDeclaration";
+from.pb($$); to.pb($1);
+}
+| InterfaceDeclaration { $$ = nodecount++; labels[$$] = "InterfaceMemberDeclaration";
+from.pb($$); to.pb($1);
+}
+| Semicol { $$ = nodecount++; labels[$$] = "InterfaceMemberDeclaration";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+ConstantDeclaration:
+FieldDeclaration { $$ = nodecount++; labels[$$] = "ConstantDeclaration";
+from.pb($$); to.pb($1);
+}
+ArrayInitializer:
+Lcb VariableInitializers Comma Rcb { $$ = nodecount++; labels[$$] = "ArrayInitializer";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+| Lcb VariableInitializers Rcb { $$ = nodecount++; labels[$$] = "ArrayInitializer";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Lcb Comma Rcb { $$ = nodecount++; labels[$$] = "ArrayInitializer";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Lcb Rcb { $$ = nodecount++; labels[$$] = "ArrayInitializer";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+VariableInitializers:
+VariableInitializer { $$ = nodecount++; labels[$$] = "VariableInitializers";
+from.pb($$); to.pb($1);
+}
+| VariableInitializers Comma VariableInitializer { $$ = nodecount++; labels[$$] = "VariableInitializers";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+Block:
+Lcb BlockStatements Rcb { $$ = nodecount++; labels[$$] = "Block";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Lcb Rcb { $$ = nodecount++; labels[$$] = "Block";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+BlockStatements:
+BlockStatement { $$ = nodecount++; labels[$$] = "BlockStatements";
+from.pb($$); to.pb($1);
+}
+| BlockStatements BlockStatement { $$ = nodecount++; labels[$$] = "BlockStatements";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+BlockStatement:
+LocalVariableDeclarationStatement { $$ = nodecount++; labels[$$] = "BlockStatement";
+from.pb($$); to.pb($1);
+}
+| Statement { $$ = nodecount++; labels[$$] = "BlockStatement";
+from.pb($$); to.pb($1);
+}
+LocalVariableDeclarationStatement:
+LocalVariableDeclaration Semicol { $$ = nodecount++; labels[$$] = "LocalVariableDeclarationStatement";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+LocalVariableDeclaration:
+Type TypeArguments VariableDeclarators { $$ = nodecount++; labels[$$] = "LocalVariableDeclaration";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| Type VariableDeclarators { $$ = nodecount++; labels[$$] = "LocalVariableDeclaration";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+Statement:
+StatementWithoutTrailingSubstatement { $$ = nodecount++; labels[$$] = "Statement";
+from.pb($$); to.pb($1);
+}
+| LabeledStatement { $$ = nodecount++; labels[$$] = "Statement";
+from.pb($$); to.pb($1);
+}
+| IfThenStatement { $$ = nodecount++; labels[$$] = "Statement";
+from.pb($$); to.pb($1);
+}
+| IfThenElseStatement { $$ = nodecount++; labels[$$] = "Statement";
+from.pb($$); to.pb($1);
+}
+| WhileStatement { $$ = nodecount++; labels[$$] = "Statement";
+from.pb($$); to.pb($1);
+}
+| ForStatement { $$ = nodecount++; labels[$$] = "Statement";
+from.pb($$); to.pb($1);
+}
+StatementNoShortIf:
+StatementWithoutTrailingSubstatement { $$ = nodecount++; labels[$$] = "StatementNoShortIf";
+from.pb($$); to.pb($1);
+}
+| LabeledStatementNoShortIf { $$ = nodecount++; labels[$$] = "StatementNoShortIf";
+from.pb($$); to.pb($1);
+}
+| IfThenElseStatementNoShortIf { $$ = nodecount++; labels[$$] = "StatementNoShortIf";
+from.pb($$); to.pb($1);
+}
+| WhileStatementNoShortIf { $$ = nodecount++; labels[$$] = "StatementNoShortIf";
+from.pb($$); to.pb($1);
+}
+| ForStatementNoShortIf { $$ = nodecount++; labels[$$] = "StatementNoShortIf";
+from.pb($$); to.pb($1);
+}
+StatementWithoutTrailingSubstatement:
+Block { $$ = nodecount++; labels[$$] = "StatementWithoutTrailingSubstatement";
+from.pb($$); to.pb($1);
+}
+| EmptyStatement { $$ = nodecount++; labels[$$] = "StatementWithoutTrailingSubstatement";
+from.pb($$); to.pb($1);
+}
+| ExpressionStatement { $$ = nodecount++; labels[$$] = "StatementWithoutTrailingSubstatement";
+from.pb($$); to.pb($1);
+}
+| SwitchStatement { $$ = nodecount++; labels[$$] = "StatementWithoutTrailingSubstatement";
+from.pb($$); to.pb($1);
+}
+| DoStatement { $$ = nodecount++; labels[$$] = "StatementWithoutTrailingSubstatement";
+from.pb($$); to.pb($1);
+}
+| BreakStatement { $$ = nodecount++; labels[$$] = "StatementWithoutTrailingSubstatement";
+from.pb($$); to.pb($1);
+}
+| ContinueStatement { $$ = nodecount++; labels[$$] = "StatementWithoutTrailingSubstatement";
+from.pb($$); to.pb($1);
+}
+| ReturnStatement { $$ = nodecount++; labels[$$] = "StatementWithoutTrailingSubstatement";
+from.pb($$); to.pb($1);
+}
+| SynchronizedStatement { $$ = nodecount++; labels[$$] = "StatementWithoutTrailingSubstatement";
+from.pb($$); to.pb($1);
+}
+| ThrowStatement { $$ = nodecount++; labels[$$] = "StatementWithoutTrailingSubstatement";
+from.pb($$); to.pb($1);
+}
+| TryStatement { $$ = nodecount++; labels[$$] = "StatementWithoutTrailingSubstatement";
+from.pb($$); to.pb($1);
+}
+EmptyStatement:
+Semicol { $$ = nodecount++; labels[$$] = "EmptyStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+LabeledStatement:
+Identifier Col Statement { $$ = nodecount++; labels[$$] = "LabeledStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+LabeledStatementNoShortIf:
+Identifier Col StatementNoShortIf { $$ = nodecount++; labels[$$] = "LabeledStatementNoShortIf";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+ExpressionStatement:
+StatementExpression Semicol { $$ = nodecount++; labels[$$] = "ExpressionStatement";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+StatementExpression:
+Assignment { $$ = nodecount++; labels[$$] = "StatementExpression";
+from.pb($$); to.pb($1);
+}
+| PreIncrementExpression { $$ = nodecount++; labels[$$] = "StatementExpression";
+from.pb($$); to.pb($1);
+}
+| PreDecrementExpression { $$ = nodecount++; labels[$$] = "StatementExpression";
+from.pb($$); to.pb($1);
+}
+| PostIncrementExpression { $$ = nodecount++; labels[$$] = "StatementExpression";
+from.pb($$); to.pb($1);
+}
+| PostDecrementExpression { $$ = nodecount++; labels[$$] = "StatementExpression";
+from.pb($$); to.pb($1);
+}
+| MethodInvocation { $$ = nodecount++; labels[$$] = "StatementExpression";
+from.pb($$); to.pb($1);
+}
+| ClassInstanceCreationExpression { $$ = nodecount++; labels[$$] = "StatementExpression";
+from.pb($$); to.pb($1);
+}
+IfThenStatement:
+If Lb Expression Rb Statement { $$ = nodecount++; labels[$$] = "IfThenStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+}
+IfThenElseStatement:
+If Lb Expression Rb StatementNoShortIf Else Statement { $$ = nodecount++; labels[$$] = "IfThenElseStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+from.pb($$); to.pb($7);
+}
+IfThenElseStatementNoShortIf:
+If Lb Expression Rb StatementNoShortIf Else StatementNoShortIf { $$ = nodecount++; labels[$$] = "IfThenElseStatementNoShortIf";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+from.pb($$); to.pb($7);
+}
+SwitchStatement:
+Switch Lb Expression Rb SwitchBlock { $$ = nodecount++; labels[$$] = "SwitchStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+}
+SwitchBlock:
+Lcb SwitchBlockStatementGroups SwitchLabels Rcb { $$ = nodecount++; labels[$$] = "SwitchBlock";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+| Lcb SwitchBlockStatementGroups Rcb { $$ = nodecount++; labels[$$] = "SwitchBlock";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Lcb SwitchLabels Rcb { $$ = nodecount++; labels[$$] = "SwitchBlock";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Lcb Rcb { $$ = nodecount++; labels[$$] = "SwitchBlock";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+SwitchBlockStatementGroups:
+SwitchBlockStatementGroup { $$ = nodecount++; labels[$$] = "SwitchBlockStatementGroups";
+from.pb($$); to.pb($1);
+}
+| SwitchBlockStatementGroups SwitchBlockStatementGroup { $$ = nodecount++; labels[$$] = "SwitchBlockStatementGroups";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+SwitchBlockStatementGroup:
+SwitchLabels BlockStatements { $$ = nodecount++; labels[$$] = "SwitchBlockStatementGroup";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+SwitchLabels:
+SwitchLabel { $$ = nodecount++; labels[$$] = "SwitchLabels";
+from.pb($$); to.pb($1);
+}
+| SwitchLabels SwitchLabel { $$ = nodecount++; labels[$$] = "SwitchLabels";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+SwitchLabel:
+Case ConstantExpression Col { $$ = nodecount++; labels[$$] = "SwitchLabel";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Default Col { $$ = nodecount++; labels[$$] = "SwitchLabel";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+WhileStatement:
+While Lb Expression Rb Statement { $$ = nodecount++; labels[$$] = "WhileStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+}
+WhileStatementNoShortIf:
+While Lb Expression Rb StatementNoShortIf { $$ = nodecount++; labels[$$] = "WhileStatementNoShortIf";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+}
+DoStatement:
+Do Statement While Lb Expression Rb Semicol { $$ = nodecount++; labels[$$] = "DoStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+ForStart:
+For Lb ForInit Semicol Expression Semicol ForUpdate Rb { $$ = nodecount++; labels[$$] = "ForStart";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+from.pb($$); to.pb($7);
+($8).num = nodecount++; labels[($8).num] = ($8).str; from.pb($$); to.pb(($8).num);
+}
+| For Lb ForInit Semicol Expression Semicol Rb { $$ = nodecount++; labels[$$] = "ForStart";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| For Lb ForInit Semicol Semicol ForUpdate Rb { $$ = nodecount++; labels[$$] = "ForStart";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| For Lb ForInit Semicol Semicol Rb { $$ = nodecount++; labels[$$] = "ForStart";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| For Lb Semicol Expression Semicol ForUpdate Rb { $$ = nodecount++; labels[$$] = "ForStart";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| For Lb Semicol Expression Semicol Rb { $$ = nodecount++; labels[$$] = "ForStart";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| For Lb Semicol Semicol ForUpdate Rb { $$ = nodecount++; labels[$$] = "ForStart";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| For Lb Semicol Semicol Rb { $$ = nodecount++; labels[$$] = "ForStart";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+}
+ForStart1:
+For Lb Final_ Type VariableDeclarators Col Expression Rb { $$ = nodecount++; labels[$$] = "ForStart1";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+from.pb($$); to.pb($7);
+($8).num = nodecount++; labels[($8).num] = ($8).str; from.pb($$); to.pb(($8).num);
+}
+| For Lb Var VariableDeclarators Col Expression Rb { $$ = nodecount++; labels[$$] = "ForStart1";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| For Lb Final_ Var VariableDeclarators Col Expression Rb { $$ = nodecount++; labels[$$] = "ForStart1";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+from.pb($$); to.pb($7);
+($8).num = nodecount++; labels[($8).num] = ($8).str; from.pb($$); to.pb(($8).num);
+}
+| For Lb Type VariableDeclarators Col Expression Rb { $$ = nodecount++; labels[$$] = "ForStart1";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+ForStatement:
+ForStart Statement { $$ = nodecount++; labels[$$] = "ForStatement";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+| ForStart1 Statement { $$ = nodecount++; labels[$$] = "ForStatement";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+ForStatementNoShortIf:
+ForStart StatementNoShortIf { $$ = nodecount++; labels[$$] = "ForStatementNoShortIf";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+| ForStart1 StatementNoShortIf { $$ = nodecount++; labels[$$] = "ForStatementNoShortIf";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+ForInit:
+StatementExpressionList { $$ = nodecount++; labels[$$] = "ForInit";
+from.pb($$); to.pb($1);
+}
+| LocalVariableDeclaration { $$ = nodecount++; labels[$$] = "ForInit";
+from.pb($$); to.pb($1);
+}
+ForUpdate:
+StatementExpressionList { $$ = nodecount++; labels[$$] = "ForUpdate";
+from.pb($$); to.pb($1);
+}
+StatementExpressionList:
+StatementExpression { $$ = nodecount++; labels[$$] = "StatementExpressionList";
+from.pb($$); to.pb($1);
+}
+| StatementExpressionList Comma StatementExpression { $$ = nodecount++; labels[$$] = "StatementExpressionList";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+BreakStatement:
+Break Identifier Semicol { $$ = nodecount++; labels[$$] = "BreakStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Break Semicol { $$ = nodecount++; labels[$$] = "BreakStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+ContinueStatement:
+Continue Identifier Semicol { $$ = nodecount++; labels[$$] = "ContinueStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Continue Semicol { $$ = nodecount++; labels[$$] = "ContinueStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+ReturnStatement:
+Return Expression Semicol { $$ = nodecount++; labels[$$] = "ReturnStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Return Semicol { $$ = nodecount++; labels[$$] = "ReturnStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+ThrowStatement:
+Throw Expression Semicol { $$ = nodecount++; labels[$$] = "ThrowStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+SynchronizedStatement:
+Synchronized Lb Expression Rb Block { $$ = nodecount++; labels[$$] = "SynchronizedStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+}
+TryStatement:
+Try Block Catches { $$ = nodecount++; labels[$$] = "TryStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| Try Block Catches Finally { $$ = nodecount++; labels[$$] = "TryStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| Try Block Finally { $$ = nodecount++; labels[$$] = "TryStatement";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+Catches:
+CatchClause { $$ = nodecount++; labels[$$] = "Catches";
+from.pb($$); to.pb($1);
+}
+| Catches CatchClause { $$ = nodecount++; labels[$$] = "Catches";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+CatchClause:
+Catch Lb FormalParameter Rb Block { $$ = nodecount++; labels[$$] = "CatchClause";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+}
+Finally:
+finally Block { $$ = nodecount++; labels[$$] = "Finally";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+Primary:
+PrimaryNoNewArray { $$ = nodecount++; labels[$$] = "Primary";
+from.pb($$); to.pb($1);
+}
+| ArrayCreationExpression { $$ = nodecount++; labels[$$] = "Primary";
+from.pb($$); to.pb($1);
+}
+PrimaryNoNewArray:
+Literal { $$ = nodecount++; labels[$$] = "PrimaryNoNewArray";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| This { $$ = nodecount++; labels[$$] = "PrimaryNoNewArray";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Lb Expression Rb { $$ = nodecount++; labels[$$] = "PrimaryNoNewArray";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| ClassInstanceCreationExpression { $$ = nodecount++; labels[$$] = "PrimaryNoNewArray";
+from.pb($$); to.pb($1);
+}
+| FieldAccess { $$ = nodecount++; labels[$$] = "PrimaryNoNewArray";
+from.pb($$); to.pb($1);
+}
+| MethodInvocation { $$ = nodecount++; labels[$$] = "PrimaryNoNewArray";
+from.pb($$); to.pb($1);
+}
+| ArrayAccess { $$ = nodecount++; labels[$$] = "PrimaryNoNewArray";
+from.pb($$); to.pb($1);
+}
+ClassInstanceCreationExpression:
+New ClassType Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+}
+| New ClassType Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+| Primary Dot New ClassType Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| Primary Dot New ClassType Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| New TypeArguments ClassType Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| New TypeArguments ClassType Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+}
+| Primary Dot New TypeArguments ClassType Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+from.pb($$); to.pb($7);
+($8).num = nodecount++; labels[($8).num] = ($8).str; from.pb($$); to.pb(($8).num);
+}
+| Primary Dot New TypeArguments ClassType Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| Name Dot New ClassType Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| Name Dot New ClassType Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| Name Dot New TypeArguments ClassType Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+from.pb($$); to.pb($7);
+($8).num = nodecount++; labels[($8).num] = ($8).str; from.pb($$); to.pb(($8).num);
+}
+| Name Dot New TypeArguments ClassType Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| New ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| New ClassType TypeArgumentsOrDiamond Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+}
+| Primary Dot New ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+from.pb($$); to.pb($7);
+($8).num = nodecount++; labels[($8).num] = ($8).str; from.pb($$); to.pb(($8).num);
+}
+| Primary Dot New ClassType TypeArgumentsOrDiamond Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| New TypeArguments ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| New TypeArguments ClassType TypeArgumentsOrDiamond Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| Primary Dot New TypeArguments ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+from.pb($$); to.pb($8);
+($9).num = nodecount++; labels[($9).num] = ($9).str; from.pb($$); to.pb(($9).num);
+}
+| Primary Dot New TypeArguments ClassType TypeArgumentsOrDiamond Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+($8).num = nodecount++; labels[($8).num] = ($8).str; from.pb($$); to.pb(($8).num);
+}
+| Name Dot New ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+from.pb($$); to.pb($7);
+($8).num = nodecount++; labels[($8).num] = ($8).str; from.pb($$); to.pb(($8).num);
+}
+| Name Dot New ClassType TypeArgumentsOrDiamond Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| Name Dot New TypeArguments ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+from.pb($$); to.pb($8);
+($9).num = nodecount++; labels[($9).num] = ($9).str; from.pb($$); to.pb(($9).num);
+}
+| Name Dot New TypeArguments ClassType TypeArgumentsOrDiamond Lb Rb { $$ = nodecount++; labels[$$] = "ClassInstanceCreationExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+from.pb($$); to.pb($4);
+from.pb($$); to.pb($5);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+($8).num = nodecount++; labels[($8).num] = ($8).str; from.pb($$); to.pb(($8).num);
+}
+TypeArgumentsOrDiamond:
+Lt Gt { $$ = nodecount++; labels[$$] = "TypeArgumentsOrDiamond";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+| TypeArguments { $$ = nodecount++; labels[$$] = "TypeArgumentsOrDiamond";
+from.pb($$); to.pb($1);
+}
+ArgumentList:
+Expression { $$ = nodecount++; labels[$$] = "ArgumentList";
+from.pb($$); to.pb($1);
+}
+| ArgumentList Comma Expression { $$ = nodecount++; labels[$$] = "ArgumentList";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+ArrayCreationExpression:
+New PrimitiveType DimExprs Dims { $$ = nodecount++; labels[$$] = "ArrayCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| New PrimitiveType DimExprs { $$ = nodecount++; labels[$$] = "ArrayCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| New ClassOrInterfaceType DimExprs Dims { $$ = nodecount++; labels[$$] = "ArrayCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| New ClassOrInterfaceType DimExprs { $$ = nodecount++; labels[$$] = "ArrayCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| New PrimitiveType Dims ArrayInitializer { $$ = nodecount++; labels[$$] = "ArrayCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+| New ClassOrInterfaceType Dims ArrayInitializer { $$ = nodecount++; labels[$$] = "ArrayCreationExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+from.pb($$); to.pb($4);
+}
+DimExprs:
+DimExpr { $$ = nodecount++; labels[$$] = "DimExprs";
+from.pb($$); to.pb($1);
+}
+| DimExprs DimExpr { $$ = nodecount++; labels[$$] = "DimExprs";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+DimExpr:
+Lsb Expression Rsb { $$ = nodecount++; labels[$$] = "DimExpr";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+Dims:
+Lsb Rsb { $$ = nodecount++; labels[$$] = "Dims";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+| Dims Lsb Rsb { $$ = nodecount++; labels[$$] = "Dims";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+FieldAccess:
+Primary Dot Identifier { $$ = nodecount++; labels[$$] = "FieldAccess";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Super Dot Identifier { $$ = nodecount++; labels[$$] = "FieldAccess";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+MethodInvocation:
+Name Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+| Name Lb Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+| Primary Dot TypeArguments Identifier Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| Primary Dot TypeArguments Identifier Lb Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| Super Dot TypeArguments Identifier Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| Super Dot TypeArguments Identifier Lb Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| Name Dot TypeArguments Identifier Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+from.pb($$); to.pb($6);
+($7).num = nodecount++; labels[($7).num] = ($7).str; from.pb($$); to.pb(($7).num);
+}
+| Name Dot TypeArguments Identifier Lb Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| Primary Dot Identifier Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| Primary Dot Identifier Lb Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+}
+| Super Dot Identifier Lb ArgumentList Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+($6).num = nodecount++; labels[($6).num] = ($6).str; from.pb($$); to.pb(($6).num);
+}
+| Super Dot Identifier Lb Rb { $$ = nodecount++; labels[$$] = "MethodInvocation";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+($5).num = nodecount++; labels[($5).num] = ($5).str; from.pb($$); to.pb(($5).num);
+}
+ArrayAccess:
+Name Lsb Expression Rsb { $$ = nodecount++; labels[$$] = "ArrayAccess";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+| PrimaryNoNewArray Lsb Expression Rsb { $$ = nodecount++; labels[$$] = "ArrayAccess";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+}
+PostfixExpression:
+Primary { $$ = nodecount++; labels[$$] = "PostfixExpression";
+from.pb($$); to.pb($1);
+}
+| Name { $$ = nodecount++; labels[$$] = "PostfixExpression";
+from.pb($$); to.pb($1);
+}
+| PostIncrementExpression { $$ = nodecount++; labels[$$] = "PostfixExpression";
+from.pb($$); to.pb($1);
+}
+| PostDecrementExpression { $$ = nodecount++; labels[$$] = "PostfixExpression";
+from.pb($$); to.pb($1);
+}
+PostIncrementExpression:
+PostfixExpression Inc { $$ = nodecount++; labels[$$] = "PostIncrementExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+PostDecrementExpression:
+PostfixExpression Dec { $$ = nodecount++; labels[$$] = "PostDecrementExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+}
+UnaryExpression:
+PreIncrementExpression { $$ = nodecount++; labels[$$] = "UnaryExpression";
+from.pb($$); to.pb($1);
+}
+| PreDecrementExpression { $$ = nodecount++; labels[$$] = "UnaryExpression";
+from.pb($$); to.pb($1);
+}
+| Plus UnaryExpression { $$ = nodecount++; labels[$$] = "UnaryExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+| Minus UnaryExpression { $$ = nodecount++; labels[$$] = "UnaryExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+| UnaryExpressionNotPlusMinus { $$ = nodecount++; labels[$$] = "UnaryExpression";
+from.pb($$); to.pb($1);
+}
+PreIncrementExpression:
+Inc UnaryExpression { $$ = nodecount++; labels[$$] = "PreIncrementExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+PreDecrementExpression:
+Dec UnaryExpression { $$ = nodecount++; labels[$$] = "PreDecrementExpression";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+UnaryExpressionNotPlusMinus:
+PostfixExpression { $$ = nodecount++; labels[$$] = "UnaryExpressionNotPlusMinus";
+from.pb($$); to.pb($1);
+}
+| Tilde UnaryExpression { $$ = nodecount++; labels[$$] = "UnaryExpressionNotPlusMinus";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+| Not UnaryExpression { $$ = nodecount++; labels[$$] = "UnaryExpressionNotPlusMinus";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+| CastExpression { $$ = nodecount++; labels[$$] = "UnaryExpressionNotPlusMinus";
+from.pb($$); to.pb($1);
+}
+MultiplicativeExpression:
+UnaryExpression { $$ = nodecount++; labels[$$] = "MultiplicativeExpression";
+from.pb($$); to.pb($1);
+}
+| MultiplicativeExpression Mult UnaryExpression { $$ = nodecount++; labels[$$] = "MultiplicativeExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+| MultiplicativeExpression Div UnaryExpression { $$ = nodecount++; labels[$$] = "MultiplicativeExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+| MultiplicativeExpression Mod UnaryExpression { $$ = nodecount++; labels[$$] = "MultiplicativeExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+AdditiveExpression:
+MultiplicativeExpression { $$ = nodecount++; labels[$$] = "AdditiveExpression";
+from.pb($$); to.pb($1);
+}
+| AdditiveExpression Plus MultiplicativeExpression { $$ = nodecount++; labels[$$] = "AdditiveExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+| AdditiveExpression Minus MultiplicativeExpression { $$ = nodecount++; labels[$$] = "AdditiveExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+ShiftExpression:
+AdditiveExpression { $$ = nodecount++; labels[$$] = "ShiftExpression";
+from.pb($$); to.pb($1);
+}
+| ShiftExpression Shifter AdditiveExpression { $$ = nodecount++; labels[$$] = "ShiftExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+RelationalExpression:
+ShiftExpression { $$ = nodecount++; labels[$$] = "RelationalExpression";
+from.pb($$); to.pb($1);
+}
+| RelationalExpression Lt ShiftExpression { $$ = nodecount++; labels[$$] = "RelationalExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+| RelationalExpression Gt ShiftExpression { $$ = nodecount++; labels[$$] = "RelationalExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+| RelationalExpression Relop ShiftExpression { $$ = nodecount++; labels[$$] = "RelationalExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+| RelationalExpression Instanceof ReferenceType { $$ = nodecount++; labels[$$] = "RelationalExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+EqualityExpression:
+RelationalExpression { $$ = nodecount++; labels[$$] = "EqualityExpression";
+from.pb($$); to.pb($1);
+}
+| EqualityExpression Eqnq RelationalExpression { $$ = nodecount++; labels[$$] = "EqualityExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+AndExpression:
+EqualityExpression { $$ = nodecount++; labels[$$] = "AndExpression";
+from.pb($$); to.pb($1);
+}
+| AndExpression And EqualityExpression { $$ = nodecount++; labels[$$] = "AndExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+ExclusiveOrExpression:
+AndExpression { $$ = nodecount++; labels[$$] = "ExclusiveOrExpression";
+from.pb($$); to.pb($1);
+}
+| ExclusiveOrExpression Xor AndExpression { $$ = nodecount++; labels[$$] = "ExclusiveOrExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+InclusiveOrExpression:
+ExclusiveOrExpression { $$ = nodecount++; labels[$$] = "InclusiveOrExpression";
+from.pb($$); to.pb($1);
+}
+| InclusiveOrExpression Or ExclusiveOrExpression { $$ = nodecount++; labels[$$] = "InclusiveOrExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+ConditionalAndExpression:
+InclusiveOrExpression { $$ = nodecount++; labels[$$] = "ConditionalAndExpression";
+from.pb($$); to.pb($1);
+}
+| ConditionalAndExpression Bool_and InclusiveOrExpression { $$ = nodecount++; labels[$$] = "ConditionalAndExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+ConditionalOrExpression:
+ConditionalAndExpression { $$ = nodecount++; labels[$$] = "ConditionalOrExpression";
+from.pb($$); to.pb($1);
+}
+| ConditionalOrExpression Bool_or ConditionalAndExpression { $$ = nodecount++; labels[$$] = "ConditionalOrExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+ConditionalExpression:
+ConditionalOrExpression { $$ = nodecount++; labels[$$] = "ConditionalExpression";
+from.pb($$); to.pb($1);
+}
+| ConditionalOrExpression Qm Expression Col ConditionalExpression { $$ = nodecount++; labels[$$] = "ConditionalExpression";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+($4).num = nodecount++; labels[($4).num] = ($4).str; from.pb($$); to.pb(($4).num);
+from.pb($$); to.pb($5);
+}
+AssignmentExpression:
+ConditionalExpression { $$ = nodecount++; labels[$$] = "AssignmentExpression";
+from.pb($$); to.pb($1);
+}
+| Assignment { $$ = nodecount++; labels[$$] = "AssignmentExpression";
+from.pb($$); to.pb($1);
+}
+Assignment:
+LeftHandSide AssignmentOperator AssignmentExpression { $$ = nodecount++; labels[$$] = "Assignment";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+LeftHandSide:
+Name { $$ = nodecount++; labels[$$] = "LeftHandSide";
+from.pb($$); to.pb($1);
+}
+| FieldAccess { $$ = nodecount++; labels[$$] = "LeftHandSide";
+from.pb($$); to.pb($1);
+}
+| ArrayAccess { $$ = nodecount++; labels[$$] = "LeftHandSide";
+from.pb($$); to.pb($1);
+}
+AssignmentOperator:
+Eqq { $$ = nodecount++; labels[$$] = "AssignmentOperator";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+| Eq { $$ = nodecount++; labels[$$] = "AssignmentOperator";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+}
+Expression:
+AssignmentExpression { $$ = nodecount++; labels[$$] = "Expression";
+from.pb($$); to.pb($1);
+}
+ConstantExpression:
+Expression { $$ = nodecount++; labels[$$] = "ConstantExpression";
+from.pb($$); to.pb($1);
+}
+TypeParameters:
+Lt TypeParameterList Gt { $$ = nodecount++; labels[$$] = "TypeParameters";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+($3).num = nodecount++; labels[($3).num] = ($3).str; from.pb($$); to.pb(($3).num);
+}
+TypeParameterList:
+TypeParameter { $$ = nodecount++; labels[$$] = "TypeParameterList";
+from.pb($$); to.pb($1);
+}
+| TypeParameter Comma TypeParameterList { $$ = nodecount++; labels[$$] = "TypeParameterList";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+| TypeParameter Comma TypeParameters { $$ = nodecount++; labels[$$] = "TypeParameterList";
+from.pb($$); to.pb($1);
+($2).num = nodecount++; labels[($2).num] = ($2).str; from.pb($$); to.pb(($2).num);
+from.pb($$); to.pb($3);
+}
+TypeParameter:
+Identifier TypeBound { $$ = nodecount++; labels[$$] = "TypeParameter";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}
+TypeBound:
+Extends ClassOrInterfaceType AdditionalBounds { $$ = nodecount++; labels[$$] = "TypeBound";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+from.pb($$); to.pb($3);
+}
+| { $$ = nodecount++; labels[$$] = "TypeBound";
+from.pb($$); to.pb($1);
+}
+AdditionalBounds:
+AdditionalBounds AdditionalBound { $$ = nodecount++; labels[$$] = "AdditionalBounds";
+from.pb($$); to.pb($1);
+from.pb($$); to.pb($2);
+}
+| { $$ = nodecount++; labels[$$] = "AdditionalBounds";
+from.pb($$); to.pb($1);
+}
+AdditionalBound:
+And InterfaceType { $$ = nodecount++; labels[$$] = "AdditionalBound";
+($1).num = nodecount++; labels[($1).num] = ($1).str; from.pb($$); to.pb(($1).num);
+from.pb($$); to.pb($2);
+}

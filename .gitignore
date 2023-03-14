@@ -1,0 +1,12 @@
+*pdf
+.ipynb_checkpoints/
+final_zip/
+test_output/
+*.dot
+*.o
+myASTGenerator
+*.c
+*.h
+*.output
+*.ps
+*.png
