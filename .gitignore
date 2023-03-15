@@ -4,7 +4,7 @@ final_zip/
 test_output/
 *.dot
 *.o
-myASTGenerator
+a.out
 *.c
 *.h
 *.output

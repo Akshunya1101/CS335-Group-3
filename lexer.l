@@ -255,7 +255,7 @@ OVERRIDE                 Override
 %%
 \/\*([^\*]|\*+[^\/])*\*\/|\/\/[^\n\r]* {}
 [ \t\f\n]+ {}
-{LITERAL} {yylval.s.str = strdup(yytext);
+{LITERAL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Literal;}
 {STRING_LITERAL} {yylval.s.str = strdup(yytext);
               return Literal;}
@@ -460,7 +460,7 @@ OVERRIDE                 Override
               return Non_sealed;}
 {STRICTFP} {yylval.s.str = strdup(yytext);
               return  Strictfp;}
-{IDENTIFIER} {yylval.s.str = strdup(yytext);
+{IDENTIFIER} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Identifier;}
 <<EOF>> {yyterminate();}
 . {cerr << "Illegal character " << yytext[0] << " in line " << yylineno << '\n'; return 0;}

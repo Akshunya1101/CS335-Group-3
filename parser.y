@@ -84,11 +84,28 @@
     string scope1;
     bool flag = false;
     bool flagg = false;
+
+
+    // 3AC Expressions
+    vector<string> ac;
+    int varnum=1;
+    char* build_string() {
+        int currnum = varnum++;
+        char* str = (char*)malloc(sizeof(char) * floor(log10(currnum) + 1));
+        sprintf(str, "t%d", currnum);
+        return str;
+    }
+    void add_string(char *s1, char* s2, char *s3, string op) {
+        string exp1 = s1, exp2 = s2, exp3 = s3;
+        string expr = exp1 + " = " + exp2 + op + exp3 + ";";
+        ac.pb(expr);
+        return;
+    }
 %}
 %union {
     int num;
     char * str;
-    struct {int num; char *str; int size; char *type;} s;
+    struct {int num; char *str; int size; char *type; char *var;} s;
 }
 %define parse.error verbose
 %token<s> Keyword
@@ -1544,13 +1561,13 @@ PostfixExpression
 | CastExpression
 MultiplicativeExpression:
 UnaryExpression
-| MultiplicativeExpression Mult UnaryExpression
-| MultiplicativeExpression Div UnaryExpression
-| MultiplicativeExpression Mod UnaryExpression
+| MultiplicativeExpression Mult UnaryExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, " * ");}
+| MultiplicativeExpression Div UnaryExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, " / ");}
+| MultiplicativeExpression Mod UnaryExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, " % ");}
 AdditiveExpression:
-MultiplicativeExpression
-| AdditiveExpression Plus MultiplicativeExpression
-| AdditiveExpression Minus MultiplicativeExpression
+MultiplicativeExpression {($$).var = strdup(($1).var);}
+| AdditiveExpression Plus MultiplicativeExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, " + ");}
+| AdditiveExpression Minus MultiplicativeExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, " - ");}
 ShiftExpression:
 AdditiveExpression
 | ShiftExpression Shifter AdditiveExpression
@@ -1609,9 +1626,12 @@ AdditionalBound : And InterfaceType;
 
 int main() {
     yyparse();
-    for(auto x:list_tables){
-        x->print();
-        cout<<endl;
+    // for(auto x:list_tables){
+    //     x->print();
+    //     cout<<endl;
+    // }
+    for(auto s : ac) {
+        cout << s << endl;
     }
     return 0;
 }

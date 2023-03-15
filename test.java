@@ -6,14 +6,7 @@ public class test_3 {
         {
             int x ;
         }
-		boolean a = (4>=1), b = 0;
-        a.b = 6;
-        boolean a1 = (4<=1);
-        boolean b = (4<2);
-        boolean c = (3==4);
-        boolean c4 = (a&&b);
-        boolean c1 = (3!=4);
-        boolean c8 = (c1||c);
+        int a = 3 * 4 / 9 % 4 + c - d + 4 % 2;
         int k = 3>>>4;
         int k1 = 3>>4;
         int k2 = (3<<4);
