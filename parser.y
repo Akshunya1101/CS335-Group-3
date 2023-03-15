@@ -14,22 +14,28 @@
             int Line;
             long int Offset;
             string Scope;
+            vector<string> Params;
             Entry(){
             }
-            Entry(string token, string type, int line, long int offset, string scope){
+            Entry(string token, string type, int line, long int offset, string scope, vector<string> params){
                 Token = token;
                 Type = type;
                 Line = line;
                 Offset = offset;
                 Scope = scope;
+                Params = params;
             }
             void print_entry(){
-                cout<<Token<<"    "<<Type<<"    "<<Line<<"    "<<Offset<<"    "<<Scope<<endl;
+                cout<<Token<<"    "<<Type<<"    "<<Line<<"    "<<Offset<<"    "<<Scope<<"    ";
+                for(auto x:Params){
+                    cout<<x<<' ';
+                }
+                cout<<endl;
             }
     };
     class SymbolTable{
         public:
-            map<string,Entry> table;
+            map<string,vector<Entry>> table;
             int level;
             SymbolTable* parent;
             SymbolTable(){
@@ -44,29 +50,40 @@
                     level = 0;
                 }
             }
-            void set(string lexeme, string token, string type, int line, long int offset, string scope){
-                if(table.find(lexeme)!=table.end()){
-                    string scope1 = table[lexeme].Scope;
-                    if(scope == scope1){
-                        cerr<<"Error!! "<<lexeme<<' '<<line<<endl;
-                        return;
-                    }
+            Entry* set(string lexeme, string token, string type, int line, long int offset, string scope, vector<string> params){
+                table[lexeme].push_back(Entry(token,type,line,offset,scope,params));
+                return &table[lexeme].back();
+            }
+            void check(Entry* e,string lexeme){
+                int count = 0;
+                for(int i=0;i<table[lexeme].size();i++){
+                    if(e->Scope == table[lexeme][i].Scope && e->Params == table[lexeme][i].Params){
+                        count++;
+                }
                 }
                 table[lexeme] = Entry(token,type,line,offset,scope);
+                    }
+                table[lexeme] = Entry(token,type,line,offset,scope);
+                }
+                if(count > 1){
+                    cerr<<"Redeclaration of "<<lexeme<<" in line "<<e->Line<<endl;
+                }
             }
-            Entry get(string lexeme){
+            vector<Entry> get(string lexeme){
                 for(auto ptr=this; ptr!=NULL; ptr=ptr->parent){
                     if(ptr->table.find(lexeme)!=ptr->table.end()){
                         return ptr->table[lexeme];
                     }
                 }
-                cerr<<"INVALID SCOPE "<<lexeme<<endl;
-                return Entry("","",-1,-1,"");
+                cerr<<"Undeclared "<< lexeme << " on line "<<yylineno<<endl;
+                return {};
             }
             void print(){
                 for(auto it=table.begin();it!=table.end();it++){
-                    cout<<it->first<<":    ";
-                    it->second.print_entry();
+                    for(auto it1:it->second){
+                        cout<<it->first<<":    ";
+                        it1.print_entry();
+                    }
                 }
             }
     };
@@ -84,6 +101,7 @@
     string scope1;
     bool flag = false;
     bool flagg = false;
+    Entry* func = NULL;
 
 
     // 3AC Expressions
@@ -372,8 +390,8 @@
 Goal:
 CompilationUnit
 Name:
-SimpleName {($$).type = ($1).type; Entry c = head->get($1.type);} 
-| QualifiedName {($$).type = ($1).type; Entry c = head->get($1.type);}
+SimpleName {($$).type = ($1).type; vector<Entry> c = head->get($1.type);} 
+| QualifiedName {($$).type = ($1).type; vector<Entry> c = head->get($1.type);}
 SimpleName:
 Identifier {($$).type = ($1).str;}
 QualifiedName:
@@ -434,9 +452,9 @@ Dummy:
 {tp = "Void"; sz = 0;}
 
 ArrayType:
-PrimitiveType Lsb Rsb
-| Name Lsb Rsb
-| ArrayType Lsb Rsb
+PrimitiveType Lsb Rsb {($$).type = strdup("array("); strcat($$.type,$1.type); strcat($$.type,strdup(")"));}
+| Name Lsb Rsb {($$).type = strdup("array("); strcat($$.type,$1.type); strcat($$.type,strdup(")"));}
+| ArrayType Lsb Rsb {($$).type = strdup("array("); strcat($$.type,$1.type); strcat($$.type,strdup(")"));}
 CastExpression:
 Lb PrimitiveType Dims Rb UnaryExpression | Lb PrimitiveType Rb UnaryExpression
 | Lb Expression Rb UnaryExpressionNotPlusMinus
@@ -457,7 +475,10 @@ NumericType {
     ($$).type = ($1).type;
     ($$).size = ($1).size;
 }
-| Bboolean
+| Bboolean {
+    ($$).type = (char*)"Boolean";
+    ($$).size = 0;
+}
 NumericType:
 IntegralType {
     ($$).type = ($1).type;
@@ -534,7 +555,8 @@ ClassDeclaration
 | Semicol
 ClassDeclaration:
 Modifiers Class Identifier TypeParameters Superr Interfaces {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -551,7 +573,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier TypeParameters Superr Interfaces {
-    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -568,7 +591,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Modifiers Class Identifier TypeParameters Superr {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -585,7 +609,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier TypeParameters Superr {
-    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -602,7 +627,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Modifiers Class Identifier TypeParameters Interfaces {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -619,7 +645,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier TypeParameters Interfaces {
-    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -636,7 +663,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Modifiers Class Identifier TypeParameters {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -653,7 +681,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier TypeParameters {
-    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -670,7 +699,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Modifiers Class Identifier Superr Interfaces {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -687,7 +717,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier Superr Interfaces {
-    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -704,7 +735,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Modifiers Class Identifier Superr {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -721,7 +753,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier Superr {
-    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -738,7 +771,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Modifiers Class Identifier Interfaces {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -755,7 +789,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier Interfaces {
-    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -772,7 +807,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Modifiers Class Identifier {
-    head->set($3.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -789,7 +825,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     scopes.pop();
 }
 | Class Identifier {
-    head->set($2.str,"Identifier","Class",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -839,11 +876,11 @@ VariableDeclarators:
 VariableDeclarator 
 | VariableDeclarators Comma VariableDeclarator
 VariableDeclarator:
-VariableDeclaratorId
-| VariableDeclaratorId Eq VariableInitializer 
+VariableDeclaratorId {offset = offset + sz; head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{}),$1.str);}
+| VariableDeclaratorId {offset = offset + sz; head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{}),$1.str);} Eq VariableInitializer 
 VariableDeclaratorId:
-Identifier  {head->set($1.str,"Identifier",tp,yylineno,offset,scope); offset = offset + sz;}
-| VariableDeclaratorId Lsb Rsb
+Identifier {$$.str = $1.str;}
+| VariableDeclaratorId Lsb Rsb {tp = "array(" + tp + ")";}
 VariableInitializer:
 Expression
 | ArrayInitializer
@@ -860,7 +897,7 @@ MethodDeclarator:
 Identifier Lb {
     tp = "Method," + tp;
     sz = 0;
-    head->set($1.str,"Identifier",tp,yylineno,offset,scope);
+    func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{});
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -869,11 +906,11 @@ Identifier Lb {
     scope = ($1.str);
     scope += " Method";
     flag = true;
-} FormalParameterList Rb
+} FormalParameterList Rb {tables.top()->check(func,$1.str);}
 | Identifier Lb Rb {
     tp = "Method," + tp;
     sz = 0;
-    head->set($1.str,"Identifier",tp,yylineno,offset,scope);
+    func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{});
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -882,16 +919,17 @@ Identifier Lb {
     scope = ($1.str);
     scope += " Method";
     flag = true;
+    tables.top()->check(func,$1.str);
 }
 | MethodDeclarator Lsb Rsb
 FormalParameterList:
-FormalParameter
-| FormalParameterList Comma FormalParameter
+FormalParameter {if(func){func->Params.push_back(tp);}}
+| FormalParameterList Comma FormalParameter {if(func){func->Params.push_back(tp);}}
 FormalParameter:
-Type VariableDeclaratorId
+Type VariableDeclaratorId {offset = offset + sz; head->check(head->set($2.str,"Identifier",tp,yylineno,offset,scope,{}),$2.str);}
 | Final_ Type {tp = "Final " + tp;} VariableDeclaratorId
-|Type TypeArguments VariableDeclaratorId
-| Final_ Type TypeArguments VariableDeclaratorId
+|Type TypeArguments VariableDeclaratorId  {offset = offset + sz; head->check(head->set($3.str,"Identifier",tp,yylineno,offset,scope,{}),$3.str);}
+| Final_ Type {tp = "Final " + tp;} TypeArguments VariableDeclaratorId
 Final_ : Final | Final_ Final
 Throws:
 throws ClassTypeList
@@ -938,18 +976,20 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
 }
 ConstructorDeclarator:
 SimpleName Lb {
-    tp = "Constructor"; sz = 0; head->set($1.type,"Identifier",tp,yylineno,offset,scope);tables.push(head);
+    tp = "Constructor"; sz = 0; 
+    func = head->set($1.type,"Identifier",tp,yylineno,offset,scope,{});
+    tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
     scope = ($1.type);
     scope += " Constructor";
-} FormalParameterList Rb
+} FormalParameterList Rb {tables.top()->check(func,$1.type);}
 | SimpleName Lb Rb {
     tp = "Constructor";
     sz = 0;
-    head->set($1.type,"Identifier",tp,yylineno,offset,scope);
+    func = head->set($1.type,"Identifier",tp,yylineno,offset,scope,{});
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -957,8 +997,10 @@ SimpleName Lb {
     scopes.push(scope);
     scope = ($1.type);
     scope += " Constructor";
+    tables.top()->check(func,$1.type);
 }
-|TypeParameters SimpleName Lb {tp = "Constructor"; sz = 0; head->set($2.type,"Identifier",tp,yylineno,offset,scope);
+|TypeParameters SimpleName Lb {tp = "Constructor"; sz = 0; 
+    func = head->set($2.type,"Identifier",tp,yylineno,offset,scope,{});
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -966,11 +1008,11 @@ SimpleName Lb {
     scopes.push(scope);
     scope = ($2.type);
     scope += " Constructor";
-} FormalParameterList Rb
+} FormalParameterList Rb {tables.top()->check(func,$2.type);}
 | TypeParameters SimpleName Lb Rb {
     tp = "Constructor";
     sz = 0;
-    head->set($2.type,"Identifier",tp,yylineno,offset,scope);
+    func = head->set($2.type,"Identifier",tp,yylineno,offset,scope,{});
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -978,6 +1020,7 @@ SimpleName Lb {
     scopes.push(scope);
     scope = ($2.type);
     scope += " Constructor";
+    tables.top()->check(func,$2.type);
 }
 ConstructorBody:
 Lcb
@@ -993,7 +1036,8 @@ This Lb ArgumentList Rb Semicol | This Lb Rb Semicol
 | Super Lb ArgumentList Rb Semicol | Super Lb Rb Semicol
 InterfaceDeclaration:
 Modifiers Interface Identifier ExtendsInterfaces {
-    head->set($3.str,"Identifier","Interface",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Interface",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -1010,7 +1054,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     scopes.pop();
 }
 | Interface Identifier ExtendsInterfaces {
-    head->set($2.str,"Identifier","Interface",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Interface",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -1027,7 +1072,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     scopes.pop();
 }
 | Modifiers Interface Identifier {
-    head->set($3.str,"Identifier","Interface",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Interface",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -1044,7 +1090,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     scopes.pop();
 }
 | Interface Identifier {
-    head->set($2.str,"Identifier","Interface",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Interface",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -1061,7 +1108,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     scopes.pop();
 }
 |Modifiers Interface Identifier TypeParameters ExtendsInterfaces {
-    head->set($3.str,"Identifier","Interface",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Interface",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -1078,7 +1126,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     scopes.pop();
 }
 | Interface Identifier TypeParameters ExtendsInterfaces {
-    head->set($2.str,"Identifier","Interface",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Interface",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -1095,7 +1144,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     scopes.pop();
 }
 | Modifiers Interface Identifier TypeParameters {
-    head->set($3.str,"Identifier","Interface",yylineno,offset,scope);
+    func = head->set($3.str,"Identifier","Interface",yylineno,offset,scope,{});
+    head->check(func,$3.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -1112,7 +1162,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     scopes.pop();
 }
 | Interface Identifier TypeParameters {
-    head->set($2.str,"Identifier","Interface",yylineno,offset,scope);
+    func = head->set($2.str,"Identifier","Interface",yylineno,offset,scope,{});
+    head->check(func,$2.str);
     tables.push(head);
     head = new SymbolTable(head); list_tables.push_back(head);
     offsets.push(offset);
@@ -1164,7 +1215,7 @@ Lcb
         offsets.push(offset);
         offset = 0;
         scopes.push(scope);
-        scope = "Block";
+        scope = "Block in " + scope;
         flagg = true;
     }
     flag = false;
@@ -1390,8 +1441,8 @@ optForUpdate:
 ForUpdate
 |
 ForStart1:
-For Lb Dummy3 Final_ Type VariableDeclaratorId Col Expression Rb
-| For Lb Dummy3 Type VariableDeclaratorId Col Expression Rb
+For Lb Dummy3 Final_ Type VariableDeclaratorId {offset = offset + sz; head->check(head->set($6.str,"Identifier",tp,yylineno,offset,scope,{}),$6.str);} Col Expression Rb
+| For Lb Dummy3 Type VariableDeclaratorId {offset = offset + sz; head->check(head->set($5.str,"Identifier",tp,yylineno,offset,scope,{}),$5.str);} Col Expression Rb
 ForStatement:
 ForStart Statement {
     head = tables.top();
