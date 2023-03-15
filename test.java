@@ -9,6 +9,8 @@ public class test_1 {
     public static void xxxxx(String[][] args,int x1,int x2,float x3, float arrr[][])
 	{
         {
+            int q[][] = {{1, 3, 8}, {1, 0, 7}};
+            int[][] q1 = {{1, 3, 8}, {1, 0, 7}, {1, 3, 8}};
             int x ;
         }
 		boolean a = (4>=1), b = 0;
