@@ -59,11 +59,7 @@
                 for(int i=0;i<table[lexeme].size();i++){
                     if(e->Scope == table[lexeme][i].Scope && e->Params == table[lexeme][i].Params){
                         count++;
-                }
-                }
-                table[lexeme] = Entry(token,type,line,offset,scope);
                     }
-                table[lexeme] = Entry(token,type,line,offset,scope);
                 }
                 if(count > 1){
                     cerr<<"Redeclaration of "<<lexeme<<" in line "<<e->Line<<endl;
@@ -113,9 +109,8 @@
         sprintf(str, "t%d", currnum);
         return str;
     }
-    void add_string(char *s1, char* s2, char *s3, string op) {
-        string exp1 = s1, exp2 = s2, exp3 = s3;
-        string expr = exp1 + " = " + exp2 + op + exp3 + ";";
+    void add_string(string exp1, string exp2, string exp3, string op) {
+        string expr = exp1 + " = " + exp2 + " " + op + " " + exp3 + ";";
         ac.pb(expr);
         return;
     }
@@ -1612,25 +1607,25 @@ PostfixExpression
 | CastExpression
 MultiplicativeExpression:
 UnaryExpression
-| MultiplicativeExpression Mult UnaryExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, " * ");}
-| MultiplicativeExpression Div UnaryExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, " / ");}
-| MultiplicativeExpression Mod UnaryExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, " % ");}
+| MultiplicativeExpression Mult UnaryExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
+| MultiplicativeExpression Div UnaryExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
+| MultiplicativeExpression Mod UnaryExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
 AdditiveExpression:
-MultiplicativeExpression {($$).var = strdup(($1).var);}
-| AdditiveExpression Plus MultiplicativeExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, " + ");}
-| AdditiveExpression Minus MultiplicativeExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, " - ");}
+MultiplicativeExpression
+| AdditiveExpression Plus MultiplicativeExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
+| AdditiveExpression Minus MultiplicativeExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
 ShiftExpression:
 AdditiveExpression
-| ShiftExpression Shifter AdditiveExpression
+| ShiftExpression Shifter AdditiveExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
 RelationalExpression:
 ShiftExpression
-| RelationalExpression Lt ShiftExpression
-| RelationalExpression Gt ShiftExpression
-| RelationalExpression Relop ShiftExpression
+| RelationalExpression Lt ShiftExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
+| RelationalExpression Gt ShiftExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
+| RelationalExpression Relop ShiftExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
 | RelationalExpression Instanceof ReferenceType
 EqualityExpression:
 RelationalExpression
-| EqualityExpression Eqnq RelationalExpression
+| EqualityExpression Eqnq RelationalExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
 AndExpression:
 EqualityExpression
 | AndExpression And EqualityExpression
@@ -1677,10 +1672,10 @@ AdditionalBound : And InterfaceType;
 
 int main() {
     yyparse();
-    // for(auto x:list_tables){
-    //     x->print();
-    //     cout<<endl;
-    // }
+    for(auto x:list_tables){
+        x->print();
+        cout<<endl;
+    }
     for(auto s : ac) {
         cout << s << endl;
     }
@@ -1688,6 +1683,6 @@ int main() {
 }
 
 int yyerror(const char *s) {
-    printf("%s %d",s,yylineno);
+    printf("%s in line %d\n",s,yylineno);
     return 0;
 }
