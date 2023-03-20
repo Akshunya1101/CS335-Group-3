@@ -1,101 +1,12 @@
-test_1:    Identifier    Class    1    0    Global    
+test_3:    Identifier    Class    1    0    Global    
 
-List:    Identifier    Class    2    0    test_1 Class    
-String:    Identifier    Class    5    0    test_1 Class    
-main:    Identifier    Method,Void    40    4    test_1 Class    array(String) integer integer float List<Integer> 
-xxxxx:    Identifier    integer    8    4    test_1 Class    
-xxxxx:    Identifier    Method,Void    9    4    test_1 Class    array(array(String)) integer integer float array(array(float)) 
+main:    Identifier    Method,Void    2    0    test_3 Class    array(String) 
 
+a:    Identifier    integer    10    12    main Method    
+args:    Identifier    array(String)    2    0    main Method    
+b:    Identifier    float    9    4    main Method    
+c:    Identifier    float    9    8    main Method    
 
+x:    Identifier    integer    7    4    Block in main Method    
 
-a:    Identifier    Boolean    16    16    xxxxx Method    
-a1:    Identifier    Boolean    18    16    xxxxx Method    
-args:    Identifier    array(array(String))    9    0    xxxxx Method    
-arr:    Identifier    array(array(array(integer)))    38    84    xxxxx Method    2 2 3 
-arrr:    Identifier    array(array(float))    9    16    xxxxx Method    
-asdfgh:    Identifier    integer    27    32    xxxxx Method    
-b:    Identifier    Boolean    16    16    xxxxx Method    
-b:    Identifier    Boolean    19    16    xxxxx Method    
-c:    Identifier    Boolean    20    16    xxxxx Method    
-c1:    Identifier    Boolean    22    16    xxxxx Method    
-c4:    Identifier    Boolean    21    16    xxxxx Method    
-c8:    Identifier    Boolean    23    16    xxxxx Method    
-k:    Identifier    integer    24    20    xxxxx Method    
-k1:    Identifier    integer    25    24    xxxxx Method    
-k2:    Identifier    integer    26    28    xxxxx Method    
-k3:    Identifier    integer    31    48    xxxxx Method    
-m:    Identifier    integer    35    64    xxxxx Method    
-n:    Identifier    integer    36    68    xxxxx Method    
-o:    Identifier    integer    30    44    xxxxx Method    
-u:    Identifier    integer    32    52    xxxxx Method    
-u1:    Identifier    integer    33    56    xxxxx Method    
-x:    Identifier    integer    28    36    xxxxx Method    
-x1:    Identifier    integer    9    4    xxxxx Method    
-x2:    Identifier    integer    9    8    xxxxx Method    
-x3:    Identifier    float    9    12    xxxxx Method    
-x6:    Identifier    integer    34    60    xxxxx Method    
-y:    Identifier    integer    29    40    xxxxx Method    
-z:    Identifier    integer    37    72    xxxxx Method    
-
-q:    Identifier    array(array(integer))    12    6    Block in xxxxx Method    2 3 
-q1:    Identifier    array(array(integer))    13    15    Block in xxxxx Method    3 3 
-x:    Identifier    integer    14    19    Block in xxxxx Method    
-
-a:    Identifier    Boolean    47    12    main Method    
-a1:    Identifier    Boolean    49    12    main Method    
-args:    Identifier    array(String)    40    0    main Method    
-arr:    Identifier    array(integer)    70    80    main Method    6 
-arr1:    Identifier    array(array(integer))    69    74    main Method    3 2 
-asdfgh:    Identifier    integer    58    28    main Method    
-b:    Identifier    Boolean    47    12    main Method    
-b:    Identifier    Boolean    50    12    main Method    
-c:    Identifier    Boolean    51    12    main Method    
-c1:    Identifier    Boolean    53    12    main Method    
-c4:    Identifier    Boolean    52    12    main Method    
-c8:    Identifier    Boolean    54    12    main Method    
-k:    Identifier    integer    55    16    main Method    
-k1:    Identifier    integer    56    20    main Method    
-k2:    Identifier    integer    57    24    main Method    
-k3:    Identifier    integer    62    44    main Method    
-m:    Identifier    integer    66    60    main Method    
-n:    Identifier    integer    67    64    main Method    
-o:    Identifier    integer    61    40    main Method    
-s:    Identifier    List<Integer>    40    12    main Method    
-u:    Identifier    integer    63    48    main Method    
-u1:    Identifier    integer    64    52    main Method    
-x:    Identifier    integer    59    32    main Method    
-x1:    Identifier    integer    40    4    main Method    
-x2:    Identifier    integer    40    8    main Method    
-x3:    Identifier    float    40    12    main Method    
-x6:    Identifier    integer    65    56    main Method    
-y:    Identifier    integer    60    36    main Method    
-z:    Identifier    integer    68    68    main Method    
-
-x:    Identifier    integer    45    4    Block in main Method    
-
-t1 = 4 >= 1;
-t2 = 4 <= 1;
-t3 = 4 < 2;
-t4 = 3 == 4;
-t5 = 3 != 4;
-t6 = 3 >>> 4;
-t7 = 3 >> 4;
-t8 = 3 << 4;
-t9 = 2 - k;
-t10 = 3 * k;
-t11 = 3 % 2;
-t12 = 3 / 7;
-t13 = u > 0;
-t14 = 4 >= 1;
-t15 = 4 <= 1;
-t16 = 4 < 2;
-t17 = 3 == 4;
-t18 = 3 != 4;
-t19 = 3 >>> 4;
-t20 = 3 >> 4;
-t21 = 3 << 4;
-t22 = 2 - k;
-t23 = 3 * k;
-t24 = 3 % 2;
-t25 = 3 / 7;
-t26 = u > 0;
+t1 = b +float c;

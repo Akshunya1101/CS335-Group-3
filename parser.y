@@ -1608,7 +1608,7 @@ Name Lsb Expression Rsb
 | PrimaryNoNewArray Lsb Expression Rsb
 PostfixExpression:
 Primary
-| Name
+| Name {($$).type = ($1).str; ($$).var = ($1).var ;}
 | PostIncrementExpression
 | PostDecrementExpression
 PostIncrementExpression:
@@ -1637,7 +1637,12 @@ UnaryExpression
 | MultiplicativeExpression Mod UnaryExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
 AdditiveExpression:
 MultiplicativeExpression
-| AdditiveExpression Plus MultiplicativeExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
+| AdditiveExpression Plus MultiplicativeExpression { 
+    ($$).var = build_string();
+    char*s1 = (char*)"+" ;
+    if(!strcmp(($1).type, ($3).type)) {string t1 = ($1).type; string temp = s1; temp = temp + t1; add_string(($$).var, ($1).var, ($3).var, temp) ;}
+    else {string temp = s1; temp = temp + "float"; add_string(($$).var, ($1).var, ($3).var, temp) ;}
+}
 | AdditiveExpression Minus MultiplicativeExpression { ($$).var = build_string(); add_string(($$).var, ($1).var, ($3).var, ($2).str);}
 ShiftExpression:
 AdditiveExpression
