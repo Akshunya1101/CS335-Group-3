@@ -1,12 +1,42 @@
-test_3:    Identifier    Class    1    0    Global    
-
-main:    Identifier    Method,Void    2    0    test_3 Class    array(String) 
-
-a:    Identifier    integer    10    12    main Method    
-args:    Identifier    array(String)    2    0    main Method    
-b:    Identifier    float    9    4    main Method    
-c:    Identifier    float    9    8    main Method    
-
-x:    Identifier    integer    7    4    Block in main Method    
-
-t1 = b +float c;
+parser.y:379.11-17: warning: symbol ‘Dummy11’ is used, but is not defined as a token and has no rules [-Wother]
+  379 | %type<s>  Dummy11
+      |           ^~~~~~~
+parser.y:615.2: warning: empty rule for typed nonterminal, and no action [-Wother]
+  615 | | 
+      |  ^
+parser.y:1549.2: warning: empty rule for typed nonterminal, and no action [-Wother]
+ 1549 | |
+      |  ^
+parser.y:1552.2: warning: empty rule for typed nonterminal, and no action [-Wother]
+ 1552 | |
+      |  ^
+parser.y:1555.2: warning: empty rule for typed nonterminal, and no action [-Wother]
+ 1555 | |
+      |  ^
+parser.y:1820.12: warning: empty rule for typed nonterminal, and no action [-Wother]
+ 1820 | TypeBound : | Extends ClassOrInterfaceType AdditionalBounds;
+      |            ^
+parser.y:1821.18: warning: empty rule for typed nonterminal, and no action [-Wother]
+ 1821 | AdditionalBounds: | AdditionalBounds AdditionalBound
+      |                  ^
+parser.y: warning: 1 nonterminal useless in grammar [-Wother]
+parser.y:379.11-17: warning: nonterminal useless in grammar: Dummy11 [-Wother]
+  379 | %type<s>  Dummy11
+      |           ^~~~~~~
+parser.y: warning: 2 reduce/reduce conflicts [-Wconflicts-rr]
+parser.y: warning: reduce/reduce conflict on token Else [-Wcounterexamples]
+Productions leading up to the conflict state found.  Still finding a possible unifying counterexample...time limit exceeded: 6.000000
+  First example: Dummy8 StatementWithoutTrailingSubstatement •
+  First reduce derivation
+    IfThenStatement
+    ↳ 281: Statement
+           ↳ 247: IfThenStatement
+                  ↳ 281: Dummy8 Statement
+                                ↳ 245: StatementWithoutTrailingSubstatement •
+  Second example: StatementWithoutTrailingSubstatement •
+  Second reduce derivation
+    IfThenStatement
+    ↳ 281: StatementNoShortIf                            Statement
+           ↳ 251: StatementWithoutTrailingSubstatement • ↳ 248: ε
+parser.y: warning: reduce/reduce conflict on token Else [-Wcounterexamples]
+Productions leading up to the conflict state found.  Still finding a possible unifying counterexample...

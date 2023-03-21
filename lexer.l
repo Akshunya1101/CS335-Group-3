@@ -234,8 +234,6 @@ TB                       \"\"\"[ \t\f]*[\n\r](.|[^\"\"\"])*\"\"\"
 
 NULL_LITERAL             null
 
-LITERAL                  {INT_LITERAL}|{FLOAT_LITERAL}|{BOOL_LITERAL}|{CHAR_LITERAL}|{TB}|{NULL_LITERAL}
-
 IDENTIFIER               {LETTER}({LETTER}|{DIGIT})*
 
 RECORD                   record
@@ -255,10 +253,20 @@ OVERRIDE                 Override
 %%
 \/\*([^\*]|\*+[^\/])*\*\/|\/\/[^\n\r]* {}
 [ \t\f\n]+ {}
-{LITERAL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
-              return Literal;}
+{INT_LITERAL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
+              return Int_Literal;}
+{FLOAT_LITERAL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
+              return Float_Literal;}
+{BOOL_LITERAL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
+              return Bool_Literal;}
+{CHAR_LITERAL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
+              return Char_Literal;}
+{TB} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
+              return Tb;}
+{NULL_LITERAL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
+              return Null_Literal;}
 {STRING_LITERAL} {yylval.s.str = strdup(yytext);
-              return Literal;}
+              return String_Literal;}
 {RECORD} {yylval.s.str = strdup(yytext);
               return Record;}
 {OVERRIDE} {yylval.s.str = strdup(yytext);
