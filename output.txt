@@ -1,9 +1,14 @@
 test:    Identifier    Class    1    0    Global    
 
 String:    Identifier    Class    2    0    test Class    
-main:    Identifier    Method,Void    5    0    test Class    String 
+doublee:    Identifier    Method,integer    5    0    test Class    integer character 
+main:    Identifier    Method,Void    8    4    test Class    String 
 
 
-args:    Identifier    String    5    0    main Method    
-arr:    Identifier    integer    7    0    main Method    
+x:    Identifier    integer    5    0    doublee Method    
+y:    Identifier    character    5    4    doublee Method    
+
+args:    Identifier    String    8    0    main Method    
+arr:    Identifier    array(array(integer))    10    0    main Method    2 2 
+c:    Identifier    integer    12    4    main Method    
 

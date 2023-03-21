@@ -16,6 +16,14 @@
     int ln;
     map<string,string> conv;
     map<string,set<string>> conv1;
+    int find_comma(char* s){
+        int i;
+        for(i=0;i<strlen(s);i++){
+            if(s[i]==',')
+                break;
+        }
+        return i;
+    }
     char* widen(char* tt1,char* tt2){
         if(!strlen(tt1))
             return tt2;
@@ -180,13 +188,22 @@
             }
             Entry get1(vector<Entry> c,vector<string> v){
                 for(auto x:c){
-                    if(x.Params == v){
+                    if(x.Params.size()!=v.size())
+                        continue;
+                    int flag = 1;
+                    for(int i=0;i<v.size();i++){
+                        if(!compare_type(strdup(x.Params[i].c_str()),strdup(v[i].c_str()))){
+                            flag = 0;
+                            break;
+                        }
+                    }
+                    if(flag == 1){
                         return x;
                     }
                 }
                 f = 0;
                 ln = yylineno;
-                //cerr << "Appropriate type not found in line "<<yylineno<<endl;
+                //cerr << "Unappropriate parameters in line "<<yylineno<<endl;
                 return Entry("","",-1,-1,"",{},map<int,int>());
             }
             void print(){
@@ -1807,6 +1824,8 @@ MethodInvocation:
 Name Lb ArgumentList Rb {
     vector<Entry> c = head->get($1.type);
     ($$).type = strdup(head->get1(c,v).Type.c_str());
+    int i = find_comma($$.type);
+    ($$).type = strdup($$.type+i+1);
     if(strlen($$.type)){
         f = 1;
     }
@@ -1814,6 +1833,8 @@ Name Lb ArgumentList Rb {
 } | Name Lb Rb {
     vector<Entry> c = head->get($1.type);
     ($$).type = strdup(head->get1(c,v).Type.c_str());
+    int i = find_comma($$.type);
+    ($$).type = strdup($$.type+i+1);
     v.clear();
 }
 | Primary Dot TypeArguments Identifier Lb ArgumentList Rb | Primary Dot TypeArguments Identifier Lb Rb
@@ -2041,7 +2062,7 @@ int main(){
         cout<<endl;
     }
     if(f == 0){
-        cerr << "Appropriate type not found in line "<<ln<<endl;
+        cerr << "Unappropriate parameters in line "<<yylineno<<endl;
     }
     for(auto s : ac) {
         cout << s << endl;
