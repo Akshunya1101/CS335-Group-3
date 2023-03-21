@@ -13,7 +13,7 @@
     long long int sz=0;
     int f = 1;
     int f1 = 0; //for checking new
-    int ln;
+    int ln,rl = -1;
     map<string,string> conv;
     map<string,set<string>> conv1;
     int find_comma(char* s){
@@ -232,9 +232,7 @@
     int tp1,tp2,ind=0,tp3;
     vector<string> v;
     map<string,string> conversion;
-
-
-
+    string ttt="";
     // 3AC Expressions
     vector<string> ac;
     map<string, int> varnum;
@@ -451,6 +449,7 @@
 %type<s>  Dummy9
 %type<s>  Dummy8
 %type<s>  Dummy10
+%type<s>  Dummy101
 %type<s>  BlockStatements
 %type<s>  BlockStatement
 %type<s>  LocalVariableDeclarationStatement
@@ -577,30 +576,30 @@ Public | Protected | Private
 Dummy6:
 { tp = tpp + " " + tp;}
 MethodHeader:
-Modifiers TypeParameters Type Dummy6 MethodDeclarator Throws 
-| Modifiers TypeParameters Type Dummy6 MethodDeclarator 
-|TypeParameters Type Dummy6 MethodDeclarator Throws 
-|TypeParameters Type Dummy6 MethodDeclarator
-| Modifiers TypeParameters Void Dummy Dummy6 MethodDeclarator Throws 
-| Modifiers TypeParameters Void Dummy Dummy6 MethodDeclarator 
-|TypeParameters Void Dummy Dummy6 MethodDeclarator Throws 
-|TypeParameters Void Dummy Dummy6 MethodDeclarator
-|Modifiers Type MethodDeclarator Throws 
-| Modifiers Type MethodDeclarator 
-|Type MethodDeclarator Throws 
-| Type MethodDeclarator
-| Modifiers Void Dummy MethodDeclarator Throws 
-| Modifiers Void Dummy MethodDeclarator 
-|Void Dummy MethodDeclarator Throws 
-| Void Dummy MethodDeclarator
-|Modifiers TypeParameters Type Dummy6 TypeArguments MethodDeclarator Throws 
-| Modifiers TypeParameters Type Dummy6 TypeArguments MethodDeclarator 
-|TypeParameters Type Dummy6 TypeArguments MethodDeclarator Throws 
-|TypeParameters Type Dummy6 TypeArguments MethodDeclarator
-|Modifiers Type TypeArguments MethodDeclarator Throws 
-| Modifiers Type TypeArguments MethodDeclarator 
-|Type TypeArguments MethodDeclarator Throws 
-| Type TypeArguments MethodDeclarator
+Modifiers TypeParameters Type Dummy6 MethodDeclarator Throws {$$.type = $3.type;}
+| Modifiers TypeParameters Type Dummy6 MethodDeclarator {$$.type = $3.type;}
+|TypeParameters Type Dummy6 MethodDeclarator Throws {$$.type = $2.type;}
+|TypeParameters Type Dummy6 MethodDeclarator {$$.type = $2.type;}
+| Modifiers TypeParameters Void Dummy Dummy6 MethodDeclarator Throws {$$.type = (char*)"Void";}
+| Modifiers TypeParameters Void Dummy Dummy6 MethodDeclarator {$$.type = (char*)"Void";}
+|TypeParameters Void Dummy Dummy6 MethodDeclarator Throws {$$.type = (char*)"Void";}
+|TypeParameters Void Dummy Dummy6 MethodDeclarator {$$.type = (char*)"Void";}
+|Modifiers Type MethodDeclarator Throws {$$.type = $2.type;}
+| Modifiers Type MethodDeclarator {$$.type = $2.type;}
+|Type MethodDeclarator Throws {$$.type = $1.type;}
+| Type MethodDeclarator {$$.type = $1.type;}
+| Modifiers Void Dummy MethodDeclarator Throws {$$.type = (char*)"Void";}
+| Modifiers Void Dummy MethodDeclarator {$$.type = (char*)"Void";}
+|Void Dummy MethodDeclarator Throws {$$.type = (char*)"Void";}
+| Void Dummy MethodDeclarator {$$.type = (char*)"Void";}
+|Modifiers TypeParameters Type Dummy6 TypeArguments MethodDeclarator Throws {$$.type = $3.type;}
+| Modifiers TypeParameters Type Dummy6 TypeArguments MethodDeclarator {$$.type = $3.type;}
+|TypeParameters Type Dummy6 TypeArguments MethodDeclarator Throws {$$.type = $2.type;} 
+|TypeParameters Type Dummy6 TypeArguments MethodDeclarator {$$.type = $2.type;}
+|Modifiers Type TypeArguments MethodDeclarator Throws {$$.type = $2.type;}
+| Modifiers Type TypeArguments MethodDeclarator {$$.type = $2.type;}
+|Type TypeArguments MethodDeclarator Throws {$$.type = $1.type;}
+| Type TypeArguments MethodDeclarator {$$.type = $1.type;}
 
 Dummy:
 {tp = "Void"; sz = 0;}
@@ -1088,6 +1087,11 @@ Expression {l = 0; $$.num = 1; $$.num1 = 0; ($$).type = ($1).type; ($$).str = ($
 | ArrayInitializer {l++; $$.num = $1.num; $$.num1 = $1.num1; ($$).type = ($1).type; ($$).str = ($1).str;}
 MethodDeclaration:
 MethodHeader MethodBody {
+    if(!compare_type($1.type,strdup(ttt.c_str())) && !compare_type1($1.type,strdup(ttt.c_str()))){
+        cerr << "Return type does not match in declaration at line " << rl <<endl;
+    }
+    ttt = "";
+    rl = -1;
     head = tables.top();
     tables.pop();
     offset = offsets.top();
@@ -1139,7 +1143,7 @@ ClassTypeList:
 ClassType
 | ClassTypeList Comma ClassType
 MethodBody:
-Block
+Block {($$).type = strdup(ttt.c_str());}
 | Semicol
 StaticInitializer:
 Static Block
@@ -1409,7 +1413,6 @@ VariableInitializers:
 VariableInitializer {$$.num = $1.num; ($$).str = ($1).str; ($$).type = ($1).type;
     if(!compare_type(strdup(tp.c_str()),$1.type)){
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
-        cerr<<"HERE";
     }
 }
 | VariableInitializers Comma VariableInitializer {
@@ -1420,20 +1423,7 @@ VariableInitializer {$$.num = $1.num; ($$).str = ($1).str; ($$).type = ($1).type
     ($$).type = $1.type;
 }
 Block:
-Lcb 
-{
-    if(!flag){
-        tables.push(head);
-        head = new SymbolTable(head); list_tables.push_back(head);
-        offsets.push(offset);
-        offset = 0;
-        scopes.push(scope);
-        scope = "Block in " + scope;
-        flagg = true;
-    }
-    flag = false;
-}
-BlockStatements
+Lcb Dummy101 BlockStatements
 {
     if(flagg){
         head = tables.top();
@@ -1446,7 +1436,22 @@ BlockStatements
     flagg = false;
 }
 Rcb
-| Lcb Rcb
+| Lcb Rcb {rl = yylineno;}
+
+Dummy101:
+{
+    if(!flag){
+        tables.push(head);
+        head = new SymbolTable(head); list_tables.push_back(head);
+        offsets.push(offset);
+        offset = 0;
+        scopes.push(scope);
+        scope = "Block in " + scope;
+        flagg = true;
+    }
+    flag = false;
+}
+
 BlockStatements:
 BlockStatement
 | BlockStatements BlockStatement
@@ -1726,7 +1731,8 @@ Break Identifier Semicol | Break Semicol
 ContinueStatement:
 Continue Identifier Semicol | Continue Semicol
 ReturnStatement:
-Return Expression Semicol | Return Semicol
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;}}
+ | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";}}
 ThrowStatement:
 Throw Expression Semicol
 SynchronizedStatement:
