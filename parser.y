@@ -46,11 +46,7 @@
     int compare_string(char *first, char *second) {
         while (tolower(*first) == tolower(*second)) {
             if (*first == '\0' || *second == '\0')
-                break;
-                break;
-                
                 break;  
-                
             first++;
             second++;
         }
@@ -601,14 +597,20 @@ Lb PrimitiveType Dims Rb UnaryExpression {
     if(!compare_type($2.type,$5.type) && !compare_type($5.type,$2.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
-    ($$).type = ($2).type;
+    ($$).type = strdup(($2).type);
+    if($5.type[0]>='A' && $5.type[0]<='Z'){
+        ($$).type[0] = toupper(($$).type[0]);
+    }
     ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); strcat($$.str,$5.str); 
 }
 | Lb PrimitiveType Rb UnaryExpression {
     if(!compare_type($2.type,$4.type) && !compare_type($4.type,$2.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
-    ($$).type = ($2).type;
+    ($$).type = strdup(($2).type);
+    if($4.type[0]>='A' && $4.type[0]<='Z'){
+        ($$).type[0] = toupper(($$).type[0]);
+    }
     ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str);
 }
 | Lb Expression Rb UnaryExpressionNotPlusMinus
@@ -1390,6 +1392,7 @@ VariableInitializers:
 VariableInitializer {$$.num = $1.num; ($$).str = ($1).str; ($$).type = ($1).type;
     if(!compare_type(strdup(tp.c_str()),$1.type)){
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
+        cerr<<"HERE";
     }
 }
 | VariableInitializers Comma VariableInitializer {
@@ -1438,6 +1441,7 @@ LocalVariableDeclaration Semicol
 LocalVariableDeclaration:
 Type TypeArguments VariableDeclarators
 | Type VariableDeclarators
+| Final_ Type VariableDeclarators
 Statement:
 StatementWithoutTrailingSubstatement
 | LabeledStatement
@@ -1781,12 +1785,12 @@ Expression {v.push_back($1.type);}
 
 
 ArrayCreationExpression:
-New PrimitiveType DimExprs Dims  
-| New PrimitiveType DimExprs
-| New ClassOrInterfaceType DimExprs Dims 
-| New ClassOrInterfaceType DimExprs
-| New PrimitiveType Dims ArrayInitializer
-| New ClassOrInterfaceType Dims ArrayInitializer
+New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str);}
+| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);}
+| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str);}
+| New ClassOrInterfaceType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);}
+| New PrimitiveType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str);}
+| New ClassOrInterfaceType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str);}
 
 DimExprs:
 DimExpr
@@ -1986,7 +1990,8 @@ LeftHandSide Dummy7 AssignmentOperator AssignmentExpression {
         }
         else{
                 ($$).type = widen(($1).type,($4).type);
-                ($$).str = ($4).str;
+                ($$).str = ($1).str;
+                strcat($$.str,$3.str); strcat($$.str,$4.str); 
         }
     }
 }
