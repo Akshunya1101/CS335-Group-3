@@ -8,6 +8,7 @@ public class test_3 {
         }
         float b,c ;
         int a = b + c ;
+        a -= 78;
         if( a + b) {
             a = d + e + f;
             if(false) {
@@ -27,6 +28,9 @@ public class test_3 {
                 t = + o;
                 t++;
                 --o;
+                for(char j = '0'; j > 'a'; j++) {
+                    char t = j;
+                }
             }
         }
 	}
