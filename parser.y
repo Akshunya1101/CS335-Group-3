@@ -205,7 +205,7 @@
                     if(ptr->table.find(lexeme)!=ptr->table.end()){
                         return ptr->table[lexeme];
                     }
-                    }
+                }
                 cerr<<"Undeclared "<< lexeme << " on line "<<yylineno<<endl;
                 return {};
             }
@@ -669,6 +669,8 @@ Lb PrimitiveType Dims Rb UnaryExpression {
     if($5.type[0]>='A' && $5.type[0]<='Z'){
         ($$).type[0] = toupper(($$).type[0]);
     }
+    if($5.dim1!=lev1.size())
+        cerr << "Incompatible Type Conversion in line " << yylineno<<endl;
     ($$).dim1 = ($5).dim1; 
     ($$).str = ($5).str;
 }
@@ -680,6 +682,8 @@ Lb PrimitiveType Dims Rb UnaryExpression {
     if($4.type[0]>='A' && $4.type[0]<='Z'){
         ($$).type[0] = toupper(($$).type[0]);
     }
+    if($4.dim1!=lev1.size())
+        cerr << "Incompatible Type Conversion in line " << yylineno<<endl;
     ($$).dim1 = ($4).dim1;
     ($$).str = ($4).str;
 }
@@ -1151,6 +1155,8 @@ VariableDeclaratorId {
         if(strcmp($3.type,(char*)"") && !compare_type($1.type,$3.type) && !compare_type1($1.type,$3.type)){
             cerr << "Types do not match on both the sides in line " << yylineno<<endl;
         }
+        if(l1!=$3.dim1+lev.size())
+            cerr << "Types do not match inside the array in line " << yylineno<<endl;
         head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev),$1.str); int xx = 1; if(!lev.empty()) {xx =  lev.rbegin()->second;}
           offset = offset + sz*xx; lev.clear(); lev1.clear(); l1 = 0;
     }
@@ -1691,7 +1697,7 @@ Switch {
     scope = "Switch Statement";
 }
 SwitchStatement:
-Dummy13 Lb Expression {$$ = $3;} Rb SwitchBlock {
+Dummy13 Lb Expression {$<s>$ = $3;} Rb SwitchBlock {
     head = tables.top();
     tables.pop();
     offset = offsets.top();
@@ -2018,6 +2024,79 @@ Name Lsb Expression Rsb {
     ($$).str = ($1).str; 
     ($$).type = ($1).type;
 }
+| Bool_Literal Lsb Expression Rsb {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{}),$1.str); ($$).dim1 = 0;
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+| String_Literal Lsb Expression Rsb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{}),$1.str); ($$).dim1 = 0;
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+| Char_Literal Lsb Expression Rsb {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{}),$1.str); ($$).dim1 = 0;
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+| Int_Literal Lsb Expression Rsb {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{}),$1.str); ($$).dim1 = 0;
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+| Tb Lsb Expression Rsb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{}),$1.str); ($$).dim1 = 0;
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+| Float_Literal Lsb Expression Rsb {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{}),$1.str); ($$).dim1 = 0;
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+| Null_Literal Lsb Expression Rsb {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{}),$1.str); ($$).dim1 = 0;
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+| This Lsb Expression Rsb {($$).str = ($1).str;
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+| Lb Expression Rb Lsb Expression Rsb {($$).type = ($2).type; ($$).str = ($2).str;
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+| ClassInstanceCreationExpression Lsb Expression Rsb {
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+| FieldAccess Lsb Expression Rsb {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+| MethodInvocation Lsb Expression Rsb {($$).type = ($1).type; ($$).str = ($1).str;
+    if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
+        cerr << "Array index cannot be of type " << $3.type << " in line " << yylineno<<endl;
+    } 
+    ind++;
+}
+
 
 PostfixExpression:
 Primary {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
@@ -2031,13 +2110,41 @@ PostfixExpression Dec {add_string($1.var, $1.var, "1", "-"); $$ = $1;}
 UnaryExpression:
 PreIncrementExpression
 | PreDecrementExpression
-| Plus UnaryExpression { $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "+");}
-| Minus UnaryExpression { $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "-");}
+| Plus UnaryExpression { 
+    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "+");
+    if(!compare_string($2.type,(char*)"float") && !compare_string($2.type,(char*)"double") && !compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
+        cerr << "Incompatible Operator " <<$1.str<< "with operand of type "<< $2.type << " in line " << yylineno<<endl;
+    } 
+    if($2.dim1!=0)
+        cerr << "Incompatible Operator " <<$1.str<< " in line " << yylineno<<endl;
+}
+| Minus UnaryExpression {
+     $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "-");
+     if(!compare_string($2.type,(char*)"float") && !compare_string($2.type,(char*)"double") && !compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
+        cerr << "Incompatible Operator " <<$1.str<< "with operand of type "<< $2.type << " in line " << yylineno<<endl;
+    } 
+    if($2.dim1!=0)
+        cerr << "Incompatible Operator " <<$1.str<< " in line " << yylineno<<endl;
+}
 | UnaryExpressionNotPlusMinus {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 PreIncrementExpression:
-Inc UnaryExpression {add_string($2.var, $2.var, "1", "+"); $$ = $2;}
+Inc UnaryExpression {
+    if(!compare_string($2.type,(char*)"float") && !compare_string($2.type,(char*)"double") && !compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
+        cerr << "Incompatible Operator " <<$1.str<< "with operand of type "<< $2.type << " in line " << yylineno<<endl;
+    } 
+    if($2.dim1!=0)
+        cerr << "Incompatible Operator " <<$1.str<< " in line " << yylineno<<endl;
+    add_string($2.var, $2.var, "1", "+"); $$ = $2;
+}
 PreDecrementExpression:
-Dec UnaryExpression {add_string($2.var, $2.var, "1", "-"); $$ = $2;}
+Dec UnaryExpression {
+    if(!compare_string($2.type,(char*)"float") && !compare_string($2.type,(char*)"double") && !compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
+        cerr << "Incompatible Operator " <<$1.str<< "with operand of type "<< $2.type << " in line " << yylineno<<endl;
+    } 
+    if($2.dim1!=0)
+        cerr << "Incompatible Operator " <<$1.str<< " in line " << yylineno<<endl;
+    add_string($2.var, $2.var, "1", "-"); $$ = $2;
+}
 UnaryExpressionNotPlusMinus:
 PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 | Tilde UnaryExpression {
@@ -2045,12 +2152,16 @@ PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).
     if(!compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$1.str<< "with operand of type "<< $2.type << " in line " << yylineno<<endl;
     } 
+    if($2.dim1!=0)
+        cerr << "Incompatible Operator " <<$1.str<< " in line " << yylineno<<endl;
 }
 | Not UnaryExpression {
     ($$).type = ($2).type; ($$).var = ($2).var ; ($$).str = ($2).str;
     if(!compare_string($2.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$1.str<< "with operand of type "<< $2.type << " in line " << yylineno<<endl;
     } 
+    if($2.dim1!=0)
+        cerr << "Incompatible Operator " <<$1.str<< " in line " << yylineno<<endl;
 }
 | CastExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 MultiplicativeExpression:
@@ -2062,7 +2173,7 @@ UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var
     if(compare_string($1.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
@@ -2074,7 +2185,7 @@ UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var
     if(compare_string($1.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
@@ -2086,7 +2197,7 @@ UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var
     if(compare_string($1.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
@@ -2100,7 +2211,7 @@ MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var =
     if(compare_string($1.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]);
@@ -2116,7 +2227,7 @@ MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var =
     if(compare_string($1.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
@@ -2129,7 +2240,7 @@ AdditiveExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     || (!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type))){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
@@ -2143,7 +2254,7 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if(compare_string($1.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($3).str;
@@ -2155,7 +2266,7 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if(compare_string($1.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($3).str;
@@ -2167,7 +2278,7 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if(compare_string($1.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($3).str;
@@ -2192,7 +2303,7 @@ EqualityExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     || (!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type))){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
@@ -2205,7 +2316,7 @@ AndExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     || (!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type))){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
@@ -2218,7 +2329,7 @@ ExclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     || (!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type))){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
@@ -2229,7 +2340,7 @@ InclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if(!compare_type($1.type,(char*)"boolean") || !compare_type($3.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).type = (char*)"boolean"; ($$).str = ($3).str;
@@ -2240,7 +2351,7 @@ ConditionalAndExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if(!compare_type($1.type,(char*)"boolean") || !compare_type($3.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< "with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
     }
-    if($1.dim1!=$3.dim1)
+    if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).type = (char*)"boolean"; ($$).str = ($3).str;
