@@ -1,10 +1,49 @@
-test:    Identifier    Class    1    0    Global    
+test:    Identifier    Class    2    0    Global    
 
-String:    Identifier    Class    2    0    test Class    
-doublee:    Identifier    Method,character    5    0    test Class    integer character 
+String:    Identifier    Class    3    0    test Class    
+main:    Identifier    Method,Void    6    0    test Class    integer 
 
 
-arr:    Identifier    array(integer)    6    6    doublee Method    3 
-x:    Identifier    integer    5    0    doublee Method    
-y:    Identifier    character    5    4    doublee Method    
+'a':    Char_Literal    Character    9    8    main Method    
+'b':    Char_Literal    Character    9    8    main Method    
+0:    Int_Literal    Integer    11    12    main Method    
+0:    Int_Literal    Integer    11    12    main Method    
+0:    Int_Literal    Integer    15    24    main Method    
+0:    Int_Literal    Integer    15    24    main Method    
+0:    Int_Literal    Integer    18    27    main Method    
+0:    Int_Literal    Integer    21    31    main Method    
+0:    Int_Literal    Integer    26    31    main Method    
+1:    Int_Literal    Integer    8    4    main Method    
+1:    Int_Literal    Integer    20    27    main Method    
+1:    Int_Literal    Integer    26    31    main Method    
+1:    Int_Literal    Integer    31    31    main Method    
+1:    Int_Literal    Integer    31    31    main Method    
+10:    Int_Literal    Integer    15    24    main Method    
+100:    Int_Literal    Integer    10    10    main Method    
+1000:    Int_Literal    Integer    18    27    main Method    
+1111:    Int_Literal    Integer    18    27    main Method    
+11111:    Int_Literal    Integer    19    27    main Method    
+12:    Int_Literal    Integer    15    24    main Method    
+2:    Int_Literal    Integer    11    12    main Method    
+2:    Int_Literal    Integer    11    12    main Method    
+2:    Int_Literal    Integer    20    27    main Method    
+3:    Int_Literal    Integer    11    12    main Method    
+3:    Int_Literal    Integer    20    27    main Method    
+3:    Int_Literal    Integer    21    31    main Method    
+3:    Int_Literal    Integer    26    31    main Method    
+4:    Int_Literal    Integer    11    12    main Method    
+5:    Int_Literal    Integer    11    12    main Method    
+6:    Int_Literal    Integer    11    12    main Method    
+7:    Int_Literal    Integer    11    12    main Method    
+8:    Int_Literal    Integer    12    20    main Method    
+9:    Int_Literal    Integer    12    20    main Method    
+a:    Identifier    character    10    10    main Method    
+args:    Identifier    integer    6    0    main Method    
+arr:    Identifier    array(array(integer))    31    31    main Method    1 1 
+arr1:    Identifier    array(array(integer))    11    12    main Method    2 4 
+arr2:    Identifier    array(array(integer))    8    4    main Method    1 1 
+arr3:    Identifier    array(character)    9    8    main Method    2 
+arr4:    Identifier    array(array(array(array(integer))))    12    20    main Method    1 1 1 2 
+arr6:    Identifier    array(integer)    15    24    main Method    3 
+arr9:    Identifier    array(integer)    20    27    main Method    3 
 
