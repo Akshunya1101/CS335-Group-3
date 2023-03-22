@@ -180,23 +180,21 @@
             }
             void check(Entry* e,string lexeme){
                 int count = 0;
+                int flag = 0;
                 for(int i=0;i<table[lexeme].size();i++){
                     if(e->Scope == table[lexeme][i].Scope && e->Params == table[lexeme][i].Params){
                         count++;
+                        if(table[lexeme][i].Type == "Boolean" || table[lexeme][i].Type == "string" || table[lexeme][i].Type == "Character"
+                        || table[lexeme][i].Type == "Integer" || table[lexeme][i].Type == "Float" || table[lexeme][i].Type == "Null")
+                            flag = 1;
                     }
                 }
-                if(count > 1){
+                if(count > 1 && flag == 0){
                     cerr<<"Redeclaration of "<<lexeme<<" in line "<<e->Line<<endl;
                 }
             }
             void check1(int term){
-                if(lev.find(l)==lev.end()){
-                    lev[l] = term;
-                }
-                else if(lev[l]!=term){
-                    cerr<<"Array not dimensioned properly in line "<<yylineno<<endl;
-                }
-                sz = max((int)sz,term);
+                    lev[l] = max(lev[l],term);
             }
             vector<Entry> get(string lexeme){
                 for(auto ptr=this; ptr!=NULL; ptr=ptr->parent){
@@ -227,11 +225,25 @@
                 //cerr << "Unappropriate parameters in line "<<yylineno<<endl;
                 return Entry("","",-1,-1,"",{},map<int,int>());
             }
+            
             void print(){
                 for(auto it=table.begin();it!=table.end();it++){
                     for(auto it1:it->second){
+                        if(it1.Type == "Boolean" || it1.Type == "string" || it1.Type == "Character" || it1.Type == "Integer" || it1.Type == "Float" || it1.Type == "Null")
+                            continue;
                         cout<<it->first<<":    ";
                         it1.print_entry();
+                    }
+                }
+            }
+            void remove(string lexeme){
+                vector<Entry> c = table[lexeme];
+                for(auto it = c.begin(); it!=c.end();){
+                    if(it->Params.empty()){
+                        it = c.erase(it);
+                    }
+                    else{
+                        it++;
                     }
                 }
             }
@@ -673,10 +685,14 @@ PrimitiveType:
 NumericType {
     ($$).type = ($1).type;
     ($$).size = ($1).size;
+    tp = ($$).type;
+    sz = ($$).size;
 }
 | Bboolean {
     ($$).type = (char*)"boolean";
     ($$).size = 1;
+    tp = ($$).type;
+    sz = ($$).size;
 }
 NumericType:
 IntegralType {
@@ -1082,7 +1098,7 @@ VariableDeclaratorId {
     }
     ($$).type = ($1).type;
     ($$).str = ($1).str;
-    head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1),$1.str); l1 = 0; offset = offset + sz;
+    head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1),$1.str); if(!l1){offset = offset + sz;}; l1 = 0; lev.clear(); lev1.clear(); 
 }
 | VariableDeclaratorId Eq VariableInitializer {
     if(l1 != lev.size() && l1 != lev1.size()){
@@ -1092,7 +1108,7 @@ VariableDeclaratorId {
             }
             else{
                 vector<Entry> c1 = head->get($3.str); map<int,int> sz1 = head->get1(c1,{}).Dim;
-                head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},sz1),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + sz;
+                head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},sz1),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + sz*(sz1.size());
             }
         }
         else
@@ -1102,7 +1118,8 @@ VariableDeclaratorId {
         if(strcmp($3.type,(char*)"") && !compare_type($1.type,$3.type) && !compare_type1($1.type,$3.type)){
             cerr << "Types do not match on both the sides in line " << yylineno<<endl;
         }
-        head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + sz;
+        head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev),$1.str); int xx = 1; if(!lev.empty()) {xx =  lev.rbegin()->second;}
+          offset = offset + sz*xx; lev.clear(); lev1.clear(); l1 = 0;
     }
     else{
         map<int,int> m1;
@@ -1114,7 +1131,7 @@ VariableDeclaratorId {
         if(!compare_type($1.type,$3.type) && !compare_type1($1.type,$3.type)){
             cerr << "Types do not match on both the sides in line " << yylineno<<endl;
         }
-        head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + term;
+        head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + term*sz;
     }
     ($$).type = widen(($1).type,($3).type);
     ($$).str = ($1).str;
@@ -1811,7 +1828,7 @@ Finally:
 finally Block
 Primary:
 PrimaryNoNewArray {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
-| ArrayCreationExpression {($$).type = ($1).type; ($$).str = ($1).str;}
+| ArrayCreationExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
 PrimaryNoNewArray:
 Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{}),$1.str); ($$).dim1 = 0;}
 | String_Literal {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{}),$1.str); ($$).dim1 = 0;}
@@ -1860,12 +1877,21 @@ Expression {v.push_back($1.type);}
 
 
 ArrayCreationExpression:
-New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str);}
-| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);}
-| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str);}
-| New ClassOrInterfaceType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);}
-| New PrimitiveType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str);}
-| New ClassOrInterfaceType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str);}
+New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();}
+| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size();}
+| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();}
+| New ClassOrInterfaceType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size();}
+| New PrimitiveType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
+    if(lev.size()!=lev1.size()){
+        cerr << "Inappropriate types in line " << yylineno<<endl;  
+    }
+
+}
+| New ClassOrInterfaceType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
+    if(lev.size()!=lev1.size()){
+        cerr << "Inappropriate types in line " << yylineno<<endl;  
+    }
+}
 
 DimExprs:
 DimExpr
@@ -2176,10 +2202,28 @@ LeftHandSide AssignmentOperator AssignmentExpression {
     else{
             if($1.dim1 != $3.dim1)
                 cerr << "Types do not match inside the array in line " << yylineno<<endl;
+            else if(lev1.size()){
+                head->remove($1.str);
+                map<int,int> m1;
+                int term = 1;
+                if(lev1[0]<=0){
+                    m1 = lev;
+                    if(!m1.empty())
+                        term = m1.rbegin()->second;
+                }
+                else{
+                    for(int i=0;i<lev1.size();i++){
+                        m1[i] = lev1[lev1.size()-1-i]*term;
+                        term = m1[i];
+                    }
+                }
+                head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1); offset = offset + term*sz;
+            }
             ($$).type = widen(($1).type,($3).type);
             ($$).str = ($1).str;
             $$.dim1 = $1.dim1;
     }
+    lev.clear(); lev1.clear(); l1 = 0;
 }
 LeftHandSide:
 Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;}
