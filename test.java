@@ -1,6 +1,7 @@
-public class test
-{
-    class String{
+public class test_3 {
+    public static void main(String[] args)
+	{
+
 
         {
             int x ;

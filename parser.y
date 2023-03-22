@@ -2031,8 +2031,8 @@ PostfixExpression Dec {add_string($1.var, $1.var, "1", "-"); $$ = $1;}
 UnaryExpression:
 PreIncrementExpression
 | PreDecrementExpression
-| Plus UnaryExpression { $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "\b", $2.var, "+");}
-| Minus UnaryExpression { $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "\b", $2.var, "-");}
+| Plus UnaryExpression { $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "+");}
+| Minus UnaryExpression { $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "-");}
 | UnaryExpressionNotPlusMinus {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 PreIncrementExpression:
 Inc UnaryExpression {add_string($2.var, $2.var, "1", "+"); $$ = $2;}
@@ -2344,6 +2344,6 @@ int main(){
 }
 
 int yyerror(const char *s) {
-    cerr<<s<<' '<<yylineno<<endl;
+    cerr<<s<<" in line number "<<yylineno<<endl;
     return 0;
 }

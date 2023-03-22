@@ -6,10 +6,6 @@ a:    Identifier    integer    10    8    main Method
 args:    Identifier    String    2    0    main Method    
 b:    Identifier    float    9    0    main Method    
 c:    Identifier    float    9    4    main Method    
-d:    Identifier    integer    10    12    main Method    
-e:    Identifier    integer    10    16    main Method    
-f:    Identifier    integer    10    20    main Method    
-k:    Identifier    integer    20    24    main Method    
 
 x:    Identifier    integer    7    0    Block in main Method    
 
@@ -18,8 +14,8 @@ c:    Identifier    character    14    0    If Statement
 
 
 
-c:    Identifier    character    24    0    For Loop    
-t:    Identifier    integer    25    2    For Loop    
+i:    Identifier    integer    23    0    For Loop    
+k:    Identifier    float    24    4    For Loop    
 
 t1 = b +float c;
 If1:
@@ -27,8 +23,8 @@ t2 = a +float b;
 if t2 goto IfBody1
 goto EndIf1
 IfBody1:
-t3 = d +float e;
-t4 = t3 +float f;
+t3 = d + e;
+t4 = t3 + f;
 If2:
 if false goto IfBody2
 goto EndIf2
@@ -36,7 +32,7 @@ IfBody2:
 EndIf2:
 EndIf1:
 Else1:
-t5 = d * g;
+t5 = dfgth * g;
 EndElse1:
 While1:
 t6 = a +float b;
@@ -46,13 +42,18 @@ WhileBody1:
 t7 = d - f;
 For1:
 ForExpression1:
-if true goto ForBody1
+t8 = i < a;
+if t8 goto ForBody1
 goto EndFor1
 ForUpdate1:
-t8 = k - 1;
+i = i + 1;
 goto ForExpression1
 ForBody1:
-t9 = 6 % 2;
+k = k - 1;
+t9 =  - k;
+t10 =  + o;
+t = t + 1;
+o = o - 1;
 goto ForUpdate1
 EndFor1:
 goto While1
