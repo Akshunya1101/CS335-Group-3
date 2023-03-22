@@ -16,6 +16,10 @@
     int ln,rl = -1;
     map<string,string> conv;
     map<string,set<string>> conv1;
+    string Type_cast(string t, char*var){
+        string s = var ;
+        return "cast_to_" + t + "(" + s + ")" ;
+    }
     int find_comma(char* s){
         int i;
         for(i=0;i<strlen(s);i++){
@@ -71,6 +75,54 @@
             return tt1;
         }
         return (char*)"";
+    }
+    int widen2(char* tt1,char* tt2){
+        if(!strlen(tt1))
+            return 0;
+        if(!strlen(tt2))
+            return 1;
+        string t1(tt1),t2(tt2);
+        string t11(t1),t22(t2);
+        if(t1[0]>='A' && t1[0]<='Z')
+            t1[0]+=32;
+        if(t2[0]>='A' && t2[0]<='Z')
+            t2[0]+=32;
+        if(t11[0]>='A' && t11[0]<='Z')
+            t11[0]+=32;
+        if(t22[0]>='A' && t22[0]<='Z')
+            t22[0]+=32;
+        int f1=0,f2=0;
+        while(t11!=""){
+            if(t11 == t2){
+                f1=1;
+                break;
+                //return tt2;
+            }
+            t11 = conv[t11];
+        }
+        while(t22!=""){
+            if(t22 == t1){
+                f2 = 1;
+                break;
+                //return tt1;
+            }
+            t22 = conv[t22];
+        }
+        if(f1 && f2){
+            if(tt2 == tt1 || tt2[0]>='a' && tt2[0]<='z'){
+                return -1;
+            }
+            else{
+                return 1;
+            }
+        }
+        else if(f1){
+            return 0;
+        }
+        else if(f2){
+            return 1;
+        }
+        return -1 ;
     }
     int compare_string(char *first, char *second) {
         while (tolower(*first) == tolower(*second)) {
@@ -574,7 +626,6 @@
 %type<s>  AssignmentExpression
 %type<s>  Assignment
 %type<s>  LeftHandSide
-%type<s>  AssignmentOperator
 %type<s>  Expression
 %type<s>  ConstantExpression
 %type<s>  TypeParameters
@@ -744,6 +795,10 @@ Bbyte {
 | Char {
     ($$).size = 2;
     ($$).type = (char*)"character";
+}
+| Var {
+    ($$).size = 4;
+    ($$).type = (char*)"var";
 }
 FloatingPointType:
 Float {
@@ -1909,7 +1964,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 | Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{}),$1.str); ($$).dim1 = 0;}
 | Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{}),$1.str); ($$).dim1 = 0;}
 | This {($$).str = ($1).str;}
-| Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str;}
+| Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;}
 | ClassInstanceCreationExpression
 | FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
 | MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str;}
@@ -2176,7 +2231,22 @@ UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var
     if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
+    ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 | MultiplicativeExpression Div UnaryExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
@@ -2188,7 +2258,22 @@ UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var
     if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
+    ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 | MultiplicativeExpression Mod UnaryExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
@@ -2200,7 +2285,22 @@ UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var
     if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
+    ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 AdditiveExpression:
 MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var ;}
@@ -2215,9 +2315,20 @@ MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var =
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]);
-    char*s1 = (char*)"+" ;
-    if(compare_string(($1).type, ($3).type)) {string t1 = ($1).type; string temp = s1; temp = temp + t1; add_string(($$).var, ($1).var, ($3).var, temp) ;}
-    else {string temp = s1; temp = temp + "float"; add_string(($$).var, ($1).var, ($3).var, temp) ; ($$).type = (char*)"float";}
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 | AdditiveExpression Minus MultiplicativeExpression { 
@@ -2230,7 +2341,22 @@ MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var =
     if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
+    ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 ShiftExpression:
 AdditiveExpression {($$).type = ($1).type; ($$).str = ($1).str;}
@@ -2243,7 +2369,22 @@ AdditiveExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
+    ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 RelationalExpression:
 ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
@@ -2257,7 +2398,22 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($3).str;
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
+    ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 | RelationalExpression Gt ShiftExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
@@ -2269,7 +2425,22 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($3).str;
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
+    ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 | RelationalExpression Relop ShiftExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
@@ -2281,7 +2452,22 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if($1.dim1!=$3.dim1 || $1.dim1!=0)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($3).str;
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
+    ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 | RelationalExpression Instanceof ReferenceType
 EqualityExpression:
@@ -2293,7 +2479,22 @@ RelationalExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if($1.dim1!=$3.dim1)
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($3).str;
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
+    ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 AndExpression:
 EqualityExpression {($$).type = ($1).type; ($$).str = ($1).str;}
@@ -2368,10 +2569,10 @@ ConditionalOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 =
     ($$).type = widen(($3).type,($5).type); ($$).str = ($3).str;
 }
 AssignmentExpression:
-ConditionalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
-| Assignment {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
+ConditionalExpression //{($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
+| Assignment //{($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
 Assignment:
-LeftHandSide AssignmentOperator AssignmentExpression {
+LeftHandSide Eq AssignmentExpression {
     if(!compare_type($1.type,$3.type) && !compare_type1($1.type,$3.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
@@ -2400,14 +2601,48 @@ LeftHandSide AssignmentOperator AssignmentExpression {
             $$.dim1 = $1.dim1;
     }
     lev.clear(); lev1.clear(); l1 = 0;
+    string temp1($1.var), temp2($3.var);
+    ac.pb(temp1 + " = " + temp2 + ";");
+}
+| 
+LeftHandSide Eqq AssignmentExpression {
+    if(!compare_type($1.type,$3.type) && !compare_type1($1.type,$3.type)){
+        cerr << "Types do not match on both the sides in line " << yylineno<<endl;
+    }
+    else{
+            if($1.dim1 != $3.dim1)
+                cerr << "Types do not match inside the array in line " << yylineno<<endl;
+            else if(lev1.size()){
+                head->remove($1.str);
+                map<int,int> m1;
+                int term = 1;
+                if(lev1[0]<=0){
+                    m1 = lev;
+                    if(!m1.empty())
+                        term = m1.rbegin()->second;
+                }
+                else{
+                    for(int i=0;i<lev1.size();i++){
+                        m1[i] = lev1[lev1.size()-1-i]*term;
+                        term = m1[i];
+                    }
+                }
+                head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1); offset = offset + term*sz;
+            }
+            ($$).type = widen(($1).type,($3).type);
+            ($$).str = ($1).str;
+            $$.dim1 = $1.dim1;
+    }
+    lev.clear(); lev1.clear(); l1 = 0;
+    string temp1($1.var), temp2($2.var), temp3($3.var);
+    temp2.pop_back();
+    add_string(temp1, temp1, temp3, temp2);
 }
 LeftHandSide:
 Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;}
 |FieldAccess {($$).type = ($1).type; ($$).dim1 = ($1).dim1;}
 |ArrayAccess {($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{}).Dim;
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0;}
-AssignmentOperator:
-Eqq | Eq
 Expression:
 AssignmentExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
 ConstantExpression:

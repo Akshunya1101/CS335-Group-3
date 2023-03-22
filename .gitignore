@@ -11,3 +11,4 @@ a.out
 *.ps
 *.png
 output.txt
+*.java
