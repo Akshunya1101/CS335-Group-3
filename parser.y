@@ -626,7 +626,6 @@
 %type<s>  AssignmentExpression
 %type<s>  Assignment
 %type<s>  LeftHandSide
-%type<s>  AssignmentOperator
 %type<s>  Expression
 %type<s>  ConstantExpression
 %type<s>  TypeParameters
@@ -2459,10 +2458,10 @@ ConditionalOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 =
     ($$).type = widen(($3).type,($5).type); ($$).str = ($3).str;
 }
 AssignmentExpression:
-ConditionalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
-| Assignment {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
+ConditionalExpression //{($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
+| Assignment //{($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
 Assignment:
-LeftHandSide AssignmentOperator AssignmentExpression {
+LeftHandSide Eq AssignmentExpression {
     if(!compare_type($1.type,$3.type) && !compare_type1($1.type,$3.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
@@ -2491,14 +2490,48 @@ LeftHandSide AssignmentOperator AssignmentExpression {
             $$.dim1 = $1.dim1;
     }
     lev.clear(); lev1.clear(); l1 = 0;
+    string temp1($1.var), temp2($3.var);
+    ac.pb(temp1 + " = " + temp2 + ";");
+}
+| 
+LeftHandSide Eqq AssignmentExpression {
+    if(!compare_type($1.type,$3.type) && !compare_type1($1.type,$3.type)){
+        cerr << "Types do not match on both the sides in line " << yylineno<<endl;
+    }
+    else{
+            if($1.dim1 != $3.dim1)
+                cerr << "Types do not match inside the array in line " << yylineno<<endl;
+            else if(lev1.size()){
+                head->remove($1.str);
+                map<int,int> m1;
+                int term = 1;
+                if(lev1[0]<=0){
+                    m1 = lev;
+                    if(!m1.empty())
+                        term = m1.rbegin()->second;
+                }
+                else{
+                    for(int i=0;i<lev1.size();i++){
+                        m1[i] = lev1[lev1.size()-1-i]*term;
+                        term = m1[i];
+                    }
+                }
+                head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1); offset = offset + term*sz;
+            }
+            ($$).type = widen(($1).type,($3).type);
+            ($$).str = ($1).str;
+            $$.dim1 = $1.dim1;
+    }
+    lev.clear(); lev1.clear(); l1 = 0;
+    string temp1($1.var), temp2($2.var), temp3($3.var);
+    temp2.pop_back();
+    add_string(temp1, temp1, temp3, temp2);
 }
 LeftHandSide:
 Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;}
 |FieldAccess {($$).type = ($1).type; ($$).dim1 = ($1).dim1;}
 |ArrayAccess {($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{}).Dim;
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0;}
-AssignmentOperator:
-Eqq | Eq
 Expression:
 AssignmentExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
 ConstantExpression:
