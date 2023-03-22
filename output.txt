@@ -1,42 +1,59 @@
-parser.y:379.11-17: warning: symbol ‘Dummy11’ is used, but is not defined as a token and has no rules [-Wother]
-  379 | %type<s>  Dummy11
-      |           ^~~~~~~
-parser.y:615.2: warning: empty rule for typed nonterminal, and no action [-Wother]
-  615 | | 
-      |  ^
-parser.y:1549.2: warning: empty rule for typed nonterminal, and no action [-Wother]
- 1549 | |
-      |  ^
-parser.y:1552.2: warning: empty rule for typed nonterminal, and no action [-Wother]
- 1552 | |
-      |  ^
-parser.y:1555.2: warning: empty rule for typed nonterminal, and no action [-Wother]
- 1555 | |
-      |  ^
-parser.y:1820.12: warning: empty rule for typed nonterminal, and no action [-Wother]
- 1820 | TypeBound : | Extends ClassOrInterfaceType AdditionalBounds;
-      |            ^
-parser.y:1821.18: warning: empty rule for typed nonterminal, and no action [-Wother]
- 1821 | AdditionalBounds: | AdditionalBounds AdditionalBound
-      |                  ^
-parser.y: warning: 1 nonterminal useless in grammar [-Wother]
-parser.y:379.11-17: warning: nonterminal useless in grammar: Dummy11 [-Wother]
-  379 | %type<s>  Dummy11
-      |           ^~~~~~~
-parser.y: warning: 2 reduce/reduce conflicts [-Wconflicts-rr]
-parser.y: warning: reduce/reduce conflict on token Else [-Wcounterexamples]
-Productions leading up to the conflict state found.  Still finding a possible unifying counterexample...time limit exceeded: 6.000000
-  First example: Dummy8 StatementWithoutTrailingSubstatement •
-  First reduce derivation
-    IfThenStatement
-    ↳ 281: Statement
-           ↳ 247: IfThenStatement
-                  ↳ 281: Dummy8 Statement
-                                ↳ 245: StatementWithoutTrailingSubstatement •
-  Second example: StatementWithoutTrailingSubstatement •
-  Second reduce derivation
-    IfThenStatement
-    ↳ 281: StatementNoShortIf                            Statement
-           ↳ 251: StatementWithoutTrailingSubstatement • ↳ 248: ε
-parser.y: warning: reduce/reduce conflict on token Else [-Wcounterexamples]
-Productions leading up to the conflict state found.  Still finding a possible unifying counterexample...
+test_3:    Identifier    Class    1    0    Global    
+
+main:    Identifier    Method,Void    2    0    test_3 Class    String 
+
+a:    Identifier    integer    10    8    main Method    
+args:    Identifier    String    2    0    main Method    
+b:    Identifier    float    9    0    main Method    
+c:    Identifier    float    9    4    main Method    
+d:    Identifier    integer    10    12    main Method    
+e:    Identifier    integer    10    16    main Method    
+f:    Identifier    integer    10    20    main Method    
+k:    Identifier    integer    20    24    main Method    
+
+x:    Identifier    integer    7    0    Block in main Method    
+
+
+c:    Identifier    character    14    0    If Statement    
+
+
+
+c:    Identifier    character    24    0    For Loop    
+t:    Identifier    integer    25    2    For Loop    
+
+t1 = b +float c;
+If1:
+t2 = a +float b;
+if t2 goto IfBody1
+goto EndIf1
+IfBody1:
+t3 = d +float e;
+t4 = t3 +float f;
+If2:
+if false goto IfBody2
+goto EndIf2
+IfBody2:
+EndIf2:
+EndIf1:
+Else1:
+t5 = d * g;
+EndElse1:
+While1:
+t6 = a +float b;
+if t6 goto WhileBody1
+goto EndWhile1
+WhileBody1:
+t7 = d - f;
+For1:
+ForExpression1:
+if true goto ForBody1
+goto EndFor1
+ForUpdate1:
+t8 = k - 1;
+goto ForExpression1
+ForBody1:
+t9 = 6 % 2;
+goto ForUpdate1
+EndFor1:
+goto While1
+EndWhile1:

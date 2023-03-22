@@ -10,6 +10,9 @@ public class test_3 {
         int a = b + c ;
         if( a + b) {
             a = d + e + f;
+            if(false) {
+                char c = 9;
+            }
         }
         else {
             b = dfgth * g;
@@ -17,6 +20,14 @@ public class test_3 {
         while(a + b) {
             c = d - f;
             c -= a;
+            for(int i=0; i < a; i++) {
+                float k = 1.5;
+                k--;
+                l = - k;
+                t = + o;
+                t++;
+                --o;
+            }
         }
 	}
 }

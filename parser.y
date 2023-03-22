@@ -48,6 +48,11 @@
             if (*first == '\0' || *second == '\0')
                 break;
                 break;
+                break;
+                
+                break;  
+                break; 
+                break;
                 
                 break;  
                 
@@ -137,9 +142,11 @@
             map<string,vector<Entry>> table;
             int level;
             SymbolTable* parent;
+            string scope_name = "Global";
+            string scope_num = "";
             SymbolTable(){
             }
-            SymbolTable(SymbolTable* prev){
+            SymbolTable(SymbolTable* prev, string scp, string scp_num){
                 if(prev){
                     parent = prev;
                     level = prev->level+1;
@@ -148,6 +155,8 @@
                     parent = NULL;
                     level = 0;
                 }
+                scope_name = scp + scp_num;
+                scope_num = scp_num;
             }
             Entry* set(string lexeme, string token, string type, int line, long int offset, string scope, vector<string> params, map<int,int> dim){
                 table[lexeme].push_back(Entry(token,type,line,offset,scope,params,dim));
@@ -178,7 +187,7 @@
                     if(ptr->table.find(lexeme)!=ptr->table.end()){
                         return ptr->table[lexeme];
                     }
-                }
+                    }
                 cerr<<"Undeclared "<< lexeme << " on line "<<yylineno<<endl;
                 return {};
             }
@@ -205,7 +214,7 @@
     long int offset = 0;
     stack<SymbolTable*> tables;
     stack<long int> offsets;
-    SymbolTable* head = new SymbolTable(NULL);
+    SymbolTable* head = new SymbolTable(NULL, "Global", "");
     vector<SymbolTable*> list_tables(1,head);
     stack<string> scopes;
     string scope = "Global";
@@ -225,7 +234,7 @@
     // 3AC Expressions
     vector<string> ac;
     map<string, int> varnum;
-    void add_string(string exp1, string exp2, string exp3, string op) {
+    void add_expression(string exp1, string exp2, string exp3, string op) {
         string expr = exp1 + " = " + exp2 + " " + op + " " + exp3 + ";";
         ac.pb(expr);
         return;
@@ -240,16 +249,27 @@
 
         return charArray;
     }
-    void control_flow(string exp, string blockstart, string endstat) {
-        ac.pb("if " + exp + " goto " + blockstart);
-        ac.pb("goto " + endstat);
-        ac.pb(blockstart + ":");
+    // void control_flow(string exp, string blockstart, string endstat) {
+    //     ac.pb("if " + exp + " goto " + blockstart);
+    //     ac.pb("goto " + endstat);
+    //     ac.pb(blockstart + ":");
+    //     return;
+    // }
+    // void end_control_flow(string cfstart, string nextblock) {
+    //     ac.pb("goto " + cfstart);
+    //     ac.pb(nextblock + ":");
+    //     return;
+    // }
+    void add_label(string label) {
+        ac.pb(label + ":");
         return;
     }
-    void end_control_flow(string cfstart, string nextblock) {
-        ac.pb("goto " + cfstart);
-        ac.pb(nextblock + ":");
+    void if_goto(string exp, string loc) {
+        ac.pb("if " + exp + " goto " + loc);
         return;
+    }
+    void go_to(string loc) {
+        ac.pb("goto " + loc);
     }
 %}
 %union {
@@ -438,6 +458,8 @@
 %type<s>  Dummy9
 %type<s>  Dummy8
 %type<s>  Dummy10
+%type<s>  Dummy11
+%type<s>  Dummy12
 %type<s>  BlockStatements
 %type<s>  BlockStatement
 %type<s>  LocalVariableDeclarationStatement
@@ -714,7 +736,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -732,7 +755,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -750,7 +774,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -768,7 +793,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -786,7 +812,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -804,7 +831,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -822,7 +850,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -840,7 +869,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -858,7 +888,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -876,7 +907,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -894,7 +926,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -912,7 +945,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -930,7 +964,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -948,7 +983,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -966,7 +1002,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($3.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -984,7 +1021,8 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     func = head->set($2.str,"Identifier","Class",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1082,7 +1120,8 @@ Identifier Lb {
     func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev);
     offset += sz;
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($1.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1095,7 +1134,8 @@ Identifier Lb {
     func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev);
     offset += sz;
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($1.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1162,7 +1202,8 @@ SimpleName Lb {
     tp = "Constructor"; sz = 0; 
     func = head->set($1.type,"Identifier",tp,yylineno,offset,scope,{},lev);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($1.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1174,7 +1215,8 @@ SimpleName Lb {
     sz = 0;
     func = head->set($1.type,"Identifier",tp,yylineno,offset,scope,{},lev);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($1.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1185,7 +1227,8 @@ SimpleName Lb {
 |TypeParameters SimpleName Lb {tp = "Constructor"; sz = 0; 
     func = head->set($2.type,"Identifier",tp,yylineno,offset,scope,{},lev);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1197,7 +1240,8 @@ SimpleName Lb {
     sz = 0;
     func = head->set($2.type,"Identifier",tp,yylineno,offset,scope,{},lev);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($1.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1222,7 +1266,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     func = head->set($3.str,"Identifier","Interface",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1240,7 +1285,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     func = head->set($2.str,"Identifier","Interface",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1258,7 +1304,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     func = head->set($3.str,"Identifier","Interface",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1276,7 +1323,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     func = head->set($2.str,"Identifier","Interface",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1294,7 +1342,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     func = head->set($3.str,"Identifier","Interface",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1312,7 +1361,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     func = head->set($2.str,"Identifier","Interface",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($2.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1330,7 +1380,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     func = head->set($3.str,"Identifier","Interface",yylineno,offset,scope,{},lev);
     head->check(func,$3.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1348,7 +1399,8 @@ Modifiers Interface Identifier ExtendsInterfaces {
     func = head->set($2.str,"Identifier","Interface",yylineno,offset,scope,{},lev);
     head->check(func,$2.str);
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp($3.str);
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1404,7 +1456,7 @@ Lcb
 {
     if(!flag){
         tables.push(head);
-        head = new SymbolTable(head); list_tables.push_back(head);
+        head = new SymbolTable(head, scope, to_string(++varnum[scope])); list_tables.push_back(head);
         offsets.push(offset);
         offset = 0;
         scopes.push(scope);
@@ -1482,17 +1534,20 @@ Assignment
 Dummy2:
 {
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp = "If";
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
     scope = "If Statement";
     flag = true;
+    add_label(head->scope_name);
 }
 Dummy4:
 {
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp = "Else";
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1510,50 +1565,50 @@ Dummy5:
 }
 IfThenStatement:
 Dummy8 Statement {
+    add_label("EndIf" + head->scope_num);
     head = tables.top();
     tables.pop();
     offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
-    string temp($1.var);
-    ac.pb(temp + ":");
 }
 Dummy8:
-If Lb Dummy2 Expression Rb { $$.var = build_string("Else", ++varnum["else"]); control_flow($4.var, build_string("IfStatement", ++varnum["ifstatement"]), $$.var); }
+If Lb Dummy2 Expression Rb { if_goto($4.var, "IfBody" + head->scope_num); go_to("EndIf" + head->scope_num); add_label("IfBody" + head->scope_num); }
 Dummy9:
-Dummy8 StatementNoShortIf Dummy5 Else Dummy4 {$$.var = build_string("EndIf", ++varnum["endif"]); end_control_flow($$.var, $1.var);}
+Dummy8 StatementNoShortIf {add_label("EndIf" + head->scope_num);} Dummy5 Else Dummy4 {add_label(head->scope_name);}
 IfThenElseStatement:
 Dummy9 Statement {
+    add_label("EndElse" + head->scope_num);
     head = tables.top();
     tables.pop();
     offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
-    string temp($1.var);
-    ac.pb(temp + ":");
 }
 IfThenElseStatementNoShortIf:
 Dummy9 StatementNoShortIf {
+    add_label("EndElse" + head->scope_num);
     head = tables.top();
     tables.pop();
     offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
-    string temp($1.var);
-    ac.pb(temp + ":");
 }
-SwitchStatement:
+Dummy13:
 Switch {
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp = "Switch";
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
     scope = "Switch Statement";
-} Lb Expression Rb SwitchBlock {
+}
+SwitchStatement:
+Dummy13 Lb Expression {$$ = $3;} Rb SwitchBlock {
     head = tables.top();
     tables.pop();
     offset = offsets.top();
@@ -1580,78 +1635,84 @@ Case ConstantExpression Col
 Dummy1:
 {
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp = "While";
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
     scope = "While Loop";
     flag = true;
-    $$.var = build_string("While", ++varnum["while"]);
-    string temp($$.var);
-    ac.pb(temp + ":");
+    add_label(head->scope_name);
 }
 Dummy10:
-Lb Expression Rb {$$.var = build_string("EndWhile", ++varnum["endwhile"]), control_flow($2.var, build_string("Statement", ++varnum["statement"]), $$.var);}
+Lb Expression Rb {if_goto($2.var, "WhileBody" + head->scope_num); go_to("EndWhile" + head->scope_num); add_label("WhileBody" + head->scope_num);}
 WhileStatement:
 While Dummy1 Dummy10 Statement {
+    go_to(head->scope_name);
+    add_label("EndWhile" + head->scope_num);
     head = tables.top();
     tables.pop();
     offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
-    end_control_flow($2.var, $3.var);
 }
 WhileStatementNoShortIf:
 While Dummy1 Dummy10 StatementNoShortIf {
+    go_to(head->scope_name);
+    add_label("EndWhile" + head->scope_num);
     head = tables.top();
     tables.pop();
     offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
-    end_control_flow($2.var, $3.var);
 }
 DoStatement:
 Do {
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp = "DoWhile";
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
     scope = "Do While Loop";
     flag = true;
-    $1.var = build_string("DoWhile", ++varnum["dowhile"]);
-    string temp($1.var);
-    ac.pb(temp + ":");
+    add_label(head->scope_name);
 } Statement While Lb Expression Rb Semicol {
+    if_goto($4.var, head->scope_name);
+    add_label("EndDoWhile" + head->scope_num);
     head = tables.top();
     tables.pop();
     offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
-    string expr($4.var), temp($1.var);
-    ac.pb("if " + expr + " goto " + temp);
 }
 Dummy3:
 {
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp = "For";
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
     scope = "For Loop";
     flag = true;
+    add_label(head->scope_name);
 }
+Dummy11:
+For Lb Dummy3 optForInit Semicol {add_label("ForExpression" + head->scope_num);}
+Dummy12:
+optExpression Semicol {if_goto($1.var, "ForBody" + head->scope_num); go_to("EndFor" + head->scope_num); add_label("ForUpdate" + head->scope_num);}
 ForStart:
-For Lb Dummy3 optForInit Semicol optExpression Semicol optForUpdate Rb
+Dummy11 Dummy12 optForUpdate Rb {go_to("ForExpression" + head->scope_num); add_label("ForBody" + head->scope_num);}
 optForInit:
 ForInit
 |
 optExpression:
 Expression
-|
+| {string temp = "true"; $$.var = (char *)temp.c_str();}
 optForUpdate:
 ForUpdate
 |
@@ -1660,6 +1721,8 @@ For Lb Dummy3 Final_ Type VariableDeclaratorId {head->check(head->set($6.str,"Id
 | For Lb Dummy3 Type VariableDeclaratorId {head->check(head->set($5.str,"Identifier",tp,yylineno,offset,scope,{},lev),$5.str); offset = offset + sz;} Col Expression Rb
 ForStatement:
 ForStart Statement {
+    go_to("ForUpdate" + head->scope_num);
+    add_label("EndFor" + head->scope_num);
     head = tables.top();
     tables.pop();
     offset = offsets.top();
@@ -1668,6 +1731,8 @@ ForStart Statement {
     scopes.pop();
 }
 | ForStart1 Statement {
+    go_to("ForUpdate" + head->scope_num);
+    add_label("EndFor" + head->scope_num);
     head = tables.top();
     tables.pop();
     offset = offsets.top();
@@ -1677,6 +1742,8 @@ ForStart Statement {
 }
 ForStatementNoShortIf:
 ForStart StatementNoShortIf {
+    go_to("ForUpdate" + head->scope_num);
+    add_label("EndFor" + head->scope_num);
     head = tables.top();
     tables.pop();
     offset = offsets.top();
@@ -1685,6 +1752,8 @@ ForStart StatementNoShortIf {
     scopes.pop();
 }
 | ForStart1 StatementNoShortIf {
+    go_to("ForUpdate" + head->scope_num);
+    add_label("EndFor" + head->scope_num);
     head = tables.top();
     tables.pop();
     offset = offsets.top();
@@ -1721,7 +1790,8 @@ Catch {
     tp = "Catch Parameter";
     sz = 0;
     tables.push(head);
-    head = new SymbolTable(head); list_tables.push_back(head);
+    string temp = "Catch";
+    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1826,19 +1896,19 @@ Primary {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 | PostIncrementExpression
 | PostDecrementExpression
 PostIncrementExpression:
-PostfixExpression Inc
+PostfixExpression Inc {add_expression($1.var, $1.var, "1", "+"); $$ = $1;}
 PostDecrementExpression:
-PostfixExpression Dec
+PostfixExpression Dec {add_expression($1.var, $1.var, "1", "-"); $$ = $1;}
 UnaryExpression:
 PreIncrementExpression
 | PreDecrementExpression
-| Plus UnaryExpression
-| Minus UnaryExpression
+| Plus UnaryExpression { $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_expression($$.var, "\b", $2.var, "+");}
+| Minus UnaryExpression { $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_expression($$.var, "\b", $2.var, "-");}
 | UnaryExpressionNotPlusMinus {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 PreIncrementExpression:
-Inc UnaryExpression
+Inc UnaryExpression {add_expression($2.var, $2.var, "1", "+"); $$ = $2;}
 PreDecrementExpression:
-Dec UnaryExpression
+Dec UnaryExpression {add_expression($2.var, $2.var, "1", "-"); $$ = $2;}
 UnaryExpressionNotPlusMinus:
 PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 | Tilde UnaryExpression
@@ -1850,19 +1920,19 @@ UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
+    ($$).var = build_string("t", ++varnum["var"]); add_expression(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
 }
 | MultiplicativeExpression Div UnaryExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
+    ($$).var = build_string("t", ++varnum["var"]); add_expression(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
 }
 | MultiplicativeExpression Mod UnaryExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
+    ($$).var = build_string("t", ++varnum["var"]); add_expression(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
 }
 AdditiveExpression:
 MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var ;}
@@ -1872,15 +1942,15 @@ MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var =
     }
     ($$).var = build_string("t", ++varnum["var"]);
     char*s1 = (char*)"+" ;
-    if(compare_string(($1).type, ($3).type)) {string t1 = ($1).type; string temp = s1; temp = temp + t1; add_string(($$).var, ($1).var, ($3).var, temp) ;}
-    else {string temp = s1; temp = temp + "float"; add_string(($$).var, ($1).var, ($3).var, temp) ; ($$).type = (char*)"float";}
+    if(compare_string(($1).type, ($3).type)) {string t1 = ($1).type; string temp = s1; temp = temp + t1; add_expression(($$).var, ($1).var, ($3).var, temp) ;}
+    else {string temp = s1; temp = temp + "float"; add_expression(($$).var, ($1).var, ($3).var, temp) ; ($$).type = (char*)"float";}
     ($$).type = widen(($1).type,($3).type); ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
 }
 | AdditiveExpression Minus MultiplicativeExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
+    ($$).var = build_string("t", ++varnum["var"]); add_expression(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
 }
 ShiftExpression:
 AdditiveExpression {($$).type = ($1).type; ($$).str = ($1).str;}
@@ -1888,7 +1958,7 @@ AdditiveExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
+    ($$).var = build_string("t", ++varnum["var"]); add_expression(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = widen(($1).type,($3).type); ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
 }
 RelationalExpression:
 ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
@@ -1896,19 +1966,19 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
+    ($$).var = build_string("t", ++varnum["var"]); add_expression(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
 }
 | RelationalExpression Gt ShiftExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
+    ($$).var = build_string("t", ++varnum["var"]); add_expression(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
 }
 | RelationalExpression Relop ShiftExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
+    ($$).var = build_string("t", ++varnum["var"]); add_expression(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
 }
 | RelationalExpression Instanceof ReferenceType
 EqualityExpression:
@@ -1917,7 +1987,7 @@ RelationalExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Types do not match on both the sides in line " << yylineno<<endl;
     }
-    ($$).var = build_string("t", ++varnum["var"]); add_string(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
+    ($$).var = build_string("t", ++varnum["var"]); add_expression(($$).var, ($1).var, ($3).var, ($2).str); ($$).type = (char*)"boolean"; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str);
 }
 AndExpression:
 EqualityExpression {($$).type = ($1).type; ($$).str = ($1).str;}

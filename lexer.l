@@ -265,208 +265,208 @@ OVERRIDE                 Override
               return Tb;}
 {NULL_LITERAL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Null_Literal;}
-{STRING_LITERAL} {yylval.s.str = strdup(yytext);
+{STRING_LITERAL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return String_Literal;}
-{RECORD} {yylval.s.str = strdup(yytext);
+{RECORD} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Record;}
-{OVERRIDE} {yylval.s.str = strdup(yytext);
+{OVERRIDE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Override;}
-{PERMITS} {yylval.s.str = strdup(yytext);
+{PERMITS} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Permits;}
-{VAR} {yylval.s.str = strdup(yytext);
+{VAR} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Var;}
-{FINAL} {yylval.s.str = strdup(yytext);
+{FINAL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Final;}
-{CLASS} {yylval.s.str = strdup(yytext);
+{CLASS} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Class;}
-{IMPLEMENTS} {yylval.s.str = strdup(yytext);
+{IMPLEMENTS} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Implements;}
-{SHIFTER} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{SHIFTER} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Shifter;}
-{EQQ} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{EQQ} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Eqq;}
-{BOOL_OR} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{BOOL_OR} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Bool_or;}
-{BOOL_AND} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{BOOL_AND} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Bool_and;}
-{RELOP} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{RELOP} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Relop;}
-{LT} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{LT} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Lt;}
-{GT} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{GT} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Gt;}
-{SUPER} {yylval.s.str = strdup(yytext);
+{SUPER} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Super;}
 {KEYWORD} {return  Keyword;}
-{CONTINUE} {yylval.s.str = strdup(yytext);
+{CONTINUE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Continue;}
-{FOR} {yylval.s.str = strdup(yytext);
+{FOR} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return For;}
-{SWITCH} {yylval.s.str = strdup(yytext);
+{SWITCH} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Switch;}
-{ASSERT} {yylval.s.str = strdup(yytext);
+{ASSERT} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Assert;}
-{IF} {yylval.s.str = strdup(yytext);
+{IF} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return If;}
-{PACKAGE} {yylval.s.str = strdup(yytext);
+{PACKAGE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Package;}
-{SYNCHRONIZED} {yylval.s.str = strdup(yytext);
+{SYNCHRONIZED} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Synchronized;}
-{BOOLEAN} {yylval.s.str = strdup(yytext);
+{BOOLEAN} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Bboolean;}
-{DO} {yylval.s.str = strdup(yytext);
+{DO} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Do;}
-{BREAK} {yylval.s.str = strdup(yytext);
+{BREAK} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Break;}
-{DOUBLE} {yylval.s.str = strdup(yytext);
+{DOUBLE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Double;}
-{THROW} {yylval.s.str = strdup(yytext);
+{THROW} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Throw;}
-{BYTE} {yylval.s.str = strdup(yytext);
+{BYTE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Bbyte;}
-{ELSE} {yylval.s.str = strdup(yytext);
+{ELSE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Else;}
-{IMPORT} {yylval.s.str = strdup(yytext);
+{IMPORT} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Import;}
-{CASE} {yylval.s.str = strdup(yytext);
+{CASE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Case;}
-{ENUM} {yylval.s.str = strdup(yytext);
+{ENUM} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Enum;}
-{RETURN} {yylval.s.str = strdup(yytext);
+{RETURN} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Return;}
-{TRANSIENT} {yylval.s.str = strdup(yytext);
+{TRANSIENT} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Transient;}
-{CATCH} {yylval.s.str = strdup(yytext);
+{CATCH} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Catch;}
-{INT} {yylval.s.str = strdup(yytext);
+{INT} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Int;}
-{SHORT} {yylval.s.str = strdup(yytext);
+{SHORT} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Short;}
-{TRY} {yylval.s.str = strdup(yytext);
+{TRY} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Try;}
-{CHAR} {yylval.s.str = strdup(yytext);
+{CHAR} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Char;}
-{LONG} {yylval.s.str = strdup(yytext);
+{LONG} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Long;}
-{FINALLY} {yylval.s.str = strdup(yytext);
+{FINALLY} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return finally;}
-{VOLATILE} {yylval.s.str = strdup(yytext);
+{VOLATILE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Volatile;}
-{FLOAT} {yylval.s.str = strdup(yytext);
+{FLOAT} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Float;}
-{WHILE} {yylval.s.str = strdup(yytext);
+{WHILE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return While;}
-{NATIVE} {yylval.s.str = strdup(yytext);
+{NATIVE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Native;}
-{EXPORTS} {yylval.s.str = strdup(yytext);
+{EXPORTS} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Exports;}
-{OPENS} {yylval.s.str = strdup(yytext);
+{OPENS} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Opens;}
-{REQUIRES} {yylval.s.str = strdup(yytext);
+{REQUIRES} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Requires;}
-{USES} {yylval.s.str = strdup(yytext);
+{USES} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Uses;}
-{MODULE} {yylval.s.str = strdup(yytext);
+{MODULE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Module;}
-{PROVIDES} {yylval.s.str = strdup(yytext);
+{PROVIDES} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Provides;}
-{TO} {yylval.s.str = strdup(yytext);
+{TO} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return To;}
-{WITH} {yylval.s.str = strdup(yytext);
+{WITH} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return With;}
-{OPEN} {yylval.s.str = strdup(yytext);
+{OPEN} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Open;}
-{TRANSITIVE} {yylval.s.str = strdup(yytext);
+{TRANSITIVE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Transitive;}
-{EXTENDS} {yylval.s.str = strdup(yytext);
+{EXTENDS} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Extends;}
-{INTERFACE} {yylval.s.str = strdup(yytext);
+{INTERFACE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Interface;}
-{THROWS} {yylval.s.str = strdup(yytext);
+{THROWS} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return throws;}
-{VOID} {yylval.s.str = strdup(yytext);
+{VOID} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Void;}
-{EQNQ} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{EQNQ} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Eqnq;}
-{NOT} {yylval.s.str = strdup(yytext);
+{NOT} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Not;}
-{TILDE} {yylval.s.str = strdup(yytext);
+{TILDE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Tilde;}
-{INC} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{INC} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Inc;}
-{DEC} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{DEC} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Dec;}
-{PLUS} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{PLUS} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Plus;}
-{MINUS} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{MINUS} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Minus;}
-{MULT} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{MULT} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Mult;}
-{DIV} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{DIV} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Div;}
-{MOD} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{MOD} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Mod;}
-{AND} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{AND} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return And;}
-{INSTANCEOF} {yylval.s.str = strdup(yytext);
+{INSTANCEOF} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Instanceof;}
-{NEW} {yylval.s.str = strdup(yytext);
+{NEW} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  New;}
-{THIS} {yylval.s.str = strdup(yytext);
+{THIS} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return This;}
-{XOR} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{XOR} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Xor;}
-{OR} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{OR} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Or;}
-{TWO_COL} {yylval.s.str = strdup(yytext);
+{TWO_COL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Two_col;}
-{SEMICOL} {yylval.s.str = strdup(yytext);
+{SEMICOL} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Semicol;}
-{LSB} {yylval.s.str = strdup(yytext);
+{LSB} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Lsb;}
-{RSB} {yylval.s.str = strdup(yytext);
+{RSB} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Rsb;}
-{THREED} {yylval.s.str = strdup(yytext);
+{THREED} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Threed;}
-{ARROW} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{ARROW} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Arrow;}
-{COMMA} {yylval.s.str = strdup(yytext);
+{COMMA} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Comma;}
-{COL} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{COL} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Col;}
-{QM} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{QM} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Qm;}
-{LB} {yylval.s.str = strdup(yytext);
+{LB} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Lb;}
-{LCB} {yylval.s.str = strdup(yytext);
+{LCB} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Lcb;}
-{RCB} {yylval.s.str = strdup(yytext);
+{RCB} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Rcb;}
-{RB} {yylval.s.str = strdup(yytext);
+{RB} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Rb;}
-{EQ} {yylval.s.num = -1; yylval.s.str = strdup(yytext);
+{EQ} {yylval.s.num = -1; yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Eq;}
-{DOT} {yylval.s.str = strdup(yytext);
+{DOT} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Dot;}
-{AT_THE_RATE} {yylval.s.str = strdup(yytext);
+{AT_THE_RATE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Atr;}
-{PUBLIC} {yylval.s.str = strdup(yytext);
+{PUBLIC} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Public;}
-{DEFAULT} {yylval.s.str = strdup(yytext);
+{DEFAULT} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Default;}
-{PROTECTED} {yylval.s.str = strdup(yytext);
+{PROTECTED} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Protected;}
-{PRIVATE} {yylval.s.str = strdup(yytext);
+{PRIVATE} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Private;}
-{ABSTRACT} {yylval.s.str = strdup(yytext);
+{ABSTRACT} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Abstract;}
-{STATIC} {yylval.s.str = strdup(yytext);
+{STATIC} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Static;}
-{SEALED} {yylval.s.str = strdup(yytext);
+{SEALED} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Sealed;}
-{NON_SEALED} {yylval.s.str = strdup(yytext);
+{NON_SEALED} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Non_sealed;}
-{STRICTFP} {yylval.s.str = strdup(yytext);
+{STRICTFP} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return  Strictfp;}
 {IDENTIFIER} {yylval.s.str = strdup(yytext); yylval.s.var = strdup(yytext);
               return Identifier;}
