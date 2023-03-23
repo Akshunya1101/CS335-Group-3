@@ -232,10 +232,12 @@
                 if(prev){
                     parent = prev;
                     level = prev->level+1;
+
                 }
                 else{
                     parent = NULL;
                     level = 0;
+                    table["String"].push_back(Entry("Identifier","String",0,0,"Global",{},map<int,int>(),{}));
                 }
                 sn = scp;
                 scope_name = scp + scp_num;
@@ -275,7 +277,7 @@
             }
             Entry get1(vector<Entry> c,vector<string> v){
                 for(auto x:c){
-                    if(x.Params.size()!=v.size())
+                    if(x.Params.size()!=v.size() || find(x.Mod.begin(),x.Mod.end(),"private")!=x.Mod.end())
                         continue;
                     int flag = 1;
                     for(int i=0;i<v.size();i++){
@@ -322,9 +324,27 @@
     SymbolTable* head1;
     vector<SymbolTable*> list_tables(1,head);
 
-    SymbolTable* find_table(string s){
+    SymbolTable* ancestry(SymbolTable* ptr, SymbolTable* p){
+        while(ptr!=NULL && ptr!=p){
+            ptr = ptr->parent;
+        }
+        if(ptr == p)
+            return p;
+        return NULL;
+    }
+
+    SymbolTable* find_table(string s,SymbolTable* head){
         for(auto x:list_tables){
             if(x->sn == s){
+                SymbolTable* a = ancestry(head,x->parent);
+                if(!a)
+                    continue;
+                vector<Entry> c = a->get(s); 
+                Entry c1 = a->get1(c,{});
+                if(!c1.Token.length() || c1.Type!="Class"){
+                    err.pop_back();
+                    continue;
+                }
                 return x;
             }
         }
@@ -673,7 +693,7 @@ SimpleName {($$).type = ($1).type; vector<Entry> c = head->get($1.type); Entry c
 SimpleName:
 Identifier {($$).type = ($1).str;}
 QualifiedName:
-Name Dot Identifier {f4 = 1; ($$).type = ($3).str; head1 = find_table($1.cl); vector<Entry> c = head->get($1.type); c = head1->get($3.str); Entry c1 = head->get1(c,v); ($$).str = strdup(c1.Type.c_str()) ;
+Name Dot Identifier {f4 = 1; ($$).type = ($3).str; head1 = find_table($1.cl,head); vector<Entry> c = head->get($1.type); c = head1->get($3.str); Entry c1 = head->get1(c,v); ($$).str = strdup(c1.Type.c_str()) ;
 }
 ClassOrInterfaceType:
 Name {($$).str = ($1).type; ($$).type = ($1).str; tp = ($$).str;}
@@ -891,6 +911,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($3.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($3.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -913,6 +934,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($2.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($2.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -935,6 +957,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($3.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($3.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -957,6 +980,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($2.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($2.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -979,6 +1003,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($3.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($3.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1001,6 +1026,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($2.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($2.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1023,6 +1049,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($3.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($3.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1045,6 +1072,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($2.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($2.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1067,6 +1095,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($3.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($3.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1089,6 +1118,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($2.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($2.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1111,6 +1141,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($3.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($3.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1133,6 +1164,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($2.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($2.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1155,6 +1187,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($3.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($3.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1177,6 +1210,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($2.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($2.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1199,6 +1233,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($3.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($3.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1221,6 +1256,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     tables.push(head);
     string temp($2.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
+    head->set($2.str,"Identifier","Reference Type",yylineno,offset,scope,{},lev,m);
     THIS = head->sn;
     offsets.push(offset);
     offset = 0;
@@ -1330,7 +1366,7 @@ Expression {($$).dim1 = ($1).dim1; l = 0; $$.num = 1; $$.num1 = 0; ($$).type = (
 | ArrayInitializer {l++; $$.num = $1.num; $$.num1 = $1.num1; ($$).type = ($1).type; ($$).str = ($1).str;}
 MethodDeclaration:
 MethodHeader MethodBody {
-    if(!compare_type($1.type,strdup(ttt.c_str())) && !compare_type1($1.type,strdup(ttt.c_str()))){
+    if(!compare_type($1.type,strdup(ttt.c_str())) && !compare_type1($1.type,strdup(ttt.c_str())) && !(ttt.length() == 0 && $1.type==(char*)"Void")){
         cerr << "Return type does not match in declaration at line " << rl <<endl;
     }
     ttt = "";
@@ -1376,14 +1412,44 @@ Identifier Lb {
 }
 | MethodDeclarator Lsb Rsb
 FormalParameterList:
-FormalParameter {if(func){func->Params.push_back(tp);}}
-| FormalParameterList Comma FormalParameter {if(func){func->Params.push_back(tp);}}
+FormalParameter { string tp1 = tp; for(int i=0;i<l1;i++) tp1 = "array("+tp1+")";
+    if(func){func->Params.push_back(tp1);}
+ lev.clear(); l1 = 0; lev1.clear();}
+| FormalParameterList Comma FormalParameter { string tp1 = tp; for(int i=0;i<l1;i++) tp1 = "array("+tp1+")";
+    if(func){func->Params.push_back(tp1);}
+ lev.clear(); l1 = 0; lev1.clear();}
 FormalParameter:
-Type VariableDeclaratorId {($$).str = ($2).str; head->check(head->set($2.str,"Identifier",tp,yylineno,offset,scope,{},lev,m),$2.str); m.clear(); offset = offset + sz;}
-| Final_ Type VariableDeclaratorId {tp = "Final "+tp; ($$).str = ($3).str; head->check(head->set($3.str,"Identifier",tp,yylineno,offset,scope,{},lev,m),$3.str); m.clear(); offset = offset + sz;}
-|Type TypeArguments VariableDeclaratorId  {($$).str = ($3).str; head->check(head->set($3.str,"Identifier",tp,yylineno,offset,scope,{},lev,m),$3.str); m.clear(); offset = offset + sz;}
-| Final_ Type TypeArguments VariableDeclaratorId {tp = "Final "+tp; ($$).str = ($4).str; head->check(head->set($4.str,"Identifier",tp,yylineno,offset,scope,{},lev,m),$4.str); m.clear(); offset = offset + sz;}
-Final_ : Final | Final_ Final
+Type VariableDeclaratorId {
+    map<int,int> m1;
+    for(int i=0;i<l1;i++){
+        m1[i] = -1;
+    }
+    ($$).str = ($2).str; head->check(head->set($2.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$2.str); m.clear(); offset = offset + sz;
+}
+| Final_ Type VariableDeclaratorId {
+    map<int,int> m1;
+    for(int i=0;i<l1;i++){
+        m1[i] = -1;
+    }
+    ($$).str = ($3).str; head->check(head->set($3.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$3.str); m.clear(); offset = offset + sz;
+}
+|Type TypeArguments VariableDeclaratorId  {
+    map<int,int> m1;
+    for(int i=0;i<l1;i++){
+        m1[i] = -1;
+    }
+    ($$).str = ($3).str; head->check(head->set($3.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$3.str); m.clear(); offset = offset + sz;
+}
+| Final_ Type TypeArguments VariableDeclaratorId {
+    map<int,int> m1;
+    for(int i=0;i<l1;i++){
+        m1[i] = -1;
+    }
+    ($$).str = ($4).str; head->check(head->set($4.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$4.str); m.clear(); offset = offset + sz;
+}
+Final_ :
+Final {m.push_back("final");}
+| Final_ Final
 Throws:
 throws ClassTypeList
 ClassTypeList:
@@ -1498,8 +1564,6 @@ This Lb ArgumentList Rb Semicol {
     ($$).type = strdup(head->get1(c,v).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
-    if(!err.empty())
-    err.pop_back();
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
@@ -1517,8 +1581,6 @@ This Lb ArgumentList Rb Semicol {
     ($$).type = strdup(head->parent->get1(c,v).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
-    if(!err.empty())
-    err.pop_back();
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
@@ -2105,7 +2167,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 | Tb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;}
 | Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;}
 | Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;}
-| This {($$).str = strdup(THIS.c_str());}
+| This {($$).str = strdup(THIS.c_str()); ($$).type = strdup(THIS.c_str());}
 | Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;}
 | ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type;}
 | FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
@@ -2114,7 +2176,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0;}
 ClassInstanceCreationExpression:
 New ClassType Lb ArgumentList Rb {
-    head1 = find_table($2.str);
+    head1 = find_table($2.str,head);
     vector<Entry> c = head1->get($2.str);
     ($$).type = strdup(head1->get1(c,v).Type.c_str());
     int i = find_comma($$.type);
@@ -2127,7 +2189,7 @@ New ClassType Lb ArgumentList Rb {
     v.clear();
 } 
 | New ClassType Lb Rb {
-    head1 = find_table($2.str);
+    head1 = find_table($2.str,head);
     f3 = 0;
     vector<Entry> c = head1->get($2.str);
     for(auto x:c){
@@ -2142,7 +2204,7 @@ New ClassType Lb ArgumentList Rb {
     v.clear();
 }
 | Primary Dot New ClassType Lb ArgumentList Rb {
-    head1 = find_table($4.str);
+    head1 = find_table($4.str,head);
     vector<Entry> c = head1->get($4.str);
     ($$).type = strdup(head1->get1(c,v).Type.c_str());
     int i = find_comma($$.type);
@@ -2155,12 +2217,13 @@ New ClassType Lb ArgumentList Rb {
     v.clear();
 } 
 | Primary Dot New ClassType Lb Rb {
-    head1 = find_table($4.str);
+    head1 = find_table($4.str,head);
     f3 = 0;
     vector<Entry> c = head1->get($4.str);
     for(auto x:c){
-        if(x.Params.size())
+        if(x.Params.size()){
             err.push_back(yylineno);
+        }
     }
     ($$).type = ($4).str;
     int i = find_comma($$.type);
@@ -2174,7 +2237,7 @@ New ClassType Lb ArgumentList Rb {
 | Primary Dot New TypeArguments ClassType Lb Rb
 
 | Name Dot New ClassType Lb ArgumentList Rb {
-    head1 = find_table($4.str);
+    head1 = find_table($4.str,head);
     vector<Entry> c = head1->get($4.str);
     ($$).type = strdup(head1->get1(c,v).Type.c_str());
     int i = find_comma($$.type);
@@ -2187,12 +2250,13 @@ New ClassType Lb ArgumentList Rb {
     v.clear();
 } 
 | Name Dot New ClassType Lb Rb {
-    head1 = find_table($4.str);
+    head1 = find_table($4.str,head);
     f3 = 0;
     vector<Entry> c = head1->get($4.str);
     for(auto x:c){
-        if(x.Params.size())
+        if(x.Params.size()){
             err.push_back(yylineno);
+        }
     }
     ($$).type = ($4).str;
     int i = find_comma($$.type);
@@ -2256,7 +2320,7 @@ Lsb Rsb {lev1.push_back(0);}
 | Dims Lsb Rsb {lev1.push_back(0);}
 FieldAccess:
 Primary Dot Identifier {
-    ($$).str = ($3).str; head1 = find_table($1.type); vector<Entry> c = head->get($1.str); c = head1->get($3.str); Entry c1 = head->get1(c,v); ($$).type = strdup(c1.Type.c_str()) ; ($$).dim1 = c1.Dim.size();
+    ($$).str = ($3).str; head1 = find_table($1.type,head); vector<Entry> c = head->get($1.str); c = head1->get($3.str); Entry c1 = head->get1(c,v); ($$).type = strdup(c1.Type.c_str()) ; ($$).dim1 = c1.Dim.size();
 }
 | Super Dot Identifier {($$).type = (char*)"Super"; ($$).str = ($3).str; vector<Entry> c1 = head->parent->get($$.str); map<int,int> sz1 = head->parent->get1(c1,v).Dim;
     ($$).dim1 = sz1.size();}
@@ -2963,7 +3027,7 @@ int main(){
 
     yyparse();
     if(!err.empty()){
-        cerr << "Inappropriate parameters in line " << err[0]<<endl; 
+        cerr << "Incorrect Invocation in line " << err[0]<<endl; 
     }
     for(auto x:list_tables){
         x->print();
