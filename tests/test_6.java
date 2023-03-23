@@ -1,43 +1,23 @@
-public class test_6 {
-    String name;
-	String breed;
-	int age;
-	String color;
+public class Main
+{
+	public static void main(int args) {
+        int x = 1 ;
+        float y = x ;
+        char c = 4 ;
+        int x = 4 ;
+        boolean z = (boolean)y ;
+        int arr1 [][] ;
+        arr1 = new int [2][3] ;
+        arr1[0][0] = 2 ; 
+        arr1[0] = 2 ;
+        c = arr1[0][0] ;
+        c = (char) arr1[0][0] ;
+        int arr1[][] ;
+        arr[0] = x ;
+        z = y ;
+        int w = 
 
-	// Constructor Declaration of Class
-	public test_6(String name, String breed, int age,
-			String color)
-	{
-		this.name = name;
-		this.breed = breed;
-		this.age = age;
-		this.color = color;
-	}
 
-	// method 1
-	public String getName() { return name; }
-
-	// method 2
-	public String getBreed() { return breed; }
-
-	// method 3
-	public int getAge() { return age; }
-
-	// method 4
-	public String getColor() { return color; }
-
-	@Override public String toString()
-	{
-		return ("Hi my name is " + this.getName()
-				+ ".\nMy breed,age and color are "
-				+ this.getBreed() + "," + this.getAge()
-				+ "," + this.getColor());
-	}
-
-	public static void main(String[] args)
-	{
-		test_6 tuffy
-			= new test_6("tuffy", "papillon", 5, "white");
-		System.out.println(tuffy.toString());
+        return ;
 	}
 }
