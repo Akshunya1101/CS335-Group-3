@@ -1,80 +1,25 @@
-// Java Program for Method overloading
-// By using Different Types of Arguments
+public class test {
+    public class A{
+        int x;
+        float y ;
+        A(int y){
+            
+        }
+        int re(int x,float y){
+            return 1;
+        }
+    }
+    //Check for String[]
+	public static void main(int args) {
+        A q = new A('c');
+        int z = q.re(2,3);
+        z = q.a ;
+        z = q.y ;
+        z = (int)q.y ;
+        int b = A.add(2,3) ;// not declared so error
+        A r = new B(2) ;
+        C r = new C(1) ;
 
-// Class 1
-// Helper class
-class Helper {
-
-	// Method with 2 integer parameters
-	static int Multiply(int a, int b)
-	{
-
-		// Returns product of integer numbers
-		return a * b;
-	}
-
-	// Method 2
-	// With same name but with 2 double parameters
-	static double Multiply(double a, double b)
-	{
-
-		// Returns product of double numbers
-		return a * b;
-	}
-}
-
-// Class 2
-// Main class
-class GFG {
-
-	// Main driver method
-	public static void main(String[] args)
-	{
-
-		// Calling method by passing
-		// input as in arguments
-		System.out.println(Helper.Multiply(2, 4));
-		System.out.println(Helper.Multiply(5.5, 6.3));
-	}
-}
-
-// Java program for Method Overloading
-// by Using Different Numbers of Arguments
-
-// Class 1
-// Helper class
-class Helper1 {
-
-	// Method 1
-	// Multiplication of 2 numbers
-	static int Multiply(int a, int b)
-	{
-
-		// Return product
-		return a * b;
-	}
-
-	// Method 2
-	// // Multiplication of 3 numbers
-	static int Multiply(int a, int b, int c)
-	{
-
-		// Return product
-		return a * b * c;
-	}
-}
-
-// Class 2
-// Main class
-class GFG2 {
-
-	// Main driver method
-	public static void main(String[] args)
-	{
-
-		// Calling method by passing
-		// input as in arguments
-		System.out.println(Helper1.Multiply(2, 4));
-		System.out.println(Helper1.Multiply(2, 7, 3));
+	    return;
 	}
 }

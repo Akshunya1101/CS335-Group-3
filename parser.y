@@ -14,7 +14,7 @@
     int f = 1;
     int f1 = 0; //for checking new
     int ln,rl = -1;
-    int f3,f4 ;
+    int f3 = 1,f4 = 0 ;
     vector<int> err ;
     map<string,string> conv;
     map<string,set<string>> conv1;
@@ -826,7 +826,7 @@ PrimitiveType Lsb Rsb {l1++; ($$).type = ($1).type;}
 CastExpression:
 Lb PrimitiveType Dims Rb UnaryExpression {
     if(!compare_type($2.type,$5.type) && !compare_type($5.type,$2.type)){
-        cerr << $5.type << " cannot be casted to the type " << $2.type << yylineno<<endl;
+        cerr << $5.type << " cannot be casted to the type " << $2.type << "in line " << yylineno<<endl;
     }
     else{
         ($$).type = strdup(($2).type);
@@ -845,18 +845,21 @@ Lb PrimitiveType Dims Rb UnaryExpression {
 }
 | Lb PrimitiveType Rb UnaryExpression {
     if(!compare_type($2.type,$4.type) && !compare_type($4.type,$2.type)){
-        cerr << $4.type << " cannot be casted to the type " << $2.type << yylineno<<endl;
+        cerr << $4.type << " cannot be casted to the type " << $2.type <<  "in line " << yylineno<<endl;
     }
     ($$).type = strdup(($2).type);
     if($4.type[0]>='A' && $4.type[0]<='Z'){
         ($$).type[0] = toupper(($$).type[0]);
     }
     if($4.dim1!=lev1.size()){
-        cerr << "Incompatible Type Conversion in line " << yylineno<<endl;
+        cerr << "Incompatible Type Conversion in line " << "in line " << yylineno<<endl;
         
     }
     ($$).dim1 = ($4).dim1;
     ($$).str = ($4).str;
+    string s1 = Type_cast(($2).type, ($4).var) ;
+    $$.var = build_string("t", ++varnum["var"]) ;
+    add_assignment($$.var,s1) ;
 }
 | Lb Expression Rb UnaryExpressionNotPlusMinus
 | Lb Name Dims Rb UnaryExpressionNotPlusMinus
@@ -3189,8 +3192,9 @@ int main(){
         x->print();
         cout<<endl;
     }
+    ofstream ac3 ("TAC.txt", std::ofstream::out);
     for(auto s : ac) {
-        cout << s << endl;
+        ac3 << s << endl;
     }
     return 0;
 }

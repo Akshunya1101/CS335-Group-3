@@ -1,20 +1,10 @@
-public class test_8 {
-    // Main driver method
-	public static void main(String[] args)
-	{
-		// Declaring an Integer datatype
-		int a = 3;
-
-		// Casting to Large datatype
-		double db = (double)a;
-
-		// Print and display the casted value
-		System.out.println(db);
-
-		// Narrow Casting conversion
-		int db1 = (int)db;
-		
-		// Print an display narrow casted value
-		System.out.println(db1);
+public class Main
+{
+    public static int func1(int x, float y, char c){
+        return 1 ;
+    }
+	public static void main(int args) {
+        int y = func1(2,'a', 1.2) ;
+        return ;
 	}
 }
