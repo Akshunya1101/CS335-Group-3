@@ -14,6 +14,8 @@
     int f = 1;
     int f1 = 0; //for checking new
     int ln,rl = -1;
+    int f3,f4 ;
+    vector<int> err ;
     map<string,string> conv;
     map<string,set<string>> conv1;
     string Type_cast(string t, char*var){
@@ -172,9 +174,10 @@
             string Scope;
             vector<string> Params;
             map<int,int> Dim;
+            vector<string> Mod ;
             Entry(){
             }
-            Entry(string token, string type, int line, long int offset, string scope, vector<string> params, map<int,int> dim){
+            Entry(string token, string type, int line, long int offset, string scope, vector<string> params, map<int,int> dim, vector<string> m){
                 Token = token;
                 Type = type;
                 Line = line;
