@@ -109,12 +109,7 @@
             t22 = conv[t22];
         }
         if(f1 && f2){
-            if(tt2 == tt1 || tt2[0]>='a' && tt2[0]<='z'){
-                return -1;
-            }
-            else{
-                return 1;
-            }
+            return -1 ;
         }
         else if(f1){
             return 0;
@@ -177,6 +172,7 @@
             string Scope;
             vector<string> Params;
             map<int,int> Dim;
+            int st_flag = 0 ;
             Entry(){
             }
             Entry(string token, string type, int line, long int offset, string scope, vector<string> params, map<int,int> dim){
@@ -187,6 +183,7 @@
                 Scope = scope;
                 Params = params;
                 Dim = dim;
+                st_flag = 0 ;
             }
             void print_entry(){
                 cout<<Token<<"    ";
@@ -293,7 +290,7 @@
                 }
             }
             void remove(string lexeme){
-                vector<Entry> c = table[lexeme];
+                vector<Entry> &c = table[lexeme];
                 for(auto it = c.begin(); it!=c.end();){
                     if(it->Params.empty()){
                         it = c.erase(it);
@@ -340,17 +337,6 @@
 
         return charArray;
     }
-    // void control_flow(string exp, string blockstart, string endstat) {
-    //     ac.pb("if " + exp + " goto " + blockstart);
-    //     ac.pb("goto " + endstat);
-    //     ac.pb(blockstart + ":");
-    //     return;
-    // }
-    // void end_control_flow(string cfstart, string nextblock) {
-    //     ac.pb("goto " + cfstart);
-    //     ac.pb(nextblock + ":");
-    //     return;
-    // }
     void add_label(string label) {
         ac.pb(label + ":");
         return;
@@ -361,6 +347,10 @@
     }
     void go_to(string loc) {
         ac.pb("goto " + loc);
+    }
+    void add_assignment(string exp1, string exp2) {
+        ac.pb(exp1 + " = " + exp2);
+        return;
     }
 %}
 %union {
@@ -714,7 +704,7 @@ PrimitiveType Lsb Rsb {l1++; ($$).type = ($1).type;}
 CastExpression:
 Lb PrimitiveType Dims Rb UnaryExpression {
     if(!compare_type($2.type,$5.type) && !compare_type($5.type,$2.type)){
-        cerr << "Types do not match on both the sides in line " << yylineno<<endl;
+        cerr << $5.type << " cannot be casted to the type " << $2.type << yylineno<<endl;
     }
     ($$).type = strdup(($2).type);
     if($5.type[0]>='A' && $5.type[0]<='Z'){
@@ -727,7 +717,7 @@ Lb PrimitiveType Dims Rb UnaryExpression {
 }
 | Lb PrimitiveType Rb UnaryExpression {
     if(!compare_type($2.type,$4.type) && !compare_type($4.type,$2.type)){
-        cerr << "Types do not match on both the sides in line " << yylineno<<endl;
+        cerr << $4.type << " cannot be casted to the type " << $2.type << yylineno<<endl;
     }
     ($$).type = strdup(($2).type);
     if($4.type[0]>='A' && $4.type[0]<='Z'){
@@ -1227,6 +1217,14 @@ VariableDeclaratorId {
         }
         head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + term*sz;
     }
+    int check_type = widen2(($1).type,($3).type);
+    if(check_type != -1){
+        string s1 = Type_cast($1.type, $3.var) ;
+        add_assignment($1.var, s1) ;
+    }
+    else{
+        add_assignment($1.var, $3.var) ;
+    }
     ($$).type = widen(($1).type,($3).type);
     ($$).str = ($1).str;
 }
@@ -1718,7 +1716,12 @@ Dummy8 Statement {
     scopes.pop();
 }
 Dummy8:
-If Lb Dummy2 Expression Rb { if_goto($4.var, "IfBody" + head->scope_num); go_to("EndIf" + head->scope_num); add_label("IfBody" + head->scope_num); }
+If Lb Dummy2 Expression Rb { 
+    if(($4).type != "boolean"){
+        cerr << "Incompatible type " << ($4).type << " instead of boolean" << endl ;
+    }
+    if_goto($4.var, "IfBody" + head->scope_num); go_to("EndIf" + head->scope_num); add_label("IfBody" + head->scope_num); 
+}
 Dummy9:
 Dummy8 StatementNoShortIf {add_label("EndIf" + head->scope_num);} Dummy5 Else Dummy4 {add_label(head->scope_name);}
 IfThenElseStatement:
@@ -1753,6 +1756,12 @@ Switch {
 }
 SwitchStatement:
 Dummy13 Lb Expression {$<s>$ = $3;} Rb SwitchBlock {
+    if(!compare_type((char*)"integer", ($3).type) && strcmp(($3).type, (char*)"string")){
+        cerr << ($3).type << " cannot be evaluated to type integer in the switch statement expression" << endl ;
+    }
+    // if(!compare_type(($3).type, ($6).type) && !compare_type1(($3).type, ($6).type)){
+    //     cerr << "Incompatible types in switch statement and case label" << endl ;
+    // }
     head = tables.top();
     tables.pop();
     offset = offsets.top();
@@ -1763,18 +1772,24 @@ Dummy13 Lb Expression {$<s>$ = $3;} Rb SwitchBlock {
 SwitchBlock:
 Lcb SwitchBlockStatementGroups SwitchLabels Rcb
 | Lcb SwitchBlockStatementGroups Rcb
-| Lcb SwitchLabels Rcb
+| Lcb SwitchLabels Rcb 
 | Lcb Rcb
 SwitchBlockStatementGroups:
-SwitchBlockStatementGroup
+SwitchBlockStatementGroup {($$).type = ($1).type ;}
 | SwitchBlockStatementGroups SwitchBlockStatementGroup
 SwitchBlockStatementGroup:
-SwitchLabels BlockStatements
+SwitchLabels BlockStatements {($$).type = ($1).type ;}
 SwitchLabels:
-SwitchLabel
+SwitchLabel {($$).type = ($1).type ;}
 | SwitchLabels SwitchLabel
 SwitchLabel:
-Case ConstantExpression Col
+Case ConstantExpression Col {
+    ($$).type = ($2).type ;
+    if(strcmp((char*)"Integer", ($2).type) && strcmp((char*)"Character", ($2).type) && strcmp((char*)"Boolean", ($2).type) 
+    && strcmp((char*)"Float", ($2).type) && strcmp((char*)"Null", ($2).type) && strcmp((char*)"Long", ($2).type) && strcmp((char*)"string", ($2).type)){
+        cerr << "Case label must be of type constant expression" << endl ;
+    }
+}
 | Default Col
 Dummy1:
 {
@@ -1789,7 +1804,12 @@ Dummy1:
     add_label(head->scope_name);
 }
 Dummy10:
-Lb Expression Rb {if_goto($2.var, "WhileBody" + head->scope_num); go_to("EndWhile" + head->scope_num); add_label("WhileBody" + head->scope_num);}
+Lb Expression Rb {
+    if_goto($2.var, "WhileBody" + head->scope_num); go_to("EndWhile" + head->scope_num); add_label("WhileBody" + head->scope_num);
+    if(($2).type != "boolean"){
+        cerr << "While condition of type " << ($2).type << " and not Boolean" << endl ;
+    }
+}
 WhileStatement:
 While Dummy1 Dummy10 Statement {
     go_to(head->scope_name);
@@ -1864,7 +1884,9 @@ ForStart1:
 For Lb Dummy3 Final_ Type VariableDeclaratorId {head->check(head->set($6.str,"Identifier",tp,yylineno,offset,scope,{},lev),$6.str); offset = offset + sz;} Col Expression Rb
 | For Lb Dummy3 Type VariableDeclaratorId {head->check(head->set($5.str,"Identifier",tp,yylineno,offset,scope,{},lev),$5.str); offset = offset + sz;} Col Expression Rb
 ForStatement:
-ForStart Statement {
+ForStart Statement {int a,b ;
+        float c,d ;
+        float y = a + c + b + d ;
     go_to("ForUpdate" + head->scope_num);
     add_label("EndFor" + head->scope_num);
     head = tables.top();
@@ -2159,9 +2181,24 @@ Primary {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 | PostIncrementExpression {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type;}
 | PostDecrementExpression {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type;}
 PostIncrementExpression:
-PostfixExpression Inc {add_string($1.var, $1.var, "1", "+"); $$ = $1;}
+PostfixExpression Inc {
+    if(!compare_string($1.type,(char*)"float") && !compare_string($1.type,(char*)"double") && !compare_string($1.type,(char*)"long") && !compare_string($1.type,(char*)"integer") && !compare_string($1.type,(char*)"short") && !compare_string($1.type,(char*)"character") && !compare_string($1.type,(char*)"byte")){
+        cerr << "Incompatible Operator " <<$2.str<< "with operand of type "<< $1.type << " in line " << yylineno<<endl;
+    } 
+    if($1.dim1!=0)
+        cerr << "Incompatible Operator " <<$2.str<< " in line " << yylineno<<endl;
+    add_string($1.var, $1.var, "1", "+"); $$ = $1;
+
+}
 PostDecrementExpression:
-PostfixExpression Dec {add_string($1.var, $1.var, "1", "-"); $$ = $1;}
+PostfixExpression Dec {
+    add_string($1.var, $1.var, "1", "-"); $$ = $1;
+    if(!compare_string($1.type,(char*)"float") && !compare_string($1.type,(char*)"double") && !compare_string($1.type,(char*)"long") && !compare_string($1.type,(char*)"integer") && !compare_string($1.type,(char*)"short") && !compare_string($1.type,(char*)"character") && !compare_string($1.type,(char*)"byte")){
+        cerr << "Incompatible Operator " <<$2.str<< "with operand of type "<< $1.type << " in line " << yylineno<<endl;
+    } 
+    if($1.dim1!=0)
+        cerr << "Incompatible Operator " <<$2.str<< " in line " << yylineno<<endl;
+}
 UnaryExpression:
 PreIncrementExpression
 | PreDecrementExpression
@@ -2601,8 +2638,14 @@ LeftHandSide Eq AssignmentExpression {
             $$.dim1 = $1.dim1;
     }
     lev.clear(); lev1.clear(); l1 = 0;
-    string temp1($1.var), temp2($3.var);
-    ac.pb(temp1 + " = " + temp2 + ";");
+    int check_type = widen2(($1).type,($3).type);
+    if(check_type != -1){
+        string s1 = Type_cast($1.type, $3.var) ;
+        add_assignment($1.var, s1) ;
+    }
+    else{
+        add_assignment($1.var, $3.var) ;
+    }
 }
 | 
 LeftHandSide Eqq AssignmentExpression {
