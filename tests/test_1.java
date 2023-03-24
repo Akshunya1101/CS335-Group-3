@@ -1,27 +1,18 @@
-// Java program to take an integer
-// as input and print it
-
-import java.io.*;
-import java.util.Scanner;
-
-class GFG {
-	public static void main(String[] args)
-	{
-
-		// Declare the variables
-		int num;
-
-		// Input the integer
-		System.out.println("Enter the integer: ");
-
-		// Create Scanner object
-		Scanner s = new Scanner(System.in);
-
-		// Read the next integer from the screen
-		num = s.nextInt();
-
-		// Display the integer
-		System.out.println("Entered integer is: "
-						+ num);
+public class Main
+{
+    public static int add(int x, int y){
+        return x+y ;
+    }
+	public static void main(int args) {
+        int x = 1 ;
+        float y = x ;
+        char c = 4 ;
+        c = 1 ;
+        c = (char)y ;
+        x = (int)y ;
+        float z = x + y + c ;
+        int a = add(2,3) ;
+        boolean b = x > 2 ;
+        return ;
 	}
 }

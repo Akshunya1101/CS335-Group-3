@@ -1,18 +1,15 @@
-public class test_2 {
+public class NestedForExample {  
     public static void main(String[] args) {  
-        //Declaring an array  
-        int d1 = 10;
-        int d2 = 5;
-        if(d1==d2){
-
-        } //comparing reference   
-        String str1="JAVA\"";    
-        String str2="JAVA\n";     
-        System.out.println(str1.equals(str2));     //returns true because content and case is same    
-        int myNum = 5;               // Integer (whole number)
-        float myFloatNum = 5.99f;    // Floating point number
-        char myLetter = 'D';         // Character
-        boolean myBool = true;       // Boolean
-        String myText = "Hello";     // String  
-    }
-}
+        for(int i=1;i<=3;i++){   
+            for(int j=1;j<=3;j++){  
+                if(j == 2) continue ;
+                int z = 3 ;  
+            } 
+        }
+        int i=1;  
+        while(i<=10){  
+            System.out.println(i);  
+            i++;  
+        }  
+    }  
+}  

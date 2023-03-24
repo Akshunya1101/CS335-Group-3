@@ -693,14 +693,14 @@
 Goal:
 CompilationUnit
 Name:
-SimpleName {($$).type = ($1).type; vector<Entry> c = head->get($1.type); Entry c1 = head->get1(c,v,NULL); ($$).str = strdup(c1.Type.c_str()) ; map<int,int> sz1 = c1.Dim;
+SimpleName {($$).type = ($1).type; vector<Entry> c = head->get($1.type); Entry c1 = head->get1(c,v,head); ($$).str = strdup(c1.Type.c_str()) ; map<int,int> sz1 = c1.Dim;
     ($$).dim1 = sz1.size(); ($$).cl = ($$).str;} 
 | QualifiedName {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = $1.dim1;}
 SimpleName:
 Identifier {($$).type = ($1).str;}
 QualifiedName:
-Name Dot Identifier {f4 = 1; ($$).type = ($3).str; if(THIS == $1.cl){ head1 = head->find_table($1.cl,1);} else {head1 = head->find_table($1.cl,0);}
- if(head1){vector<Entry> c = head->get($1.type); c = head1->get($3.str); Entry c1 = head->get1(c,v,head1); ($$).str = strdup(c1.Type.c_str()) ;}
+Name Dot Identifier { f4 = 1; ($$).type = ($3).str; if(THIS == $1.cl){ head1 = head->find_table($1.cl,1);} else {head1 = head->find_table($1.cl,0);}
+ if(head1){vector<Entry> c = head1->get($3.str); Entry c1; if(THIS == $1.cl){c1 = head1->get1(c,v,head1);} else{c1 = head1->get1(c,v,NULL);} ($$).str = strdup(c1.Type.c_str()) ;}
 else {
         cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
         YYABORT;
@@ -1335,7 +1335,7 @@ VariableDeclaratorId {
                 YYABORT;  
             }
             else{
-                vector<Entry> c1 = head->get($3.str); map<int,int> sz1 = head->get1(c1,v,NULL).Dim;
+                vector<Entry> c1 = head->get($3.str); map<int,int> sz1 = head->get1(c1,v,head).Dim;
                 head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},sz1,m),$1.str); m.clear(); lev.clear(); lev1.clear(); l1 = 0; offset = offset + sz*(sz1.size());
             }
         }
@@ -2193,7 +2193,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 | ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type;}
 | FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
 | MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str;}
-| ArrayAccess {($$).type = ($1).type; ($$).str = ($1).str; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,v,NULL).Dim;
+| ArrayAccess {($$).type = ($1).type; ($$).str = ($1).str; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,v,head).Dim;
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0;}
 ClassInstanceCreationExpression:
 New ClassType Lb ArgumentList Rb {
@@ -2203,7 +2203,10 @@ New ClassType Lb ArgumentList Rb {
         head1 = head->find_table($2.str,0);
     if(head1){
         vector<Entry> c = head1->get($2.str);
-        ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
+        if(THIS == $2.str)
+            ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
+        else
+            ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
         int i = find_comma($$.type);
         ($$).type = strdup($$.type+i+1);
         if(!err.empty())
@@ -2224,9 +2227,13 @@ New ClassType Lb ArgumentList Rb {
     else
         head1 = head->find_table($2.str,0);
     f3 = 0;
-    vector<Entry> c;
+    vector<Entry> c = head1->get($2.str);
     if(head1){
-        c = head1->get($2.str);
+        if(THIS == $2.str)
+            ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
+        else{
+            ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
+        }
     }
     else{
         cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
@@ -2249,7 +2256,10 @@ New ClassType Lb ArgumentList Rb {
     else
         head1 = head->find_table($4.str,0);
     vector<Entry> c = head1->get($4.str);
-    ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
+    if(THIS == $4.str)
+            ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
+    else
+            ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     if(!err.empty())
@@ -2288,7 +2298,10 @@ New ClassType Lb ArgumentList Rb {
     else
         head1 = head->find_table($4.str,0);
     vector<Entry> c = head1->get($4.str);
-    ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
+    if(THIS == $4.str)
+            ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
+        else
+            ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     if(!err.empty())
@@ -2375,7 +2388,7 @@ Lsb Rsb {lev1.push_back(0);}
 | Dims Lsb Rsb {lev1.push_back(0);}
 FieldAccess:
 Primary Dot Identifier {
-    ($$).str = ($3).str; head1 = head->find_table($1.type,1); vector<Entry> c = head->get($1.str); if(head1){ c = head1->get($3.str); Entry c1 = head->get1(c,v,head1); ($$).type = strdup(c1.Type.c_str()) ; ($$).dim1 = c1.Dim.size();} else{
+    ($$).str = ($3).str; head1 = head->find_table($1.type,1); vector<Entry> c = head->get($1.str); if(head1){ c = head1->get($3.str); Entry c1 = head1->get1(c,v,head1); ($$).type = strdup(c1.Type.c_str()) ; ($$).dim1 = c1.Dim.size();} else{
         cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
         YYABORT;
     }
@@ -2388,7 +2401,10 @@ Name Lb ArgumentList Rb {
         swap(head,head1);
     }
     vector<Entry> c = head->get($1.type);
-    ($$).type = strdup(head->get1(c,v,NULL).Type.c_str());
+    if(THIS == $1.cl)
+        ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
+    else
+        ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
     if(!err.empty())
     err.pop_back();
     if(!strlen($$.type)){
@@ -2407,7 +2423,10 @@ Name Lb ArgumentList Rb {
         swap(head,head1);
     }
     vector<Entry> c = head->get($1.type);
-    ($$).type = strdup(head->get1(c,v,NULL).Type.c_str());
+    if(THIS == $1.cl)
+        ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
+    else
+        ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     v.clear();
@@ -3148,7 +3167,7 @@ LeftHandSide Eqq AssignmentExpression {
 LeftHandSide:
 Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;}
 |FieldAccess {($$).type = ($1).type; ($$).dim1 = ($1).dim1;}
-|ArrayAccess {($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,v,NULL).Dim;
+|ArrayAccess {($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,v,head).Dim;
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0;}
 Expression:
 AssignmentExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}

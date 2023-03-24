@@ -1,54 +1,17 @@
-public class test_5 {
-    public static void main1(String args[]) {
-        int age = 55;
-        if (age >= 60) {
-            System.out.println("Person is double-vaccinated");
-        } else if (age >= 50 && age < 60) {
-            System.out.println("Person is vaccinated with single-dose only");
-        } else if (age >= 40 && age < 50) {
-            System.out.println("Person is not vaccinated");
-        } else {
-            System.out.println("Person is not eligible for vaccine ");
-        }
-    }
-
-    public static void main2(String args[]) {
-        int age = 20, weight = 50;
-        if(age >= 18) {
-            System.out.println("Person is allowed to vote");
-          if(weight >= 45) {
-                System.out.println("Person is allowed to vote and is fit to donate blood");
-          }
-              else {
-             System.out.println("Person is not fit to donate blood");
-          }
-        }   
-        else {
-            System.out.println("Person is not allowed to vote");
-        }  
-        for (;;) {
-		}  
-    }
-
-    public static void main(String[] args)
-	{
-
-		int row = 1, column = 1;
-		int x;
-		do {
-			x = 4;
-			do {
-				System.out.print("");
-				x--;
-			} while (x >= row);
-			column = 1;
-			do {
-				System.out.print(column + " ");
-				column++;
-
-			} while (column <= 5);
-			System.out.println(" ");
-			row++;
-		} while (row <= 5);
+public class Main
+{
+	public static void main(int args) {
+	    int [][][] arr1 = {{{1,2}, {4,5}, {2,3}}} ;
+        int arr2[][] = {{3}} ;
+        int arr3[] = {1, 2} ;
+        char arr5 [] = {'a', 'b', 'c'} ;
+        float arr6 [][] = {{1.2, 1.1}} ;
+        int arr7 [][] ;
+        arr7 = new int [2][3] ;
+        arr2[0][0] = arr1[0][0][0] ;
+        arr2 = arr1[0] ;
+        arr2[0] = arr3 ;
+        arr3[0] = (int) arr6[0][1] ;
+        return ;
 	}
 }
