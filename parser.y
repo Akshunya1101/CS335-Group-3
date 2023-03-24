@@ -769,7 +769,7 @@
 Goal:
 CompilationUnit
 Name:
-SimpleName {($$).type = ($1).type;  $$.var = $1.var;  vector<Entry> c = head->get($1.type); Entry c1 = head->get1(c,v,head); ($$).str = strdup(c1.Type.c_str()) ; map<int,int> sz1 = c1.Dim;
+SimpleName {($$).type = ($1).type;  $$.var = $1.var;  vector<Entry> c = head->get($1.type); Entry c1 = head->get1(c,{},head); ($$).str = strdup(c1.Type.c_str()) ; map<int,int> sz1 = c1.Dim;
     ($$).dim1 = sz1.size(); ($$).cl = ($$).str;} 
 | QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1;}
 SimpleName:
@@ -784,10 +784,10 @@ string st = "Class";
  else if(st == $1.cl){
     head1 = head->find_table($1.type,0);
  }
- if(head1){vector<Entry> c = head1->get($3.str); Entry c1; if(THIS == $1.cl){c1 = head1->get1(c,v,head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,v,NULL);} ($$).str = strdup(c1.Type.c_str()) ; if(check_print($1.var)) {$$.var = make_print_string($1.var);}
+ if(head1){vector<Entry> c = head1->get($3.str); Entry c1; if(THIS == $1.cl){c1 = head1->get1(c,{},head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,{},NULL);} ($$).str = strdup(c1.Type.c_str()) ; if(check_print($1.var)) {$$.var = make_print_string($1.var);}
     else {
         string temp1 = build_string("t", ++varnum["var"]);
-        add_assignment(temp1, to_string(head->get1(c,v,head).Offset) + " //Offset");
+        add_assignment(temp1, to_string(head->get1(c,{},head).Offset) + " //Offset");
         $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, temp1);
         }
     }
@@ -1429,7 +1429,7 @@ VariableDeclaratorId {
                 YYABORT;  
             }
             else{
-                vector<Entry> c1 = head->get($3.str); map<int,int> sz1 = head->get1(c1,v,head).Dim;
+                vector<Entry> c1 = head->get($3.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
                 head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},sz1,m),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + sz*(sz1.size());
                 vector<Entry> *c2 ;
                 for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
@@ -1772,7 +1772,7 @@ This Lb ArgumentList Rb Semicol {
 }
 | This Lb Rb Semicol {
     vector<Entry> c = head->get(strdup(THIS.c_str()));
-    ($$).type = strdup(head->get1(c,v,head).Type.c_str());
+    ($$).type = strdup(head->get1(c,{},head).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     v.clear();
@@ -1789,7 +1789,7 @@ This Lb ArgumentList Rb Semicol {
 }
 | Super Lb Rb Semicol {
     vector<Entry> c = head->parent->get($1.str);
-    ($$).type = strdup(head->parent->get1(c,v,NULL).Type.c_str());
+    ($$).type = strdup(head->parent->get1(c,{},NULL).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     v.clear();
@@ -2404,7 +2404,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 | ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type; $$.var = $1.var;  $$.var = $1.var;}
 | FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var;  $$.var = $1.var;}
 | MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str; $$.var = $1.var;  $$.var = $1.var;}
-| ArrayAccess {($$).type = ($1).type; ($$).str = ($1).str; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,v,head).Dim;
+| ArrayAccess {($$).type = ($1).type; ($$).str = ($1).str; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; $$.var = $1.var;  $$.var = $1.var;}
 
 New1:
@@ -2447,9 +2447,9 @@ New ClassType New1 Lb ArgumentList Rb {
     vector<Entry> c = head1->get($2.str);
     if(head1){
         if(THIS == $2.str || $2.str == "Reference Type")
-            ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
+            ($$).type = strdup(head1->get1(c,{},head1).Type.c_str());
         else{
-            ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
+            ($$).type = strdup(head1->get1(c,{},NULL).Type.c_str());
         }
     }
     else{
@@ -2614,12 +2614,12 @@ Lsb Rsb {lev1.push_back(0);}
 | Dims Lsb Rsb {lev1.push_back(0);}
 FieldAccess:
 Primary Dot Identifier {
-    ($$).str = ($3).str; head1 = head->find_table($1.type,1); vector<Entry> c = head->get($1.str); if(head1){ c = head1->get($3.str); Entry c1 = head1->get1(c,v,head1); ($$).type = strdup(c1.Type.c_str()) ; ($$).dim1 = c1.Dim.size();} else{
+    ($$).str = ($3).str; head1 = head->find_table($1.type,1); vector<Entry> c = head->get($1.str); if(head1){ c = head1->get($3.str); Entry c1 = head1->get1(c,{},head1); ($$).type = strdup(c1.Type.c_str()) ; ($$).dim1 = c1.Dim.size();} else{
         cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
         YYABORT;
     }
     $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var);}
-| Super Dot Identifier {($$).type = (char*)"Super"; ($$).str = ($3).str; vector<Entry> c1 = head->parent->get($$.str); map<int,int> sz1 = head->parent->get1(c1,v,head).Dim;
+| Super Dot Identifier {($$).type = (char*)"Super"; ($$).str = ($3).str; vector<Entry> c1 = head->parent->get($$.str); map<int,int> sz1 = head->parent->get1(c1,{},head).Dim;
     ($$).dim1 = sz1.size(); $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var);}
 Dummy14:
 Primary Dot Identifier { $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var); ($$).type = ($3).str; }
@@ -2653,7 +2653,7 @@ Name Lb ArgumentList Rb {
     }
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->get($1.type);
-    ($$).type = strdup(head->get1(c,v,head1).Type.c_str());
+    ($$).type = strdup(head->get1(c,{},head1).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     if(f4){
@@ -2684,7 +2684,7 @@ Name Lb ArgumentList Rb {
 | Dummy14 Lb Rb {
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->get($1.type);
-    ($$).type = strdup(head->get1(c,v,NULL).Type.c_str());
+    ($$).type = strdup(head->get1(c,{},NULL).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
 }
@@ -2705,7 +2705,7 @@ Name Lb ArgumentList Rb {
 | Dummy15 Lb Rb {
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->parent->get($1.type);
-    ($$).type = strdup(head->parent->get1(c,v,head->parent).Type.c_str());
+    ($$).type = strdup(head->parent->get1(c,{},head->parent).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
 }
@@ -3600,10 +3600,10 @@ LeftHandSide Eqq AssignmentExpression {
 LeftHandSide:
 Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;}
 |FieldAccess {($$).type = ($1).type; ($$).dim1 = ($1).dim1;}
-|ArrayAccess {($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,v,head).Dim;
+|ArrayAccess {($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0;}
 Expression:
-AssignmentExpression //{($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
+AssignmentExpression {$$=$1;}
 ConstantExpression:
 Expression //{($$).type = ($1).type; ($$).str = ($1).str;}
 TypeParameters: Lt TypeParameterList Gt {($$).type = ($1).str; strcat(($$).type,($2).type); strcat(($$).type,($3).str); tpp = ($$).type;}
