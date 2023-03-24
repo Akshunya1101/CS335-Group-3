@@ -685,6 +685,10 @@
 %type<s>  Dummy12
 %type<s>  Dummy14
 %type<s>  Dummy15
+%type<s>  Dummy16
+%type<s>  Dummy17
+%type<s>  Dummy18
+%type<s>  Dummy19
 %type<s>  Dummy101
 %type<s>  BlockStatements
 %type<s>  BlockStatement
@@ -912,8 +916,45 @@ Lb PrimitiveType Dims Rb UnaryExpression {
     $$.var = build_string("t", ++varnum["var"]) ;
     add_assignment($$.var,s1) ;
 }
-| Lb Expression Rb UnaryExpressionNotPlusMinus
-| Lb Name Dims Rb UnaryExpressionNotPlusMinus
+| Lb Expression Rb UnaryExpressionNotPlusMinus {
+    if(!compare_type($2.type,$4.type) && !compare_type($4.type,$2.type)){
+        cerr << "Types do not match on both the sides in line " << yylineno<<endl;
+        YYABORT;
+    }
+    ($$).type = strdup(($2).type);
+    if($4.type[0]>='A' && $4.type[0]<='Z'){
+        ($$).type[0] = toupper(($$).type[0]);
+    }
+    if($4.dim1!=lev1.size()){
+        cerr << "Incompatible Type Conversion in line " << yylineno<<endl;
+        YYABORT;
+    }
+    ($$).dim1 = ($4).dim1;
+    ($$).str = ($4).str;
+    string s1 = Type_cast(($2).type, ($4).var) ;
+    $$.var = build_string("t", ++varnum["var"]) ;
+    add_assignment($$.var,s1) ;
+}
+| Lb Name Dims Rb UnaryExpressionNotPlusMinus {
+    if(!compare_type($2.type,$5.type) && !compare_type($5.type,$2.type)){
+        cerr << "Types do not match on both the sides in line " << yylineno<<endl;
+        YYABORT;
+    }
+    else{
+        ($$).type = strdup(($2).type);
+        if($5.type[0]>='A' && $5.type[0]<='Z'){
+            ($$).type[0] = toupper(($$).type[0]);
+        }
+        if($5.dim1!=lev1.size()){
+            cerr << "Incompatible Type Conversion in line " << yylineno<<endl;
+            YYABORT;
+        }
+        else{
+            ($$).dim1 = ($5).dim1; 
+            ($$).str = ($5).str;
+        }
+    }
+}
 Type:
 PrimitiveType {
     ($$).type = ($1).type;
@@ -2409,7 +2450,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 | Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var;}
 | Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var;}
 | This {($$).str = strdup(THIS.c_str()); ($$).type = strdup(THIS.c_str()); ($$).dim1 = 0;  $$.var = $1.var;}
-| Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;  $$.var = $1.var;}
+| Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;  $$.var = $2.var;}
 | ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type; $$.var = $1.var;  $$.var = $1.var;}
 | FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var;  $$.var = $1.var;}
 | MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str; $$.var = $1.var;  $$.var = $1.var;}
@@ -3044,7 +3085,7 @@ Dec UnaryExpression {
 UnaryExpressionNotPlusMinus:
 PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 | Tilde UnaryExpression {
-    ($$).type = ($2).type; ($$).var = ($2).var ; ($$).str = ($2).str;
+    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "~");
     if(!compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3055,7 +3096,7 @@ PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).
     }
 }
 | Not UnaryExpression {
-    ($$).type = ($2).type; ($$).var = ($2).var ; ($$).str = ($2).str;
+    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "!");
     if(!compare_string($2.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3395,6 +3436,21 @@ EqualityExpression {($$).type = ($1).type; ($$).str = ($1).str;}
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 ExclusiveOrExpression:
@@ -3411,6 +3467,21 @@ AndExpression {($$).type = ($1).type; ($$).str = ($1).str;}
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 InclusiveOrExpression:
@@ -3427,6 +3498,21 @@ ExclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str;}
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 ConditionalAndExpression:
@@ -3441,6 +3527,21 @@ InclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str;}
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
     ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 ConditionalOrExpression:
@@ -3454,21 +3555,43 @@ ConditionalAndExpression {($$).type = ($1).type; ($$).str = ($1).str;}
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     }
     ($$).dim1 = ($3).dim1; 
+    ($$).var = build_string("t", ++varnum["var"]);
+    string s1 = ($2).str ;
+    string temp = widen(($1).type,($3).type);
+    s1 = s1 + temp ;
+    string s2 ;
+    int check_type = widen2(($1).type,($3).type) ;
+    if(check_type == 1){
+        string s2 = Type_cast(($1).type, ($3).var) ;
+        add_string(($$).var, ($1).var, s2, s1);
+    }
+    else if(check_type == 0){
+        string s2 = Type_cast(($3).type, ($1).var) ;
+        add_string(($$).var, s2, ($3).var, s1);
+    }
+    else add_string(($$).var, ($1).var, ($3).var, s1);
     ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
+Dummy18:
+ConditionalOrExpression Qm {$$ = $1; $$.var = build_string("TernaryOperationSecond", ++varnum["ternaryoperationsecond"]);
+string temp = build_string("TernaryOperationFirst", ++varnum["ternaryoperationfirst"]); if_goto($1.var, temp); go_to($$.var); add_label(temp);}
+Dummy19:
+Dummy18 Expression Col {$$ = $1; add_assignment("t_op", $2.var); $$.var = build_string("EndTernaryOperation", ++varnum["endternaryoperation"]); go_to($$.var); add_label($1.var);}
 ConditionalExpression:
 ConditionalOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
-| ConditionalOrExpression Qm Expression Col ConditionalExpression {
-    if(!compare_type($1.type,(char*)"boolean") || (!compare_type($3.type,$5.type) && !compare_type($5.type,$3.type))){
-        cerr << "Incompatible Ternary Operator with operands of types "<< $1.type << ", " << $3.type << " and "<< $5.type << " in line " << yylineno<<endl;
+| Dummy19 ConditionalExpression {
+    if(!compare_type($1.type,(char*)"boolean")){
+        cerr << "Incompatible Ternary Operator with the given operands in line " << yylineno<<endl;
         YYABORT;
     }
-    if($1.dim1!=0 || $3.dim1!=$5.dim1){
+    if($1.dim1!=0){
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
         YYABORT;
     }
-    ($$).dim1 = ($3).dim1; 
-    ($$).type = widen(($3).type,($5).type); ($$).str = ($3).str;
+    $$.type = $2.type;
+    add_assignment("t_op", $1.var);
+    add_label($1.var);
+    $$.var = (char *)"t_op";
 }
 AssignmentExpression:
 ConditionalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}

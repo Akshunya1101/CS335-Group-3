@@ -3,7 +3,7 @@ public class Main
     public static int add(int x, int y, int z, float y){
         return x+y ;
     }
-	public static void main(int args) {
+	private static void main(int args) {
         int x = 1 ;
         float y = x ;
         char c = 4 ;
