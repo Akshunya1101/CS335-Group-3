@@ -15,7 +15,7 @@
     int inc_flag = 0 ;
     int f1 = 0; //for checking new
     int ln,rl = -1;
-    int f3 = 1,f4 = 0 ;
+    int f3=1, f4=0;
     vector<int> err ;
     map<string,string> conv;
     map<string,set<string>> conv1;
@@ -771,7 +771,7 @@ TypeArgument Comma TypeArgumentList {($$).type = ($1).type; strcat(($$).type,($2
 TypeArgument:
 ReferenceType {($$).type = ($1).type;}
 ClassType:
-ClassOrInterfaceType {$$.str = $1.str; $$.type = $1.type;}
+ClassOrInterfaceType 
 InterfaceType:
 ClassOrInterfaceType
 | ClassOrInterfaceType TypeArguments
@@ -782,10 +782,10 @@ Modifier {m.push_back($1.str);}
 Modifier:
 Public {$$.str = $1.str;}
 | Protected 
-| Private {$$.str = $1.str;}
-| Static {$$.str = $1.str;}
+| Private
+| Static
 | Abstract 
-| Final {$$.str = $1.str;}
+| Final
 | Native 
 | Synchronized 
 | Transient 
@@ -2374,6 +2374,7 @@ New ClassType New1 Lb ArgumentList Rb {
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function");
     v.clear();
 } 
 | New ClassType New1 Lb Rb {
@@ -2390,7 +2391,6 @@ New ClassType New1 Lb ArgumentList Rb {
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     f3 = 1;
-    v.clear();
 }
 | Primary Dot New ClassType New1 Lb ArgumentList Rb {
      $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var); 
@@ -2404,6 +2404,7 @@ New ClassType New1 Lb ArgumentList Rb {
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function");
     v.clear();
 } 
 | Primary Dot New ClassType New1 Lb Rb {
@@ -2420,11 +2421,12 @@ New ClassType New1 Lb ArgumentList Rb {
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     f3 = 1;
-    v.clear();
 }
-|New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $3.var); }
+|New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $3.var);
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function"); }
 | New TypeArguments ClassType New1 Lb Rb { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $3.var); }
-|Primary Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $5.var); }
+|Primary Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $5.var);
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function"); }
 | Primary Dot New TypeArguments ClassType New1 Lb Rb { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $5.var); }
 
 | Name Dot New ClassType New1 Lb ArgumentList Rb {
@@ -2439,6 +2441,7 @@ New ClassType New1 Lb ArgumentList Rb {
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function");
     v.clear();
 } 
 | Name Dot New ClassType New1 Lb Rb {
@@ -2455,9 +2458,9 @@ New ClassType New1 Lb ArgumentList Rb {
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     f3 = 1;
-    v.clear();
 }
-|Name Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var); }
+|Name Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function"); }
 | Name Dot New TypeArguments ClassType New1 Lb Rb { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var); }
 
 
@@ -2572,6 +2575,7 @@ Name Lb ArgumentList Rb {
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function");
     v.clear();
 }
 | Dummy14 Identifier Lb Rb {
@@ -2580,7 +2584,6 @@ Name Lb ArgumentList Rb {
     ($$).type = strdup(head->get1(c,v).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
-    v.clear();
 }
 | Dummy15 Identifier Lb ArgumentList Rb {
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
@@ -2593,6 +2596,7 @@ Name Lb ArgumentList Rb {
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function");
     v.clear();
 } 
 | Dummy15 Identifier Lb Rb {
@@ -2601,7 +2605,6 @@ Name Lb ArgumentList Rb {
     ($$).type = strdup(head->parent->get1(c,v).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
-    v.clear();
 }
 ArrayAccess:
 Name Lsb Expression Rsb {
