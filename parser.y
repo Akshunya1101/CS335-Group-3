@@ -1,12 +1,25 @@
 %{
     #include<bits/stdc++.h>
     #include <fstream>
+    #include <iostream>
+    #include <getopt.h>
     using namespace std;
     extern int yylex();
     int yyerror(const char*s);
     #define YYERROR_VERBOSE 1
     #define pb push_back
+    #define YYDEBUG 1
+    extern int yylex();
+    extern FILE* yyin ;
     extern int yylineno;
+    bool verbose = false;
+    static struct option long_options[] = {
+        {"input", required_argument, 0, 'i'},
+        {"output", required_argument, 0, 'o'},
+        {"help", no_argument, 0, 'h'},
+        {"verbose", no_argument, 0, 'v'},
+        {0, 0, 0, 0}
+};
     map<int,int> lev;
     vector<int> lev1;
     string symtable = "" ;
@@ -791,12 +804,14 @@ QualifiedName:
 Name Dot Identifier { f4 = 1; ($$).type = ($3).str; if(THIS == $1.cl){ head1 = head->find_table($1.cl,1);} else {head1 = head->find_table($1.cl,0);}
 string ss = "Reference Type";
 string st = "Class";
+if(!head1){
  if(st == $1.cl && THIS == $1.type || $1.cl == ss){
     head1 = head->find_table($1.type,1);
  }
  else if(st == $1.cl){
     head1 = head->find_table($1.type,0);
  }
+}
  if(head1){vector<Entry> c = head1->get($3.str); Entry c1; if(THIS == $1.cl){c1 = head1->get1(c,{},head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,{},NULL);} ($$).str = strdup(c1.Type.c_str()) ; if(check_print($1.var)) {$$.var = make_print_string($1.var);}
     else {
         string temp1 = build_string("t", ++varnum["var"]);
@@ -2682,10 +2697,16 @@ Name Lb ArgumentList Rb {
     }
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->get($1.type);
-    ($$).type = strdup(head->get1(c,v,head).Type.c_str());
-    if(!err.empty())
+    if(THIS == $1.cl)
+        ($$).type = strdup(head->get1(c,v,head).Type.c_str());
+    else{
+        ($$).type = strdup(head->get1(c,v,NULL).Type.c_str());
+    }
+    if(!err.empty()){
         err.pop_back();
+    }
     if(!strlen($$.type)){
+        cerr<<"HERE";
         err.push_back(yylineno);
     }
     int i = find_comma($$.type);
@@ -2703,7 +2724,11 @@ Name Lb ArgumentList Rb {
     }
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->get($1.type);
-    ($$).type = strdup(head->get1(c,{},head1).Type.c_str());
+    if(THIS == $1.cl)
+        ($$).type = strdup(head->get1(c,v,head).Type.c_str());
+    else{
+        ($$).type = strdup(head->get1(c,v,NULL).Type.c_str());
+    }
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     if(f4){
@@ -3749,7 +3774,7 @@ AdditionalBounds: {} | AdditionalBounds AdditionalBound
 AdditionalBound : And InterfaceType;
 %%
 
-int main(){
+int main(int argc, char* argv[]){
     list_tables[0] = head;
     conv["byte"] = "short";
     conv["short"] = "integer";
@@ -3766,7 +3791,41 @@ int main(){
     conv1["char"] = {"short","byte","char"};
     conv1["short"] = {"short","char","byte"};
     conv1["byte"] = {"short","char","byte"};
-
+    char* input_filename = nullptr;
+    int opt;
+    while ((opt = getopt_long(argc, argv, "i:hv", long_options, nullptr)) != -1) {
+        switch (opt) {
+        case 'i':
+            input_filename = optarg;
+            break;
+        case 'h':
+            std::cout << "Usage: " << argv[0] << " [OPTIONS]\n"
+                      << "Options:\n"
+                      << "  -i, --input FILENAME   Set input file\n"
+                      << "  -h, --help             Display this help message\n"
+                      << "  -v, --verbose          Enable verbose mode\n"
+                      << std::endl;
+            return 0;
+        case 'v':
+            verbose = true;
+            break;
+        case '?':
+            return 1;
+        default:
+            std::cerr << "Internal error: unhandled option " << opt << std::endl;
+            return 1;
+        }
+    }
+    if (input_filename == nullptr) {
+        std::cerr << "Error: input filename is required" << std::endl;
+        return 1;
+    }
+    if (verbose) {
+        #if YYDEBUG
+            yydebug = 1 ;
+        #endif
+    }
+    yyin = fopen(input_filename, "r");
     yyparse();
     if(!err.empty()){
         cerr << "Incorrect Invocation in line " << err[0]<<endl; 
