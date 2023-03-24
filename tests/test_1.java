@@ -1,6 +1,6 @@
 public class Main
 {
-    public static int add(int x, int y){
+    public static int add(int x, int y, int z, float y){
         return x+y ;
     }
 	public static void main(int args) {
@@ -10,8 +10,9 @@ public class Main
         c = 1 ;
         c = (char)y ;
         x = (int)y ;
+        x = (int)1.1 ;
         float z = x + y + c ;
-        int a = add(2,3) ;
+        int a = add(x, x, x, y) ;
         boolean b = x > 2 ;
         return ;
 	}

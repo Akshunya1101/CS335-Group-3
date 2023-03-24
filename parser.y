@@ -2857,6 +2857,33 @@ PostfixExpression Inc {
     $$.var = build_string("t", ++varnum["var"]) ;
     add_assignment($$.var, $1.var) ;
     add_string($1.var, $1.var, "1", "+");
+    vector<Entry>* c2 ;
+                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
+                    if(ptr->table.find($1.str)!=ptr->table.end()){
+                        c2 = &ptr->table[$1.str];
+                        break ;
+                    }
+                }
+                Entry *c3 ;
+                for(int j=0; j<(*c2).size(); j++){
+                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
+                        continue;
+                    int final_flag = 1;
+                    for(int i=0;i<v.size();i++){
+                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
+                            final_flag = 0;
+                            break;
+                        }
+                    }
+                    if(final_flag == 1){
+                        c3 = &(*c2)[j] ;
+                        break ;
+                    }
+                }
+                c3->final_check++ ;
+    if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
+        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+    }
 
 }
 PostDecrementExpression:
@@ -2873,6 +2900,33 @@ PostfixExpression Dec {
     $$.var = build_string("t", ++varnum["var"]) ;
     add_assignment($$.var, $1.var) ;
     add_string($1.var, $1.var, "1", "-");
+    vector<Entry>* c2 ;
+                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
+                    if(ptr->table.find($1.str)!=ptr->table.end()){
+                        c2 = &ptr->table[$1.str];
+                        break ;
+                    }
+                }
+                Entry *c3 ;
+                for(int j=0; j<(*c2).size(); j++){
+                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
+                        continue;
+                    int final_flag = 1;
+                    for(int i=0;i<v.size();i++){
+                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
+                            final_flag = 0;
+                            break;
+                        }
+                    }
+                    if(final_flag == 1){
+                        c3 = &(*c2)[j] ;
+                        break ;
+                    }
+                }
+                c3->final_check++ ;
+    if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
+        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+    }
 }
 UnaryExpression:
 PreIncrementExpression
@@ -2911,6 +2965,33 @@ Inc UnaryExpression {
         YYABORT;
     }
     add_string($2.var, $2.var, "1", "+"); $$ = $2;
+    vector<Entry>* c2 ;
+                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
+                    if(ptr->table.find($2.str)!=ptr->table.end()){
+                        c2 = &ptr->table[$2.str];
+                        break ;
+                    }
+                }
+                Entry *c3 ;
+                for(int j=0; j<(*c2).size(); j++){
+                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
+                        continue;
+                    int final_flag = 1;
+                    for(int i=0;i<v.size();i++){
+                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
+                            final_flag = 0;
+                            break;
+                        }
+                    }
+                    if(final_flag == 1){
+                        c3 = &(*c2)[j] ;
+                        break ;
+                    }
+                }
+                c3->final_check++ ;
+    if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
+        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+    }
 }
 PreDecrementExpression:
 Dec UnaryExpression {
@@ -2923,6 +3004,33 @@ Dec UnaryExpression {
         YYABORT;
     }
     add_string($2.var, $2.var, "1", "-"); $$ = $2;
+    vector<Entry>* c2 ;
+                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
+                    if(ptr->table.find($2.str)!=ptr->table.end()){
+                        c2 = &ptr->table[$2.str];
+                        break ;
+                    }
+                }
+                Entry *c3 ;
+                for(int j=0; j<(*c2).size(); j++){
+                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
+                        continue;
+                    int final_flag = 1;
+                    for(int i=0;i<v.size();i++){
+                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
+                            final_flag = 0;
+                            break;
+                        }
+                    }
+                    if(final_flag == 1){
+                        c3 = &(*c2)[j] ;
+                        break ;
+                    }
+                }
+                c3->final_check++ ;
+    if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
+        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+    }
 }
 UnaryExpressionNotPlusMinus:
 PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
