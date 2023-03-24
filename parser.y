@@ -9,6 +9,7 @@
     extern int yylineno;
     map<int,int> lev;
     vector<int> lev1;
+    string symtable = "" ;
     class SymbolTable;
     int l = 0, l1 = 0, l2 = 0;
     long long int sz=0;
@@ -23,6 +24,10 @@
     string Type_cast(string t, char*var){
         string s = var ;
         return "cast_to_" + t + "(" + s + ")" ;
+    }
+    int count_files = 1 ;
+    string csv_name(){
+        return "symboltable" + to_string(count_files++) + ".csv" ;
     }
     int find_comma(char* s){
         int i;
@@ -195,13 +200,16 @@
                 final_check = 0 ;
             }
             void print_entry(){
-                cout<<Token<<"    ";
+                symtable = symtable + Token + ", " ;
                 for(int i=0;i<Dim.size();i++)
                     Type = "array(" + Type + ")";
-                cout<<Type<<"    "<<Line<<"    "<<Offset<<"    "<<Scope<<"    ";
+                int fc = find_comma(strdup(Type.c_str())) ;
+                if(fc != -1) Type[fc] = '_' ;
+                symtable = symtable + Type + ", " + to_string(Line) + ", " + to_string(Offset) + ", " + Scope + ", " ;                
                 for(auto x:Params){
-                    cout<<x<<' ';
+                    symtable = symtable + x + " " ;
                 }
+                symtable = symtable + ", " ;
                 int term = 1;
                 stack<int> s;
                 for(auto x:Dim){
@@ -209,10 +217,10 @@
                     term = x.second;
                 }
                 while(!s.empty()){
-                    cout<<s.top()<<' ';
+                    symtable = symtable + to_string(s.top()) + " " ;
                     s.pop();
                 }
-                cout<<endl;
+                symtable = symtable + '\n' ;
             }
     };
     class SymbolTable{
@@ -342,11 +350,12 @@
             }
             
             void print(){
+                symtable = "Lexeme, Token, Type, Line, Offset, Scope, Prameters, Dimensions\n" ;
                 for(auto it=table.begin();it!=table.end();it++){
                     for(auto it1:it->second){
                         if(it1.Type == "Boolean" || it1.Type == "string" || it1.Type == "Character" || it1.Type == "Integer" || it1.Type == "Float" || it1.Type == "Null")
                             continue;
-                        cout<<it->first<<":    ";
+                        symtable = symtable + it->first + ", ";
                         it1.print_entry();
                     }
                 }
@@ -3640,8 +3649,10 @@ int main(){
         cerr << "Incorrect Invocation in line " << err[0]<<endl; 
     }
     for(auto x:list_tables){
+        ofstream sy (csv_name(), std::ofstream::out);
         x->print();
-        cout<<endl;
+        sy << symtable ;
+        symtable = "" ;
     }
     ofstream ac3 ("TAC.txt", std::ofstream::out);
     for(auto s : ac) {
