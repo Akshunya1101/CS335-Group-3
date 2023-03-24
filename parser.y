@@ -13,13 +13,12 @@
     int l = 0, l1 = 0, l2 = 0;
     long long int sz=0;
     int f = 1;
-    int f3 = 1;
-    int f4 = 0;
     int f1 = 0; //for checking new
     int ln,rl = -1;
+    int f3=1, f4=0;
+    vector<int> err ;
     map<string,string> conv;
     map<string,set<string>> conv1;
-    vector<int> err;
     string Type_cast(string t, char*var){
         string s = var ;
         return "cast_to_" + t + "(" + s + ")" ;
@@ -115,12 +114,7 @@
             t22 = conv[t22];
         }
         if(f1 && f2){
-            if(tt2 == tt1 || tt2[0]>='a' && tt2[0]<='z'){
-                return -1;
-            }
-            else{
-                return 1;
-            }
+            return -1 ;
         }
         else if(f1){
             return 0;
@@ -184,7 +178,7 @@
             string Scope;
             vector<string> Params;
             map<int,int> Dim;
-            vector<string> Mod;
+            vector<string> Mod ;
             Entry(){
             }
             Entry(string token, string type, int line, long int offset, string scope, vector<string> params, map<int,int> dim, vector<string> m){
@@ -311,10 +305,25 @@
             }
             Entry get1(vector<Entry> c,vector<string> v, SymbolTable* p){
                 for(auto x:c){
-                    if(x.Params.size()!=v.size() || (find(x.Mod.begin(),x.Mod.end(),"private")!=x.Mod.end() && !this->ancestry(p)))
+                    if(x.Params.size()!=v.size()){
+                        if(v.empty())
+                            continue;
+                        else{
+                            if(v[0][0]!='0'){
+                                continue;
+                            }
+                        }
+                    }
+                    if((find(x.Mod.begin(),x.Mod.end(),"private")!=x.Mod.end() && !this->ancestry(p)))
                         continue;
+                    if((find(x.Mod.begin(),x.Mod.end(),"static")==x.Mod.end() && !v.empty())){
+                        if(v[0][0]=='0')
+                            continue;
+                    }
                     int flag = 1;
                     for(int i=0;i<v.size();i++){
+                        if(v[0]=="0")
+                            break;
                         if(!compare_type(strdup(x.Params[i].c_str()),strdup(v[i].c_str()))){
                             flag = 0;
                             break;
@@ -375,8 +384,32 @@
     vector<string> ac;
     map<string, int> varnum;
     void add_string(string exp1, string exp2, string exp3, string op) {
-        string expr = exp1 + " = " + exp2 + " " + op + " " + exp3 + ";";
+        string expr = exp1 + " = " + exp2 + " " + op + " " + exp3;
         ac.pb(expr);
+        return;
+    }
+    void add_assignment(string exp1, string exp2) {
+        ac.pb(exp1 + " = " + exp2);
+        return;
+    }
+    void add_address(string exp, string exp1, string exp2) {
+        string result = exp + " points to *(" + exp1 + "+" + exp2 + ")";
+        ac.pb(result);
+        return;
+    }
+    void add_param(string exp) {
+        ac.pb("param " + exp);
+        return;
+    }
+    void call_func(string exp, string func_name) {
+        ac.pb(exp + " = call " + func_name);
+        return;
+    }
+    void alloc_mem(string exp) {
+        ac.pb("stackpointer +xxx");
+        ac.pb("Call allocmem");
+        ac.pb("stackpointer -yyy");
+        add_assignment(exp, "popparam //Assigning the newly allocated memory");
         return;
     }
     char* build_string(string str, int number) {
@@ -389,17 +422,6 @@
 
         return charArray;
     }
-    // void control_flow(string exp, string blockstart, string endstat) {
-    //     ac.pb("if " + exp + " goto " + blockstart);
-    //     ac.pb("goto " + endstat);
-    //     ac.pb(blockstart + ":");
-    //     return;
-    // }
-    // void end_control_flow(string cfstart, string nextblock) {
-    //     ac.pb("goto " + cfstart);
-    //     ac.pb(nextblock + ":");
-    //     return;
-    // }
     void add_label(string label) {
         ac.pb(label + ":");
         return;
@@ -410,6 +432,54 @@
     }
     void go_to(string loc) {
         ac.pb("goto " + loc);
+    }
+    string findscope(bool brkorcont) {
+        string sc = scope;
+        stack<string> temp1;
+        bool found = false;
+        while(!scopes.empty()) {
+            if( (sc.size()>=3 && sc.substr(0, 3)=="For") || (sc.size()>=5 && sc.substr(0, 5)=="While") || (brkorcont && sc.size()>=6 && sc.substr(0, 6)=="Switch") || (sc.size()>=7 && sc.substr(0, 7)=="DoWhile") ) {
+                found = true;
+                break;
+            }
+            sc = scopes.top();
+            temp1.push(sc);
+            scopes.pop();
+        }
+        while(!temp1.empty()) {
+            scopes.push(temp1.top());
+            temp1.pop();
+        }
+        if(!found) {
+            cerr << (brkorcont? "Break":"Continue") << " declared outside any loop or switch case statement" << endl;
+        }
+        return sc;
+    }
+    string findloccont(string sc) {
+        string final_loc = "End";
+        if(sc.size()>=3 && sc.substr(0, 3)=="For") {
+            final_loc = "ForUpdate" + sc.substr(3, sc.size()-3);
+        }
+        else if(sc.size()>=5 && sc.substr(0, 5)=="While") {
+            final_loc = sc;
+        }
+        else if(sc.size()>=7 && sc.substr(0, 7)=="DoWhile") {
+            final_loc = "DoWhileExpression" + sc.substr(7, sc.size()-7);
+        }
+        return final_loc;
+    }
+    bool check_print(string exp1) {
+        if(exp1 == "System" || exp1 == "System.out")
+            return true;
+        return false;
+    }
+    char *make_print_string(string exp) {
+        string result="println";
+        if(exp=="System")
+            result = "System.out";
+        char* charArray = new char[result.length() + 1];
+        strcpy(charArray, result.c_str());
+        return charArray;
     }
 %}
 %union {
@@ -530,6 +600,7 @@
 %token<s> Two_col
 %type<s>  Goal
 %type<s>  Name
+%type<s>  New1
 %type<s>  SimpleName
 %type<s>  QualifiedName
 %type<s>  ClassOrInterfaceType
@@ -600,6 +671,8 @@
 %type<s>  Dummy10
 %type<s>  Dummy11
 %type<s>  Dummy12
+%type<s>  Dummy14
+%type<s>  Dummy15
 %type<s>  Dummy101
 %type<s>  BlockStatements
 %type<s>  BlockStatement
@@ -693,21 +766,36 @@
 Goal:
 CompilationUnit
 Name:
-SimpleName {($$).type = ($1).type; vector<Entry> c = head->get($1.type); Entry c1 = head->get1(c,v,head); ($$).str = strdup(c1.Type.c_str()) ; map<int,int> sz1 = c1.Dim;
+SimpleName {($$).type = ($1).type;  $$.var = $1.var;  vector<Entry> c = head->get($1.type); Entry c1 = head->get1(c,v,head); ($$).str = strdup(c1.Type.c_str()) ; map<int,int> sz1 = c1.Dim;
     ($$).dim1 = sz1.size(); ($$).cl = ($$).str;} 
-| QualifiedName {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = $1.dim1;}
+| QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1;}
 SimpleName:
-Identifier {($$).type = ($1).str;}
+Identifier {($$).type = ($1).str; $$.var = $1.var;}
 QualifiedName:
 Name Dot Identifier { f4 = 1; ($$).type = ($3).str; if(THIS == $1.cl){ head1 = head->find_table($1.cl,1);} else {head1 = head->find_table($1.cl,0);}
- if(head1){vector<Entry> c = head1->get($3.str); Entry c1; if(THIS == $1.cl){c1 = head1->get1(c,v,head1);} else{c1 = head1->get1(c,v,NULL);} ($$).str = strdup(c1.Type.c_str()) ;}
+string ss = "Reference Type";
+string st = "Class";
+ if(st == $1.cl && THIS == $1.type || $1.cl == ss){
+    head1 = head->find_table($1.type,1);
+ }
+ else if(st == $1.cl){
+    head1 = head->find_table($1.type,0);
+ }
+ if(head1){vector<Entry> c = head1->get($3.str); Entry c1; if(THIS == $1.cl){c1 = head1->get1(c,v,head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,v,NULL);} ($$).str = strdup(c1.Type.c_str()) ; if(check_print($1.var)) {$$.var = make_print_string($1.var);}
+    else {
+        string temp1 = build_string("t", ++varnum["var"]);
+        add_assignment(temp1, to_string(head->get1(c,v,head).Offset) + " //Offset");
+        $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, temp1);
+        }
+    }
 else {
         cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
         YYABORT;
     }
+    $$.var = $3.var;
 }
 ClassOrInterfaceType:
-Name {($$).str = ($1).type; ($$).type = ($1).str; tp = ($$).str;}
+Name {($$).str = ($1).type; ($$).type = ($1).str; tp = ($$).str; $$.var = $1.var;}
 TypeArguments: 
 Lt TypeArgumentList Gt {($$).type = ($1).str; strcat(($$).type,($2).type); strcat(($$).type,($3).str); tp += ($$).type;}
 TypeArgumentList: 
@@ -808,6 +896,9 @@ Lb PrimitiveType Dims Rb UnaryExpression {
     }
     ($$).dim1 = ($4).dim1;
     ($$).str = ($4).str;
+    string s1 = Type_cast(($2).type, ($4).var) ;
+    $$.var = build_string("t", ++varnum["var"]) ;
+    add_assignment($$.var,s1) ;
 }
 | Lb Expression Rb UnaryExpressionNotPlusMinus
 | Lb Name Dims Rb UnaryExpressionNotPlusMinus
@@ -891,7 +982,7 @@ PackageDeclaration ImportDeclarations TypeDeclarations
 | ImportDeclarations TypeDeclarations
 |  ImportDeclarations
 | TypeDeclarations
-| 
+| {}
 ImportDeclarations:
 ImportDeclaration
 | ImportDeclarations ImportDeclaration
@@ -1331,7 +1422,7 @@ VariableDeclaratorId {
     if(l1 != lev.size() && l1 != lev1.size()){
         if(lev.empty() && lev1.empty()){
             if(!compare_type($1.type,$3.type) || ($3).dim1 != l1){
-                cerr << "Types do not match on both the sides in line " << yylineno<<endl; 
+                cerr << "Types do not match on both the sides in line " << yylineno<<endl;  
                 YYABORT;  
             }
             else{
@@ -1340,7 +1431,7 @@ VariableDeclaratorId {
             }
         }
         else{
-            cerr << "Types do not match on both the sides in line " << yylineno<<endl;
+            cerr << "Types do not match on both the sides in line " << yylineno<<endl;  
             YYABORT;  
         }
     }
@@ -1371,6 +1462,14 @@ VariableDeclaratorId {
         }
         head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$1.str); m.clear(); lev.clear(); lev1.clear(); l1 = 0; offset = offset + term*sz;
     }
+    int check_type = widen2(($1).type,($3).type);
+    if(check_type != -1){
+        string s1 = Type_cast($1.type, $3.var) ;
+        add_assignment($1.var, s1) ;
+    }
+    else{
+        add_assignment($1.var, $3.var) ;
+    }
     ($$).type = widen(($1).type,($3).type);
     ($$).str = ($1).str;
 }
@@ -1388,6 +1487,8 @@ MethodHeader MethodBody {
     }
     ttt = "";
     rl = -1;
+    add_label("End" + head->scope_name);
+    ac.pb("");
     head = tables.top();
     tables.pop();
     head->Size = offset; offset = offsets.top();
@@ -1403,13 +1504,16 @@ Identifier Lb {
     offset += sz;
     tables.push(head);
     string temp($1.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
     scope = ($1.str);
     scope += " Method";
     flag = true;
+    ac.pb("");
+    add_label(head->scope_name);
+    add_assignment("t0", "popparam // Getting object reference");
 } FormalParameterList Rb {tables.top()->check(func,$1.str);}
 | Identifier Lb Rb {
     tp = "Method," + tp;
@@ -1418,7 +1522,7 @@ Identifier Lb {
     offset += sz;
     tables.push(head);
     string temp($1.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1426,14 +1530,17 @@ Identifier Lb {
     scope += " Method";
     flag = true;
     tables.top()->check(func,$1.str);
+    ac.pb("");
+    add_label(head->scope_name);
+    add_assignment("t0", "popparam // Getting object reference");
 }
 | MethodDeclarator Lsb Rsb
 FormalParameterList:
 FormalParameter { string tp1 = tp; for(int i=0;i<l1;i++) tp1 = "array("+tp1+")";
-    if(func){func->Params.push_back(tp1);}
+    if(func){func->Params.push_back(tp1);} add_assignment($1.var, "popparam //Getting arguments");
  lev.clear(); l1 = 0; lev1.clear();}
 | FormalParameterList Comma FormalParameter { string tp1 = tp; for(int i=0;i<l1;i++) tp1 = "array("+tp1+")";
-    if(func){func->Params.push_back(tp1);}
+    if(func){func->Params.push_back(tp1);} add_assignment($3.var, "popparam //Getting arguments");
  lev.clear(); l1 = 0; lev1.clear();}
 FormalParameter:
 Type VariableDeclaratorId {
@@ -1441,28 +1548,28 @@ Type VariableDeclaratorId {
     for(int i=0;i<l1;i++){
         m1[i] = -1;
     }
-    ($$).str = ($2).str; head->check(head->set($2.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$2.str); m.clear(); offset = offset + sz;
+    ($$).str = ($2).str; ($$).var = ($2).var; head->check(head->set($2.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$2.str); m.clear(); offset = offset + sz;
 }
 | Final_ Type VariableDeclaratorId {
     map<int,int> m1;
     for(int i=0;i<l1;i++){
         m1[i] = -1;
     }
-    ($$).str = ($3).str; head->check(head->set($3.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$3.str); m.clear(); offset = offset + sz;
+    ($$).str = ($3).str; ($$).var = ($3).var; head->check(head->set($3.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$3.str); m.clear(); offset = offset + sz;
 }
 |Type TypeArguments VariableDeclaratorId  {
     map<int,int> m1;
     for(int i=0;i<l1;i++){
         m1[i] = -1;
     }
-    ($$).str = ($3).str; head->check(head->set($3.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$3.str); m.clear(); offset = offset + sz;
+    ($$).str = ($3).str; ($$).var = ($3).var; head->check(head->set($3.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$3.str); m.clear(); offset = offset + sz;
 }
 | Final_ Type TypeArguments VariableDeclaratorId {
     map<int,int> m1;
     for(int i=0;i<l1;i++){
         m1[i] = -1;
     }
-    ($$).str = ($4).str; head->check(head->set($4.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$4.str); m.clear(); offset = offset + sz;
+    ($$).str = ($4).str; ($$).var = ($4).var; head->check(head->set($4.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$4.str); m.clear(); offset = offset + sz;
 }
 Final_ :
 Final {m.push_back("final");}
@@ -1517,7 +1624,7 @@ SimpleName Lb {
     m.clear();
     tables.push(head);
     string temp($1.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1531,7 +1638,7 @@ SimpleName Lb {
     m.clear();
     tables.push(head);
     string temp($1.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1544,7 +1651,7 @@ SimpleName Lb {
     m.clear();
     tables.push(head);
     string temp($2.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1558,7 +1665,7 @@ SimpleName Lb {
     m.clear();
     tables.push(head);
     string temp($1.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1617,7 +1724,7 @@ Modifiers Interface Identifier ExtendsInterfaces {
     head->check(func,$3.str);
     tables.push(head);
     string temp($3.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1657,7 +1764,7 @@ Modifiers Interface Identifier ExtendsInterfaces {
     head->check(func,$3.str);
     tables.push(head);
     string temp($3.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1677,7 +1784,7 @@ Modifiers Interface Identifier ExtendsInterfaces {
     head->check(func,$2.str);
     tables.push(head);
     string temp($2.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1697,7 +1804,7 @@ Modifiers Interface Identifier ExtendsInterfaces {
     head->check(func,$3.str);
     tables.push(head);
     string temp($3.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1717,7 +1824,7 @@ Modifiers Interface Identifier ExtendsInterfaces {
     head->check(func,$2.str);
     tables.push(head);
     string temp($2.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1737,7 +1844,7 @@ Modifiers Interface Identifier ExtendsInterfaces {
     head->check(func,$3.str);
     tables.push(head);
     string temp($3.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1757,7 +1864,7 @@ Modifiers Interface Identifier ExtendsInterfaces {
     head->check(func,$2.str);
     tables.push(head);
     string temp($3.str);
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
+    head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
@@ -1893,13 +2000,13 @@ Identifier Col StatementNoShortIf
 ExpressionStatement:
 StatementExpression Semicol
 StatementExpression:
-Assignment {($$).type = ($1).type; ($$).str = ($1).str;}
-| PreIncrementExpression {($$).type = ($1).type; ($$).str = ($1).str;}
-| PreDecrementExpression {($$).type = ($1).type; ($$).str = ($1).str;}
-| PostIncrementExpression {($$).type = ($1).type; ($$).str = ($1).str;}
-| PostDecrementExpression {($$).type = ($1).type; ($$).str = ($1).str;}
-| MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str;}
-| ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type;}
+Assignment {$$ = $1;}
+| PreIncrementExpression {$$ = $1;}
+| PreDecrementExpression {$$ = $1;}
+| PostIncrementExpression {$$ = $1;}
+| PostDecrementExpression {$$ = $1;}
+| MethodInvocation {$$ = $1;}
+| ClassInstanceCreationExpression {$$ = $1;}
 Dummy2:
 {
     tables.push(head);
@@ -1908,7 +2015,7 @@ Dummy2:
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = "If Statement";
+    scope = head->scope_name;
     flag = true;
     add_label(head->scope_name);
 }
@@ -1920,7 +2027,7 @@ Dummy4:
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = "Else Statement";
+    scope = head->scope_name;
     flag = true;
 }
 Dummy5:
@@ -1943,7 +2050,12 @@ Dummy8 Statement {
     scopes.pop();
 }
 Dummy8:
-If Lb Dummy2 Expression Rb { if_goto($4.var, "IfBody" + head->scope_num); go_to("EndIf" + head->scope_num); add_label("IfBody" + head->scope_num); }
+If Lb Dummy2 Expression Rb { 
+    if(($4).type != "boolean"){
+        cerr << "Incompatible type " << ($4).type << " instead of boolean" << endl ;
+    }
+    if_goto($4.var, "IfBody" + head->scope_num); go_to("EndIf" + head->scope_num); add_label("IfBody" + head->scope_num); 
+}
 Dummy9:
 Dummy8 StatementNoShortIf {add_label("EndIf" + head->scope_num);} Dummy5 Else Dummy4 {add_label(head->scope_name);}
 IfThenElseStatement:
@@ -1974,10 +2086,16 @@ Switch {
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = "Switch Statement";
+    scope = head->scope_name;
 }
 SwitchStatement:
 Dummy13 Lb Expression {$<s>$ = $3;} Rb SwitchBlock {
+    if(!compare_type((char*)"integer", ($3).type) && strcmp(($3).type, (char*)"string")){
+        cerr << ($3).type << " cannot be evaluated to type integer in the switch statement expression" << endl ;
+    }
+    // if(!compare_type(($3).type, ($6).type) && !compare_type1(($3).type, ($6).type)){
+    //     cerr << "Incompatible types in switch statement and case label" << endl ;
+    // }
     head = tables.top();
     tables.pop();
     head->Size = offset; offset = offsets.top();
@@ -1988,18 +2106,24 @@ Dummy13 Lb Expression {$<s>$ = $3;} Rb SwitchBlock {
 SwitchBlock:
 Lcb SwitchBlockStatementGroups SwitchLabels Rcb
 | Lcb SwitchBlockStatementGroups Rcb
-| Lcb SwitchLabels Rcb
+| Lcb SwitchLabels Rcb 
 | Lcb Rcb
 SwitchBlockStatementGroups:
-SwitchBlockStatementGroup
+SwitchBlockStatementGroup {($$).type = ($1).type ;}
 | SwitchBlockStatementGroups SwitchBlockStatementGroup
 SwitchBlockStatementGroup:
-SwitchLabels BlockStatements
+SwitchLabels BlockStatements {($$).type = ($1).type ;}
 SwitchLabels:
-SwitchLabel
+SwitchLabel {($$).type = ($1).type ;}
 | SwitchLabels SwitchLabel
 SwitchLabel:
-Case ConstantExpression Col
+Case ConstantExpression Col {
+    ($$).type = ($2).type ;
+    if(strcmp((char*)"Integer", ($2).type) && strcmp((char*)"Character", ($2).type) && strcmp((char*)"Boolean", ($2).type) 
+    && strcmp((char*)"Float", ($2).type) && strcmp((char*)"Null", ($2).type) && strcmp((char*)"Long", ($2).type) && strcmp((char*)"string", ($2).type)){
+        cerr << "Case label must be of type constant expression" << endl ;
+    }
+}
 | Default Col
 Dummy1:
 {
@@ -2009,12 +2133,17 @@ Dummy1:
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = "While Loop";
+    scope = head->scope_name;
     flag = true;
     add_label(head->scope_name);
 }
 Dummy10:
-Lb Expression Rb {if_goto($2.var, "WhileBody" + head->scope_num); go_to("EndWhile" + head->scope_num); add_label("WhileBody" + head->scope_num);}
+Lb Expression Rb {
+    if_goto($2.var, "WhileBody" + head->scope_num); go_to("EndWhile" + head->scope_num); add_label("WhileBody" + head->scope_num);
+    if(($2).type != "boolean"){
+        cerr << "While condition of type " << ($2).type << " and not Boolean" << endl ;
+    }
+}
 WhileStatement:
 While Dummy1 Dummy10 Statement {
     go_to(head->scope_name);
@@ -2037,19 +2166,22 @@ While Dummy1 Dummy10 StatementNoShortIf {
     scope = scopes.top();
     scopes.pop();
 }
-DoStatement:
-Do {
+Dummy16: {
     tables.push(head);
     string temp = "DoWhile";
     head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = "Do While Loop";
+    scope = head->scope_name;
     flag = true;
     add_label(head->scope_name);
-} Statement While Lb Expression Rb Semicol {
-    if_goto($4.var, head->scope_name);
+}
+Dummy17:
+Do Dummy16 Statement While {add_label("DoWhileExpression" + head->scope_num);}
+DoStatement:
+Dummy17 Lb Expression Rb Semicol {
+    if_goto($3.var, head->scope_name);
     add_label("EndDoWhile" + head->scope_num);
     head = tables.top();
     tables.pop();
@@ -2066,7 +2198,7 @@ Dummy3:
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = "For Loop";
+    scope = head->scope_name;
     flag = true;
     add_label(head->scope_name);
 }
@@ -2078,13 +2210,13 @@ ForStart:
 Dummy11 Dummy12 optForUpdate Rb {go_to("ForExpression" + head->scope_num); add_label("ForBody" + head->scope_num);}
 optForInit:
 ForInit
-|
+| {}
 optExpression:
 Expression
 | {string temp = "true"; $$.var = (char *)temp.c_str();}
 optForUpdate:
 ForUpdate
-|
+| {}
 ForStart1:
 For Lb Dummy3 Final_ Type VariableDeclaratorId {head->check(head->set($6.str,"Identifier",tp,yylineno,offset,scope,{},lev,m),$6.str); m.clear(); offset = offset + sz;} Col Expression Rb
 | For Lb Dummy3 Type VariableDeclaratorId {head->check(head->set($5.str,"Identifier",tp,yylineno,offset,scope,{},lev,m),$5.str); m.clear(); offset = offset + sz;} Col Expression Rb
@@ -2139,12 +2271,14 @@ StatementExpressionList:
 StatementExpression
 | StatementExpressionList Comma StatementExpression
 BreakStatement:
-Break Identifier Semicol | Break Semicol
+Break Identifier Semicol {string temp = findscope(true); go_to("End" + temp + "// Break Statement");}
+| Break Semicol {string temp = findscope(true); go_to("End" + temp + "// Break Statement");}
 ContinueStatement:
-Continue Identifier Semicol | Continue Semicol
+Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
+| Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;}}
- | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";}}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string temp($2.var); ac.pb("return " + temp);}
+ | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} ac.pb("return");}
 ThrowStatement:
 Throw Expression Semicol
 SynchronizedStatement:
@@ -2165,7 +2299,7 @@ Catch {
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
-    scope = "Catch Clause";
+    scope = head->scope_name;
     flag = true;
 } Lb FormalParameter Rb Block {
     head = tables.top();
@@ -2178,39 +2312,43 @@ Catch {
 Finally:
 finally Block
 Primary:
-PrimaryNoNewArray {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
-| ArrayCreationExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
+PrimaryNoNewArray {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
+| ArrayCreationExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
 PrimaryNoNewArray:
-Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;}
-| String_Literal {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;}
-| Char_Literal {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;}
-| Int_Literal {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;}
-| Tb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;}
-| Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;}
-| Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;}
-| This {($$).str = strdup(THIS.c_str()); ($$).type = strdup(THIS.c_str()); ($$).dim1 = 0;}
-| Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;}
-| ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type;}
-| FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
-| MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str;}
+Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;  $$.var = $1.var;}
+| String_Literal {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;  $$.var = $1.var;}
+| Char_Literal {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;  $$.var = $1.var;}
+| Int_Literal {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;  $$.var = $1.var;}
+| Tb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;  $$.var = $1.var;}
+| Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;  $$.var = $1.var;}
+| Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;  $$.var = $1.var;}
+| This {($$).str = strdup(THIS.c_str()); ($$).type = strdup(THIS.c_str()); ($$).dim1 = 0;  $$.var = $1.var;}
+| Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;  $$.var = $1.var;}
+| ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type; $$.var = $1.var;  $$.var = $1.var;}
+| FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var;  $$.var = $1.var;}
+| MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str; $$.var = $1.var;  $$.var = $1.var;}
 | ArrayAccess {($$).type = ($1).type; ($$).str = ($1).str; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,v,head).Dim;
-    ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0;}
+    ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; $$.var = $1.var;  $$.var = $1.var;}
+
+New1:
+{$$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var); add_param($$.var);}
 ClassInstanceCreationExpression:
-New ClassType Lb ArgumentList Rb {
-    if(THIS == $2.str)
+New ClassType New1 Lb ArgumentList Rb {
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $2.var); 
+    if(THIS == $2.str || $2.str == "Reference Type")
         head1 = head->find_table($2.str,1);
     else
         head1 = head->find_table($2.str,0);
     if(head1){
         vector<Entry> c = head1->get($2.str);
-        if(THIS == $2.str)
+        if(THIS == $2.str || $2.str == "Reference Type")
             ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
         else
             ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
         int i = find_comma($$.type);
         ($$).type = strdup($$.type+i+1);
         if(!err.empty())
-        err.pop_back();
+            err.pop_back();
         if(!strlen($$.type)){
             err.push_back(yylineno);
         }
@@ -2219,17 +2357,19 @@ New ClassType Lb ArgumentList Rb {
         cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
         YYABORT;
     }
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function");
     v.clear();
 } 
-| New ClassType Lb Rb {
-    if(THIS == $2.str)
+| New ClassType New1 Lb Rb {
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $2.var); 
+    if(THIS == $2.str || $2.str == "Reference Type") 
         head1 = head->find_table($2.str,1);
     else
         head1 = head->find_table($2.str,0);
     f3 = 0;
     vector<Entry> c = head1->get($2.str);
     if(head1){
-        if(THIS == $2.str)
+        if(THIS == $2.str || $2.str == "Reference Type")
             ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
         else{
             ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
@@ -2242,66 +2382,27 @@ New ClassType Lb ArgumentList Rb {
     for(auto x:c){
         if(x.Params.size()){
             err.push_back(yylineno);
+            break;
         }
     }
     ($$).type = ($2).str;
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     f3 = 1;
-    v.clear();
 }
-| Primary Dot New ClassType Lb ArgumentList Rb {
-    if(THIS == $4.str)
+| Primary Dot New ClassType New1 Lb ArgumentList Rb {
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var); 
+    if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
     else
         head1 = head->find_table($4.str,0);
-    vector<Entry> c = head1->get($4.str);
-    if(THIS == $4.str)
-            ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
-    else
-            ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
-    int i = find_comma($$.type);
-    ($$).type = strdup($$.type+i+1);
-    if(!err.empty())
-    err.pop_back();
-    if(!strlen($$.type)){
-        err.push_back(yylineno);
-    }
-    v.clear();
-} 
-| Primary Dot New ClassType Lb Rb {
-    if(THIS == $4.str)
-        head1 = head->find_table($4.str,1);
-    else
-        head1 = head->find_table($4.str,0);
-    f3 = 0;
-    vector<Entry> c = head1->get($4.str);
-    for(auto x:c){
-        if(x.Params.size()){
-            err.push_back(yylineno);
-        }
-    }
-    ($$).type = ($4).str;
-    int i = find_comma($$.type);
-    ($$).type = strdup($$.type+i+1);
-    f3 = 1;
-    v.clear();
-}
-| New TypeArguments ClassType Lb ArgumentList Rb 
-| New TypeArguments ClassType Lb Rb
-| Primary Dot New TypeArguments ClassType Lb ArgumentList Rb 
-| Primary Dot New TypeArguments ClassType Lb Rb
-
-| Name Dot New ClassType Lb ArgumentList Rb {
-    if(THIS == $4.str)
-        head1 = head->find_table($4.str,1);
-    else
-        head1 = head->find_table($4.str,0);
-    vector<Entry> c = head1->get($4.str);
-    if(THIS == $4.str)
-            ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
+    if(head1){
+        vector<Entry> c = head1->get($4.str);
+        if(THIS == $4.str || $4.str == "Reference Type")
+                ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
         else
-            ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
+                ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
+    }
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     if(!err.empty())
@@ -2309,10 +2410,62 @@ New ClassType Lb ArgumentList Rb {
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function");
     v.clear();
 } 
-| Name Dot New ClassType Lb Rb {
-    if(THIS == $2.str)
+| Primary Dot New ClassType New1 Lb Rb {
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var); 
+    if(THIS == $4.str || $4.str == "Reference Type")
+        head1 = head->find_table($4.str,1);
+    else
+        head1 = head->find_table($4.str,0);
+    f3 = 0;
+    vector<Entry> c = head1->get($4.str);
+    for(auto x:c){
+        if(x.Params.size()){
+            err.push_back(yylineno);
+            break;
+        }
+    }
+    ($$).type = ($4).str;
+    int i = find_comma($$.type);
+    ($$).type = strdup($$.type+i+1);
+    f3 = 1;
+}
+|New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $3.var);
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function"); }
+| New TypeArguments ClassType New1 Lb Rb { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $3.var); }
+|Primary Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $5.var);
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function"); }
+| Primary Dot New TypeArguments ClassType New1 Lb Rb { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $5.var); }
+
+| Name Dot New ClassType New1 Lb ArgumentList Rb {
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var);
+    if(THIS == $4.str || $4.str == "Reference Type")
+        head1 = head->find_table($4.str,1);
+    else
+        head1 = head->find_table($4.str,0);
+    if(head1){
+        vector<Entry> c = head1->get($4.str);
+        if(THIS == $4.str || $4.str == "Reference Type")
+            ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
+        else{
+            ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
+        }
+    }
+    int i = find_comma($$.type);
+    ($$).type = strdup($$.type+i+1);
+    if(!err.empty())
+    err.pop_back();
+    if(!strlen($$.type)){
+        err.push_back(yylineno);
+    }
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function");
+    v.clear();
+} 
+| Name Dot New ClassType New1 Lb Rb {
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var);
+    if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
     else
         head1 = head->find_table($4.str,0);
@@ -2327,57 +2480,53 @@ New ClassType Lb ArgumentList Rb {
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     f3 = 1;
-    v.clear();
 }
-| Name Dot New TypeArguments ClassType Lb ArgumentList Rb 
-| Name Dot New TypeArguments ClassType Lb Rb
+|Name Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function"); }
+| Name Dot New TypeArguments ClassType New1 Lb Rb { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var); }
 
 
-|New ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb 
-| New ClassType TypeArgumentsOrDiamond Lb Rb
-|Primary Dot New ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb 
-| Primary Dot New ClassType TypeArgumentsOrDiamond Lb Rb
-|New TypeArguments ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb 
-| New TypeArguments ClassType TypeArgumentsOrDiamond Lb Rb
-|Primary Dot New TypeArguments ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb 
-| Primary Dot New TypeArguments ClassType TypeArgumentsOrDiamond Lb Rb
+|New ClassType New1 TypeArgumentsOrDiamond Lb ArgumentList Rb | New ClassType New1 TypeArgumentsOrDiamond Lb Rb
+|Primary Dot New ClassType New1 TypeArgumentsOrDiamond Lb ArgumentList Rb | Primary Dot New ClassType New1 TypeArgumentsOrDiamond Lb Rb
+|New TypeArguments ClassType New1 TypeArgumentsOrDiamond Lb ArgumentList Rb | New TypeArguments ClassType New1 TypeArgumentsOrDiamond Lb Rb
+|Primary Dot New TypeArguments ClassType New1 TypeArgumentsOrDiamond Lb ArgumentList Rb | Primary Dot New TypeArguments ClassType New1 TypeArgumentsOrDiamond Lb Rb
 
-|Name Dot New ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb 
-| Name Dot New ClassType TypeArgumentsOrDiamond Lb Rb
-|Name Dot New TypeArguments ClassType TypeArgumentsOrDiamond Lb ArgumentList Rb 
-| Name Dot New TypeArguments ClassType TypeArgumentsOrDiamond Lb Rb
+|Name Dot New ClassType New1 TypeArgumentsOrDiamond Lb ArgumentList Rb | Name Dot New ClassType New1 TypeArgumentsOrDiamond Lb Rb
+|Name Dot New TypeArguments ClassType New1 TypeArgumentsOrDiamond Lb ArgumentList Rb | Name Dot New TypeArguments ClassType New1 TypeArgumentsOrDiamond Lb Rb
 
 
 TypeArgumentsOrDiamond : Lt Gt | TypeArguments
 
 ArgumentList:
-Expression {v.push_back($1.type);}
-| ArgumentList Comma Expression {v.push_back($3.type);}
+Expression {v.push_back($1.type); add_param($1.var);}
+| ArgumentList Comma Expression {v.push_back($3.type); add_param($3.var);}
 
 
 ArrayCreationExpression:
-New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();}
-| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size();}
-| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();}
-| New ClassOrInterfaceType DimExprs {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size();}
+New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
+| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
+| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
+| New ClassOrInterfaceType DimExprs {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
 | New PrimitiveType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
-        cerr << "Inappropriate types in line " << yylineno<<endl; 
+        cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT; 
     }
+     $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);
 }
 | New ClassOrInterfaceType Dims ArrayInitializer {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT;
     }
+     $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);
 }
 
 DimExprs:
 DimExpr
 | DimExprs DimExpr
 DimExpr:
-Lsb Expression Rsb {lev1.push_back(stoi($2.str));
+Lsb Expression Rsb {f1 = 1; lev1.push_back(stoi($2.str));
     if(!compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"integer")){
         cerr << "Array index cannot be of type " << $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -2392,21 +2541,23 @@ Primary Dot Identifier {
         cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
         YYABORT;
     }
-}
-| Super Dot Identifier {($$).type = (char*)"Super"; ($$).str = ($3).str; vector<Entry> c1 = head->parent->get($$.str); map<int,int> sz1 = head->parent->get1(c1,v,head1).Dim;
-    ($$).dim1 = sz1.size();}
+    $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var);}
+| Super Dot Identifier {($$).type = (char*)"Super"; ($$).str = ($3).str; vector<Entry> c1 = head->parent->get($$.str); map<int,int> sz1 = head->parent->get1(c1,v,head).Dim;
+    ($$).dim1 = sz1.size(); $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var);}
+Dummy14:
+Primary Dot Identifier { $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var); ($$).type = ($3).str; }
+Dummy15:
+Super Dot Identifier { $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var); ($$).type = ($3).str;}
 MethodInvocation:
 Name Lb ArgumentList Rb {
     if(f4){
         swap(head,head1);
     }
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->get($1.type);
-    if(THIS == $1.cl)
-        ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
-    else
-        ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
+    ($$).type = strdup(head->get1(c,v,head).Type.c_str());
     if(!err.empty())
-    err.pop_back();
+        err.pop_back();
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
@@ -2415,6 +2566,7 @@ Name Lb ArgumentList Rb {
     if(f4){
         swap(head,head1);
     }
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function");
     v.clear();
     f4 = 0;
 } 
@@ -2422,14 +2574,11 @@ Name Lb ArgumentList Rb {
     if(f4){
         swap(head,head1);
     }
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->get($1.type);
-    if(THIS == $1.cl)
-        ($$).type = strdup(head1->get1(c,v,head1).Type.c_str());
-    else
-        ($$).type = strdup(head1->get1(c,v,NULL).Type.c_str());
+    ($$).type = strdup(head->get1(c,v,head1).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
-    v.clear();
     if(f4){
         swap(head,head1);
     }
@@ -2441,27 +2590,30 @@ Name Lb ArgumentList Rb {
 | Super Dot TypeArguments Identifier Lb ArgumentList Rb 
 | Super Dot TypeArguments Identifier Lb Rb
 
-| Primary Dot Identifier Lb ArgumentList Rb {
-    vector<Entry> c = head->get($3.str);
-    ($$).type = strdup(head->get1(c,v,NULL).Type.c_str());
-    int i = find_comma($$.type);
-    ($$).type = strdup($$.type+i+1);
+| Dummy14 Lb ArgumentList Rb {
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    vector<Entry> c = head->get($1.type);
+    ($$).type = strdup(head->get1(c,v,head).Type.c_str());
     if(!err.empty())
-    err.pop_back();
+        err.pop_back();
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
+    int i = find_comma($$.type);
+    ($$).type = strdup($$.type+i+1);
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function");
     v.clear();
 }
-| Primary Dot Identifier Lb Rb {
-    vector<Entry> c = head->get($3.str);
+| Dummy14 Lb Rb {
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    vector<Entry> c = head->get($1.type);
     ($$).type = strdup(head->get1(c,v,NULL).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
-    v.clear();
 }
-| Super Dot Identifier Lb ArgumentList Rb {
-    vector<Entry> c = head->parent->get($3.str);
+| Dummy15 Lb ArgumentList Rb {
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    vector<Entry> c = head->parent->get($1.type);
     ($$).type = strdup(head->parent->get1(c,v,NULL).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
@@ -2470,14 +2622,15 @@ Name Lb ArgumentList Rb {
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
+    ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function");
     v.clear();
 } 
-| Super Dot Identifier Lb Rb {
-    vector<Entry> c = head->parent->get($3.str);
-    ($$).type = strdup(head->parent->get1(c,v,NULL).Type.c_str());
+| Dummy15 Lb Rb {
+    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    vector<Entry> c = head->parent->get($1.type);
+    ($$).type = strdup(head->parent->get1(c,v,head->parent).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
-    v.clear();
 }
 ArrayAccess:
 Name Lsb Expression Rsb {
@@ -2487,6 +2640,8 @@ Name Lsb Expression Rsb {
     } 
     ind++; ($$).type = ($1).str;
     ($$).str = ($1).type; 
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 | ArrayAccess Lsb Expression Rsb {
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2496,6 +2651,8 @@ Name Lsb Expression Rsb {
     ind++;
     ($$).str = ($1).str; 
     ($$).type = ($1).type;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 | Bool_Literal Lsb Expression Rsb {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2503,6 +2660,8 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 | String_Literal Lsb Expression Rsb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2510,6 +2669,8 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 | Char_Literal Lsb Expression Rsb {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2517,6 +2678,8 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 | Int_Literal Lsb Expression Rsb {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2524,6 +2687,8 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 | Tb Lsb Expression Rsb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2531,6 +2696,8 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 | Float_Literal Lsb Expression Rsb {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2538,6 +2705,8 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 | Null_Literal Lsb Expression Rsb {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); m.clear(); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2545,6 +2714,8 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 | This Lsb Expression Rsb {($$).str = strdup(THIS.c_str());
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2552,6 +2723,8 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, "t0", $3.var);
 }
 | Lb Expression Rb Lsb Expression Rsb {($$).type = ($2).type; ($$).str = ($2).str;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2566,6 +2739,8 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 | FieldAccess Lsb Expression Rsb {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2573,6 +2748,8 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 | MethodInvocation Lsb Expression Rsb {($$).type = ($1).type; ($$).str = ($1).str;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -2580,6 +2757,8 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, $1.var, $3.var);
 }
 
 PostfixExpression:
@@ -2588,7 +2767,7 @@ Primary {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 | PostIncrementExpression {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type;}
 | PostDecrementExpression {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type;}
 PostIncrementExpression:
-PostfixExpression Inc {add_string($1.var, $1.var, "1", "+"); $$ = $1;
+PostfixExpression Inc {
     if(!compare_string($1.type,(char*)"float") && !compare_string($1.type,(char*)"double") && !compare_string($1.type,(char*)"long") && !compare_string($1.type,(char*)"integer") && !compare_string($1.type,(char*)"short") && !compare_string($1.type,(char*)"character") && !compare_string($1.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$2.str<< " with operand of type "<< $1.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -2597,9 +2776,12 @@ PostfixExpression Inc {add_string($1.var, $1.var, "1", "+"); $$ = $1;
         cerr << "Incompatible Operator " <<$2.str<< " in line " << yylineno<<endl;
         YYABORT;
     }
+    add_string($1.var, $1.var, "1", "+"); $$ = $1;
+
 }
 PostDecrementExpression:
-PostfixExpression Dec {add_string($1.var, $1.var, "1", "-"); $$ = $1;
+PostfixExpression Dec {
+    add_string($1.var, $1.var, "1", "-"); $$ = $1;
     if(!compare_string($1.type,(char*)"float") && !compare_string($1.type,(char*)"double") && !compare_string($1.type,(char*)"long") && !compare_string($1.type,(char*)"integer") && !compare_string($1.type,(char*)"short") && !compare_string($1.type,(char*)"character") && !compare_string($1.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$2.str<< " with operand of type "<< $1.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3089,8 +3271,8 @@ ConditionalOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 =
     ($$).type = widen(($3).type,($5).type); ($$).str = ($3).str;
 }
 AssignmentExpression:
-ConditionalExpression //{($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
-| Assignment //{($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
+ConditionalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
+| Assignment {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
 Assignment:
 LeftHandSide Eq AssignmentExpression {
     if(!compare_type($1.type,$3.type) && !compare_type1($1.type,$3.type)){
@@ -3124,8 +3306,14 @@ LeftHandSide Eq AssignmentExpression {
             $$.dim1 = $1.dim1;
     }
     lev.clear(); lev1.clear(); l1 = 0;
-    string temp1($1.var), temp2($3.var);
-    ac.pb(temp1 + " = " + temp2 + ";");
+    int check_type = widen2(($1).type,($3).type);
+    if(check_type != -1){
+        string s1 = Type_cast($1.type, $3.var) ;
+        add_assignment($1.var, s1) ;
+    }
+    else{
+        add_assignment($1.var, $3.var) ;
+    }
 }
 | 
 LeftHandSide Eqq AssignmentExpression {
@@ -3170,17 +3358,17 @@ Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;}
 |ArrayAccess {($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,v,head).Dim;
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0;}
 Expression:
-AssignmentExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
+AssignmentExpression //{($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
 ConstantExpression:
-Expression {($$).type = ($1).type; ($$).str = ($1).str;}
+Expression //{($$).type = ($1).type; ($$).str = ($1).str;}
 TypeParameters: Lt TypeParameterList Gt {($$).type = ($1).str; strcat(($$).type,($2).type); strcat(($$).type,($3).str); tpp = ($$).type;}
 TypeParameterList:
- TypeParameter {($$).type = ($1).type;}
+ TypeParameter //{($$).type = ($1).type;}
  | TypeParameter Comma TypeParameterList {($$).type = ($1).type; strcat(($$).type,($2).str); strcat(($$).type,($3).type);}
  | TypeParameter Comma TypeParameters {($$).type = ($1).type; strcat(($$).type,($2).str); strcat(($$).type,($3).type);}
 TypeParameter : Identifier TypeBound {($$).type = ($1).str;}
-TypeBound : | Extends ClassOrInterfaceType AdditionalBounds;
-AdditionalBounds: | AdditionalBounds AdditionalBound
+TypeBound : {} | Extends ClassOrInterfaceType AdditionalBounds;
+AdditionalBounds: {} | AdditionalBounds AdditionalBound
 AdditionalBound : And InterfaceType;
 %%
 
@@ -3210,8 +3398,9 @@ int main(){
         x->print();
         cout<<endl;
     }
+    ofstream ac3 ("TAC.txt", std::ofstream::out);
     for(auto s : ac) {
-        cout << s << endl;
+        ac3 << s << endl;
     }
     return 0;
 }
