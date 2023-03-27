@@ -15,7 +15,7 @@ public class Main
         int arr1[][] ;
         arr[0] = x ;
         z = y ;
-        int w = 
+        int w = 2;
 
 
         return ;

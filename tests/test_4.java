@@ -12,7 +12,6 @@ public class test {
 	public static void main(int args) {
         A q = new A('c');
         int w = q.x ;
-        int z = q.re(2,3);
 	    return;
 	}
 }

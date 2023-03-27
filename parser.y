@@ -815,7 +815,7 @@ if(!head1){
  if(head1){vector<Entry> c = head1->get($3.str); Entry c1; if(THIS == $1.cl){c1 = head1->get1(c,{},head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,{},NULL);} ($$).str = strdup(c1.Type.c_str()) ; if(check_print($1.var)) {$$.var = make_print_string($1.var);}
     else {
         string temp1 = build_string("t", ++varnum["var"]);
-        add_assignment(temp1, to_string(head->get1(c,{},head).Offset) + " //Offset");
+        add_assignment(temp1, to_string(c1.Offset) + " //Offset");
         $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, temp1);
         }
     }
@@ -1503,6 +1503,7 @@ VariableDeclaratorId {
                         break ;
                     }
                 }
+                if(c2){
                 Entry* c3 ;
                 for(int j=0; j<(*c2).size(); j++){
                     if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
@@ -1519,7 +1520,9 @@ VariableDeclaratorId {
                         break ;
                     }
                 }
-                c3->final_check++ ;
+                if(c3)
+                    c3->final_check++ ;
+                }
 
             }
         }
@@ -1547,7 +1550,8 @@ VariableDeclaratorId {
                         break ;
                     }
                 }
-                Entry *c3 ;
+                if(c2){
+                Entry* c3 ;
                 for(int j=0; j<(*c2).size(); j++){
                     if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
                         continue;
@@ -1563,7 +1567,9 @@ VariableDeclaratorId {
                         break ;
                     }
                 }
-                c3->final_check++ ;
+                if(c3)
+                    c3->final_check++ ;
+                }
         offset = offset + sz*xx; lev.clear(); lev1.clear(); l1 = 0;
     }
     else{
@@ -1585,6 +1591,7 @@ VariableDeclaratorId {
                         break ;
                     }
                 }
+                if(c2){
                 Entry* c3 ;
                 for(int j=0; j<(*c2).size(); j++){
                     if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
@@ -1601,7 +1608,9 @@ VariableDeclaratorId {
                         break ;
                     }
                 }
-                c3->final_check++ ;
+                if(c3)
+                    c3->final_check++ ;
+                }
     }
     int check_type = widen2(($1).type,($3).type);
     if(check_type != -1){
@@ -2706,7 +2715,6 @@ Name Lb ArgumentList Rb {
         err.pop_back();
     }
     if(!strlen($$.type)){
-        cerr<<"HERE";
         err.push_back(yylineno);
     }
     int i = find_comma($$.type);
@@ -2939,7 +2947,8 @@ PostfixExpression Inc {
                         break ;
                     }
                 }
-                Entry *c3 ;
+                if(c2){
+                Entry* c3 ;
                 for(int j=0; j<(*c2).size(); j++){
                     if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
                         continue;
@@ -2955,9 +2964,12 @@ PostfixExpression Inc {
                         break ;
                     }
                 }
-                c3->final_check++ ;
-    if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                if(c3){
+                    c3->final_check++ ;
+                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
+                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                        }
+                }
     }
 
 }
@@ -2982,7 +2994,8 @@ PostfixExpression Dec {
                         break ;
                     }
                 }
-                Entry *c3 ;
+                if(c2){
+                Entry* c3 ;
                 for(int j=0; j<(*c2).size(); j++){
                     if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
                         continue;
@@ -2998,9 +3011,12 @@ PostfixExpression Dec {
                         break ;
                     }
                 }
-                c3->final_check++ ;
-    if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                if(c3){
+                    c3->final_check++ ;
+                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
+                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                        }
+                }
     }
 }
 UnaryExpression:
@@ -3047,7 +3063,8 @@ Inc UnaryExpression {
                         break ;
                     }
                 }
-                Entry *c3 ;
+                if(c2){
+                Entry* c3 ;
                 for(int j=0; j<(*c2).size(); j++){
                     if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
                         continue;
@@ -3063,9 +3080,12 @@ Inc UnaryExpression {
                         break ;
                     }
                 }
-                c3->final_check++ ;
-    if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                if(c3){
+                    c3->final_check++ ;
+                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
+                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                        }
+                }
     }
 }
 PreDecrementExpression:
@@ -3086,7 +3106,8 @@ Dec UnaryExpression {
                         break ;
                     }
                 }
-                Entry *c3 ;
+                if(c2){
+                Entry* c3 ;
                 for(int j=0; j<(*c2).size(); j++){
                     if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
                         continue;
@@ -3102,9 +3123,12 @@ Dec UnaryExpression {
                         break ;
                     }
                 }
-                c3->final_check++ ;
-    if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                if(c3){
+                    c3->final_check++ ;
+                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
+                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                        }
+                }
     }
 }
 UnaryExpressionNotPlusMinus:
@@ -3669,7 +3693,8 @@ LeftHandSide Eq AssignmentExpression {
                         break ;
                     }
                 }
-                Entry *c3 ;
+                if(c2){
+                Entry* c3 ;
                 for(int j=0; j<(*c2).size(); j++){
                     if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
                         continue;
@@ -3685,9 +3710,12 @@ LeftHandSide Eq AssignmentExpression {
                         break ;
                     }
                 }
-                c3->final_check++ ;
-    if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                if(c3){
+                    c3->final_check++ ;
+                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
+                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                        }
+                }
     }
 }
 | 
@@ -3733,6 +3761,7 @@ LeftHandSide Eqq AssignmentExpression {
                         break ;
                     }
                 }
+                if(c2){
                 Entry* c3 ;
                 for(int j=0; j<(*c2).size(); j++){
                     if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
@@ -3749,9 +3778,12 @@ LeftHandSide Eqq AssignmentExpression {
                         break ;
                     }
                 }
-                c3->final_check++ ;
-    if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                if(c3){
+                    c3->final_check++ ;
+                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
+                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
+                        }
+                }
     }
 }
 LeftHandSide:
