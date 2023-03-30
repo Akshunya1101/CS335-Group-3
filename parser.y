@@ -823,7 +823,6 @@ else {
         cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
         YYABORT;
     }
-    $$.var = $3.var;
 }
 ClassOrInterfaceType:
 Name {($$).str = ($1).type; ($$).type = ($1).str; tp = ($$).str; $$.var = $1.var;}

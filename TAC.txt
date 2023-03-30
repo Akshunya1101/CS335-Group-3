@@ -1,0 +1,23 @@
+x = popparam //Getting arguments
+x = popparam //Getting arguments
+y = popparam //Getting arguments
+param 'c'
+
+main:
+t0 = popparam // Getting object reference
+args = popparam //Getting arguments
+stackpointer +xxx
+Call allocmem
+stackpointer -yyy
+t1 = popparam //Assigning the newly allocated memory
+param t1
+t2 = call Hello
+myObj = cast_to_Hello(t2)
+t3 = 0 //Offset
+t4 points to *(myObj+t3)
+t4 = 5
+t5 = 0 //Offset
+t6 points to *(myObj+t5)
+c = cast_to_float(t6)
+Endmain:
+
