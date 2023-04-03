@@ -1,0 +1,39 @@
+
+add:
+push BP
+BP = SP
+t0 = [BP + 8]
+a = [BP + 16]
+b = [BP + 24]
+t1 = cast_to_integer(a)
+t2 = cast_to_integer(b)
+t3 = t1 +integer t2
+pop BP
+return t3
+Endadd:
+
+
+sub:
+push BP
+BP = SP
+t0 = [BP + 8]
+a = [BP + 16]
+b = [BP + 20]
+d = [BP + 24]
+x = [BP + 28]
+pop BP
+return 0
+Endsub:
+
+param 3
+param 2
+t4 = call add
+SP = SP + 20
+[BP - 4] = t4
+param z
+param 3
+param 2
+param 1
+t5 = call sub
+SP = SP + 24
+[BP - 8] = t5
