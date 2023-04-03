@@ -32,6 +32,7 @@
     int ln,rl = -1;
     int f3=1, f4=0;
     vector<int> err ;
+    vector<string> v;
     map<string,string> conv;
     map<string,set<string>> conv1;
     string Type_cast(string t, char*var){
@@ -384,6 +385,35 @@
                     }
                 }
             }
+            void counter(string s1){
+                vector<Entry> *c2 ;
+                for(auto ptr=this; ptr!=NULL; ptr=ptr->parent){
+                    if(ptr->table.find(s1)!=ptr->table.end()){
+                        c2 = &ptr->table[s1];
+                        break ;
+                    }
+                }
+                if(c2){
+                    Entry* c3 ;
+                    for(int j=0; j<(*c2).size(); j++){
+                        if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
+                            continue;
+                        int final_flag = 1;
+                        for(int i=0;i<v.size();i++){
+                            if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
+                                final_flag = 0;
+                                break;
+                            }
+                        }
+                        if(final_flag == 1){
+                            c3 = &(*c2)[j] ;
+                            break ;
+                        }
+                    }
+                    if(c3)
+                        c3->final_check++ ;
+                }
+            }
     };
     long int offset = 0;
     stack<SymbolTable*> tables;
@@ -401,7 +431,6 @@
     bool flagg = false;
     Entry* func = NULL;
     int ind=0;
-    vector<string> v;
     map<string,string> conversion;
     string ttt="";
     string THIS="";
@@ -980,7 +1009,7 @@ PrimitiveType {
 | ReferenceType {
     ($$).type = ($1).type;
     tp = ($$).type;
-    ($$).size = 0;
+    ($$).size = 8;
     sz = ($$).size;
 }
 PrimitiveType:
@@ -1496,34 +1525,7 @@ VariableDeclaratorId {
             else{
                 vector<Entry> c1 = head->get($3.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
                 head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},sz1,m),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + sz*(sz1.size());
-                vector<Entry> *c2 ;
-                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
-                    if(ptr->table.find($1.str)!=ptr->table.end()){
-                        c2 = &ptr->table[$1.str];
-                        break ;
-                    }
-                }
-                if(c2){
-                Entry* c3 ;
-                for(int j=0; j<(*c2).size(); j++){
-                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
-                        continue;
-                    int final_flag = 1;
-                    for(int i=0;i<v.size();i++){
-                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
-                            final_flag = 0;
-                            break;
-                        }
-                    }
-                    if(final_flag == 1){
-                        c3 = &(*c2)[j] ;
-                        break ;
-                    }
-                }
-                if(c3)
-                    c3->final_check++ ;
-                }
-
+                head->counter($1.str);
             }
         }
         else{
@@ -1543,33 +1545,7 @@ VariableDeclaratorId {
             
         }
         head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev,m),$1.str); int xx = 1; if(!lev.empty()) {xx =  lev.rbegin()->second;}
-        vector<Entry> *c2 ;
-                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
-                    if(ptr->table.find($1.str)!=ptr->table.end()){
-                        c2 = &ptr->table[$1.str];
-                        break ;
-                    }
-                }
-                if(c2){
-                Entry* c3 ;
-                for(int j=0; j<(*c2).size(); j++){
-                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
-                        continue;
-                    int final_flag = 1;
-                    for(int i=0;i<v.size();i++){
-                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
-                            final_flag = 0;
-                            break;
-                        }
-                    }
-                    if(final_flag == 1){
-                        c3 = &(*c2)[j] ;
-                        break ;
-                    }
-                }
-                if(c3)
-                    c3->final_check++ ;
-                }
+        head->counter($1.str);
         offset = offset + sz*xx; lev.clear(); lev1.clear(); l1 = 0;
     }
     else{
@@ -1584,33 +1560,7 @@ VariableDeclaratorId {
             YYABORT;
         }
         head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + term*sz;
-        vector<Entry>* c2 ;
-                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
-                    if(ptr->table.find($1.str)!=ptr->table.end()){
-                        c2 = &ptr->table[$1.str];
-                        break ;
-                    }
-                }
-                if(c2){
-                Entry* c3 ;
-                for(int j=0; j<(*c2).size(); j++){
-                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
-                        continue;
-                    int final_flag = 1;
-                    for(int i=0;i<v.size();i++){
-                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
-                            final_flag = 0;
-                            break;
-                        }
-                    }
-                    if(final_flag == 1){
-                        c3 = &(*c2)[j] ;
-                        break ;
-                    }
-                }
-                if(c3)
-                    c3->final_check++ ;
-                }
+        head->counter($1.str);
     }
     int check_type = widen2(($1).type,($3).type);
     if(check_type != -1){
@@ -2940,37 +2890,7 @@ PostfixExpression Inc {
     $$.var = build_string("t", ++varnum["var"]) ;
     add_assignment($$.var, $1.var) ;
     add_string($1.var, $1.var, "1", "+");
-    vector<Entry>* c2 ;
-                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
-                    if(ptr->table.find($1.str)!=ptr->table.end()){
-                        c2 = &ptr->table[$1.str];
-                        break ;
-                    }
-                }
-                if(c2){
-                Entry* c3 ;
-                for(int j=0; j<(*c2).size(); j++){
-                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
-                        continue;
-                    int final_flag = 1;
-                    for(int i=0;i<v.size();i++){
-                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
-                            final_flag = 0;
-                            break;
-                        }
-                    }
-                    if(final_flag == 1){
-                        c3 = &(*c2)[j] ;
-                        break ;
-                    }
-                }
-                if(c3){
-                    c3->final_check++ ;
-                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
-                        }
-                }
-    }
+    head->counter($1.str);
 
 }
 PostDecrementExpression:
@@ -2987,37 +2907,7 @@ PostfixExpression Dec {
     $$.var = build_string("t", ++varnum["var"]) ;
     add_assignment($$.var, $1.var) ;
     add_string($1.var, $1.var, "1", "-");
-    vector<Entry>* c2 ;
-                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
-                    if(ptr->table.find($1.str)!=ptr->table.end()){
-                        c2 = &ptr->table[$1.str];
-                        break ;
-                    }
-                }
-                if(c2){
-                Entry* c3 ;
-                for(int j=0; j<(*c2).size(); j++){
-                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
-                        continue;
-                    int final_flag = 1;
-                    for(int i=0;i<v.size();i++){
-                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
-                            final_flag = 0;
-                            break;
-                        }
-                    }
-                    if(final_flag == 1){
-                        c3 = &(*c2)[j] ;
-                        break ;
-                    }
-                }
-                if(c3){
-                    c3->final_check++ ;
-                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
-                        }
-                }
-    }
+    head->counter($1.str);
 }
 UnaryExpression:
 PreIncrementExpression
@@ -3056,37 +2946,7 @@ Inc UnaryExpression {
         YYABORT;
     }
     add_string($2.var, $2.var, "1", "+"); $$ = $2;
-    vector<Entry>* c2 ;
-                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
-                    if(ptr->table.find($2.str)!=ptr->table.end()){
-                        c2 = &ptr->table[$2.str];
-                        break ;
-                    }
-                }
-                if(c2){
-                Entry* c3 ;
-                for(int j=0; j<(*c2).size(); j++){
-                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
-                        continue;
-                    int final_flag = 1;
-                    for(int i=0;i<v.size();i++){
-                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
-                            final_flag = 0;
-                            break;
-                        }
-                    }
-                    if(final_flag == 1){
-                        c3 = &(*c2)[j] ;
-                        break ;
-                    }
-                }
-                if(c3){
-                    c3->final_check++ ;
-                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
-                        }
-                }
-    }
+    head->counter($1.str);
 }
 PreDecrementExpression:
 Dec UnaryExpression {
@@ -3099,37 +2959,7 @@ Dec UnaryExpression {
         YYABORT;
     }
     add_string($2.var, $2.var, "1", "-"); $$ = $2;
-    vector<Entry>* c2 ;
-                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
-                    if(ptr->table.find($2.str)!=ptr->table.end()){
-                        c2 = &ptr->table[$2.str];
-                        break ;
-                    }
-                }
-                if(c2){
-                Entry* c3 ;
-                for(int j=0; j<(*c2).size(); j++){
-                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
-                        continue;
-                    int final_flag = 1;
-                    for(int i=0;i<v.size();i++){
-                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
-                            final_flag = 0;
-                            break;
-                        }
-                    }
-                    if(final_flag == 1){
-                        c3 = &(*c2)[j] ;
-                        break ;
-                    }
-                }
-                if(c3){
-                    c3->final_check++ ;
-                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
-                        }
-                }
-    }
+    head->counter($1.str);
 }
 UnaryExpressionNotPlusMinus:
 PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
@@ -3686,37 +3516,7 @@ LeftHandSide Eq AssignmentExpression {
     else{
         add_assignment($1.var, $3.var) ;
     }
-    vector<Entry>* c2 ;
-                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
-                    if(ptr->table.find($1.str)!=ptr->table.end()){
-                        c2 = &ptr->table[$1.str];
-                        break ;
-                    }
-                }
-                if(c2){
-                Entry* c3 ;
-                for(int j=0; j<(*c2).size(); j++){
-                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
-                        continue;
-                    int final_flag = 1;
-                    for(int i=0;i<v.size();i++){
-                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
-                            final_flag = 0;
-                            break;
-                        }
-                    }
-                    if(final_flag == 1){
-                        c3 = &(*c2)[j] ;
-                        break ;
-                    }
-                }
-                if(c3){
-                    c3->final_check++ ;
-                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
-                        }
-                }
-    }
+    head->counter($1.str);
 }
 | 
 LeftHandSide Eqq AssignmentExpression {
@@ -3754,37 +3554,7 @@ LeftHandSide Eqq AssignmentExpression {
     string temp1($1.var), temp2($2.var), temp3($3.var);
     temp2.pop_back();
     add_string(temp1, temp1, temp3, temp2);
-    vector<Entry>* c2 ;
-                for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
-                    if(ptr->table.find($1.str)!=ptr->table.end()){
-                        c2 = &ptr->table[$1.str];
-                        break ;
-                    }
-                }
-                if(c2){
-                Entry* c3 ;
-                for(int j=0; j<(*c2).size(); j++){
-                    if((*c2)[j].Params.size()!=0 || find((*c2)[j].Mod.begin(),(*c2)[j].Mod.end(),"private")!=(*c2)[j].Mod.end())
-                        continue;
-                    int final_flag = 1;
-                    for(int i=0;i<v.size();i++){
-                        if(!compare_type(strdup((*c2)[j].Params[i].c_str()),strdup(v[i].c_str()))){
-                            final_flag = 0;
-                            break;
-                        }
-                    }
-                    if(final_flag == 1){
-                        c3 = &(*c2)[j] ;
-                        break ;
-                    }
-                }
-                if(c3){
-                    c3->final_check++ ;
-                        if(c3->final_check > 1 && find(c3->Mod.begin(), c3->Mod.end(), "final") != c3->Mod.end()){
-                        cerr << "Variable of type final cannot be modified in line " << yylineno << endl ;
-                        }
-                }
-    }
+    head->counter($1.str);
 }
 LeftHandSide:
 Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;}
