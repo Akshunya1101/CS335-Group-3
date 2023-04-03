@@ -1,23 +1,32 @@
-x = popparam //Getting arguments
-x = popparam //Getting arguments
-y = popparam //Getting arguments
-param 'c'
+
+add:
+push BP
+BP = SP
+t0 = [BP + 8]
+pop BP
+return 1
+Endadd:
+
 
 main:
-t0 = popparam // Getting object reference
-args = popparam //Getting arguments
+push BP
+BP = SP
+t0 = [BP + 8]
+args = [BP + 16]
+g = [BP + 24]
+t1 points to *(t0+8)
+t1 = 1
 stackpointer +xxx
 Call allocmem
 stackpointer -yyy
-t1 = popparam //Assigning the newly allocated memory
-param t1
-t2 = call Hello
-myObj = cast_to_Hello(t2)
-t3 = 0 //Offset
-t4 points to *(myObj+t3)
-t4 = 5
-t5 = 0 //Offset
-t6 points to *(myObj+t5)
-c = cast_to_float(t6)
+t2 = popparam //Assigning the newly allocated memory
+[BP - 4] = t2
+t3 points to *(arr+0)
+t3 = 1
+t4 points to *(arr+1)
+t5 points to *(arr+0)
+t4 = t5
+pop BP
+return 1
 Endmain:
 

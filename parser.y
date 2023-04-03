@@ -390,7 +390,9 @@
     stack<long int> offsets;
     SymbolTable* head = new SymbolTable(NULL, "Global", "");
     SymbolTable* head1;
-
+    int arg_offset = 8 ;
+    int func_offset = 4 ;
+    map<string, string> mp_func ;
     stack<string> scopes;
     string scope = "Global";
     string tp;
@@ -444,7 +446,7 @@
 
         char* charArray = new char[result.length() + 1];
         strcpy(charArray, result.c_str());
-
+        mp_func[result] = result ;
         return charArray;
     }
     void add_label(string label) {
@@ -457,6 +459,32 @@
     }
     void go_to(string loc) {
         ac.pb("goto " + loc);
+    }
+    void callee(){
+        ac.pb("push BP\nBP = SP") ;
+        arg_offset = 8 ;
+        func_offset = 4 ;
+        mp_func.clear() ;
+    }
+    string local_offset(int l_offset){
+        string s = "[BP - " + to_string(func_offset) + "]" ;
+        func_offset += l_offset ;
+        return s ;
+    }
+    void param_offset(string s1, int p_offset){
+        ac.pb(s1 + " = [BP + " + to_string(arg_offset) + "]") ;
+        arg_offset += p_offset ;
+    }
+    int get_offset(string t){
+        if(t == "integer" || t == "Integer" || t == "float") return 4 ;
+        else if(t == "double") return 8 ;
+        else if(t == "character" || t == "Character") return 2 ;
+        return 8 ;
+    }
+    int check_literal(string s){
+        if(s == "Boolean" || s == "string" || s == "Character" || s == "Integer" || s == "Float" || s == "Null")
+            return 0 ;
+        return 1 ;
     }
     string findscope(bool brkorcont) {
         string sc = scope;
@@ -1613,11 +1641,27 @@ VariableDeclaratorId {
     }
     int check_type = widen2(($1).type,($3).type);
     if(check_type != -1){
-        string s1 = Type_cast($1.type, $3.var) ;
-        add_assignment($1.var, s1) ;
+        string s1 ;
+        if(check_literal($3.type)){s1 = Type_cast($1.type, strdup(mp_func[$3.var].c_str()));}
+        else{s1 = Type_cast($1.type, $3.var);}
+        string s2 = build_string("t", ++varnum["var"]) ;
+        add_assignment(s2, s1);
+        if(mp_func[$1.var].length() == 0){
+            mp_func[$1.var] = local_offset(get_offset($1.type)) ;
+            add_assignment(mp_func[$1.var], s2) ;
+        }
+        else add_assignment(mp_func[$1.var], s2) ;
     }
     else{
-        add_assignment($1.var, $3.var) ;
+        if(mp_func[$1.var].length() == 0){
+            mp_func[$1.var] = local_offset(get_offset($1.type)) ;
+            if(check_literal($3.type)) add_assignment(mp_func[$1.var], mp_func[$3.var]) ;
+            else add_assignment(mp_func[$1.var], $3.var) ;
+        }
+        else{
+            if(check_literal($3.type)) add_assignment(mp_func[$1.var], mp_func[$3.var]) ;
+            else add_assignment(mp_func[$1.var], $3.var) ;
+        }
     }
 
     ($$).type = widen(($1).type,($3).type);
@@ -1663,7 +1707,8 @@ Identifier Lb {
     flag = true;
     ac.pb("");
     add_label(head->scope_name);
-    add_assignment("t0", "popparam // Getting object reference");
+    callee() ;
+    param_offset("t0", 8) ;
 } FormalParameterList Rb {tables.top()->check(func,$1.str);}
 | Identifier Lb Rb {
     tp = "Method," + tp;
@@ -1682,15 +1727,16 @@ Identifier Lb {
     tables.top()->check(func,$1.str);
     ac.pb("");
     add_label(head->scope_name);
-    add_assignment("t0", "popparam // Getting object reference");
+    callee() ;
+    param_offset("t0", 8) ;
 }
 | MethodDeclarator Lsb Rsb
 FormalParameterList:
 FormalParameter { string tp1 = tp; for(int i=0;i<l1;i++) tp1 = "array("+tp1+")";
-    if(func){func->Params.push_back(tp1);} add_assignment($1.var, "popparam //Getting arguments");
+    if(func){func->Params.push_back(tp1);} param_offset($1.var, get_offset($1.type)) ; mp_func[$1.var] = $1.var ;
  lev.clear(); l1 = 0; lev1.clear();}
 | FormalParameterList Comma FormalParameter { string tp1 = tp; for(int i=0;i<l1;i++) tp1 = "array("+tp1+")";
-    if(func){func->Params.push_back(tp1);} add_assignment($3.var, "popparam //Getting arguments");
+    if(func){func->Params.push_back(tp1);} param_offset($3.var, get_offset($3.type)) ; mp_func[$3.var] = $3.var ;
  lev.clear(); l1 = 0; lev1.clear();}
 FormalParameter:
 Type VariableDeclaratorId {
@@ -2427,8 +2473,8 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string temp($2.var); ac.pb("return " + temp);}
- | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} ac.pb("return");}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string temp($2.var); ac.pb("pop BP\nreturn " + temp);}
+ | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} ac.pb("pop BP\nreturn");}
 ThrowStatement:
 Throw Expression Semicol
 SynchronizedStatement:
@@ -2687,15 +2733,15 @@ Lsb Rsb {lev1.push_back(0);}
 | Dims Lsb Rsb {lev1.push_back(0);}
 FieldAccess:
 Primary Dot Identifier {
-    ($$).str = ($3).str; head1 = head->find_table($1.type,1); vector<Entry> c = head->get($1.str); if(head1){ c = head1->get($3.str); Entry c1 = head1->get1(c,{},head1); ($$).type = strdup(c1.Type.c_str()) ; ($$).dim1 = c1.Dim.size();} else{
+    ($$).str = ($3).str; head1 = head->find_table($1.type,1); vector<Entry> c = head->get($1.str); Entry c1; if(head1){ c = head1->get($3.str); c1 = head1->get1(c,{},head1); ($$).type = strdup(c1.Type.c_str()) ; ($$).dim1 = c1.Dim.size();} else{
         cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
         YYABORT;
     }
-    $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var);}
+    $$.var = build_string("t", ++varnum["var"]); add_address($$.var,(char*)"t0",to_string(c1.Offset));}
 | Super Dot Identifier {($$).type = (char*)"Super"; ($$).str = ($3).str; vector<Entry> c1 = head->parent->get($$.str); map<int,int> sz1 = head->parent->get1(c1,{},head).Dim;
-    ($$).dim1 = sz1.size(); $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var);}
+    ($$).dim1 = sz1.size(); $$.var = build_string("t", ++varnum["var"]); add_address($$.var,(char*)"t0", $3.var);}
 Dummy14:
-Primary Dot Identifier { $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var); ($$).type = ($3).str; }
+Primary Dot Identifier { $$.var = build_string("t", ++varnum["var"]); add_address($$.var,(char*)"t0", $3.var); ($$).type = ($3).str; }
 Dummy15:
 Super Dot Identifier { $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var); ($$).type = ($3).str;}
 MethodInvocation:
@@ -3679,11 +3725,27 @@ LeftHandSide Eq AssignmentExpression {
     lev.clear(); lev1.clear(); l1 = 0;
     int check_type = widen2(($1).type,($3).type);
     if(check_type != -1){
-        string s1 = Type_cast($1.type, $3.var) ;
-        add_assignment($1.var, s1) ;
+        string s1 ;
+        if(check_literal($3.type)){s1 = Type_cast($1.type, strdup(mp_func[$3.var].c_str()));}
+        else{s1 = Type_cast($1.type, $3.var);}
+        string s2 = build_string("t", ++varnum["var"]) ;
+        add_assignment(s2, s1);
+        if(mp_func[$1.var].length() == 0){
+            mp_func[$1.var] = local_offset(get_offset($1.type)) ;
+            add_assignment(mp_func[$1.var], s2) ;
+        }
+        else add_assignment(mp_func[$1.var], s2) ;
     }
     else{
-        add_assignment($1.var, $3.var) ;
+        if(mp_func[$1.var].length() == 0){
+            mp_func[$1.var] = local_offset(get_offset($1.type)) ;
+            if(check_literal($3.type)) add_assignment(mp_func[$1.var], mp_func[$3.var]) ;
+            else add_assignment(mp_func[$1.var], $3.var) ;
+        }
+        else{
+            if(check_literal($3.type)) add_assignment(mp_func[$1.var], mp_func[$3.var]) ;
+            else add_assignment(mp_func[$1.var], $3.var) ;
+        }
     }
     vector<Entry>* c2 ;
                 for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
@@ -3750,9 +3812,15 @@ LeftHandSide Eqq AssignmentExpression {
             $$.dim1 = $1.dim1;
     }
     lev.clear(); lev1.clear(); l1 = 0;
-    string temp1($1.var), temp2($2.var), temp3($3.var);
+    string temp1(mp_func[$1.var]), temp2($2.var), temp3;
+    if(check_literal($3.type)) temp3 = mp_func[$3.var] ;
+    else temp3 = $3.var ;
     temp2.pop_back();
-    add_string(temp1, temp1, temp3, temp2);
+    string sl1 = build_string("t", ++varnum["var"]) ;
+    add_assignment(sl1, temp1);
+    string sl2 = build_string("t", ++varnum["var"]) ;
+    add_assignment(sl2, temp3);
+    add_string(temp1, sl1, sl2, temp2) ;
     vector<Entry>* c2 ;
                 for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
                     if(ptr->table.find($1.str)!=ptr->table.end()){
