@@ -462,10 +462,19 @@
         ac.pb(exp + " = call " + func_name);
         return;
     }
+    int get_offset(string t){
+        if(t == "integer" || t == "Integer" || t == "float") return 4 ;
+        else if(t == "double") return 8 ;
+        else if(t == "character" || t == "Character") return 2 ;
+        return 8 ;
+    }
     void alloc_mem(string exp) {
-        ac.pb("stackpointer +xxx");
+        int x = get_offset(tp);
+        for(auto i:lev1)
+            x *= i;
+        ac.pb("SP = SP - " + to_string(x));
         ac.pb("Call allocmem");
-        ac.pb("stackpointer -yyy");
+        ac.pb("SP = SP + " + to_string(x-8) + " //Pointer in stack for array present in heap");
         add_assignment(exp, "popparam //Assigning the newly allocated memory");
         return;
     }
@@ -504,12 +513,6 @@
     void param_offset(string s1, int p_offset){
         ac.pb(s1 + " = [BP + " + to_string(arg_offset) + "]") ;
         arg_offset += p_offset ;
-    }
-    int get_offset(string t){
-        if(t == "integer" || t == "Integer" || t == "float") return 4 ;
-        else if(t == "double") return 8 ;
-        else if(t == "character" || t == "Character") return 2 ;
-        return 8 ;
     }
     int check_literal(string s){
         if(s == "Boolean" || s == "string" || s == "Character" || s == "Integer" || s == "Float" || s == "Null")

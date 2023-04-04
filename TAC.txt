@@ -1,39 +1,25 @@
 
-add:
+main:
 push BP
 BP = SP
 t0 = [BP + 8]
-a = [BP + 16]
-b = [BP + 24]
-t1 = cast_to_integer(a)
-t2 = cast_to_integer(b)
-t3 = t1 +integer t2
-pop BP
-return t3
-Endadd:
+args = [BP + 16]
+SP = SP - 480
+Call allocmem
+SP = SP + 472 //Pointer in stack for array present in heap
+t1 = popparam //Assigning the newly allocated memory
+[BP - 4] = t1
+t2 points to *(arr+0)
+t3 points to *(t2+1)
+t4 points to *(t3+2)
+t5 points to *(t4+2)
+t5 = 2
+[BP - 8] = 1
+SP = SP - 8
+Call allocmem
+SP = SP + 0 //Pointer in stack for array present in heap
+t6 = popparam //Assigning the newly allocated memory
+[BP - 12] = t6
+[BP - 16] = 1
+Endmain:
 
-
-sub:
-push BP
-BP = SP
-t0 = [BP + 8]
-a = [BP + 16]
-b = [BP + 20]
-d = [BP + 24]
-x = [BP + 28]
-pop BP
-return 0
-Endsub:
-
-param 3
-param 2
-t4 = call add
-SP = SP + 20
-[BP - 4] = t4
-param z
-param 3
-param 2
-param 1
-t5 = call sub
-SP = SP + 24
-[BP - 8] = t5
