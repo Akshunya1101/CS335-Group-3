@@ -1,0 +1,9 @@
+Lexeme, Token, Type, Line, Offset, Scope, Prameters, Dimensions
+GFG, Identifier, Reference Type, 1, 0, Global, , 
+GFG, Identifier, GFG, 6, 12, GFG Class, integer double , 
+add, Identifier, Method_integer, 20, 12, GFG Class, integer integer , 
+arr, Identifier, array(array(integer)), 4, 12, GFG Class, , 1 -1 
+main, Identifier, Method_Void, 32, 16, GFG Class, , 
+sub, Identifier, Method_Void, 16, 12, GFG Class, integer integer float character integer boolean integer integer , 
+x, Identifier, integer, 2, 0, GFG Class, , 
+z, Identifier, double, 3, 4, GFG Class, , 

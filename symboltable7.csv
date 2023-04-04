@@ -1,0 +1,6 @@
+Lexeme, Token, Type, Line, Offset, Scope, Prameters, Dimensions
+a, Identifier, integer, 20, 0, add Method, , 
+arr, Identifier, array(array(integer)), 22, 12, add Method, , 3 4 
+b, Identifier, integer, 20, 4, add Method, , 
+dead_var, Identifier, integer, 28, 60, add Method, , 
+sum, Identifier, integer, 21, 8, add Method, , 
