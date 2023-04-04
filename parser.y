@@ -445,16 +445,32 @@
     int offset_val = 0;
     int change_ac_val = 0;
     void add_string(string exp1, string exp2, string exp3, string op) {
-        string expr = exp1 + " = " + exp2 + " " + op + " " + exp3;
+        if(mp_func[exp1].length()==0)
+            mp_func[exp1] = exp1;
+        if(mp_func[exp2].length()==0)
+            mp_func[exp2] = exp2;
+        if(mp_func[exp3].length()==0)
+            mp_func[exp3] = exp3;
+        string expr = mp_func[exp1] + " = " + mp_func[exp2] + " " + op + " " + mp_func[exp3];
         ac.pb(expr);
         return;
     }
     void add_assignment(string exp1, string exp2) {
-        ac.pb(exp1 + " = " + exp2);
+        if(mp_func[exp1].length()==0)
+            mp_func[exp1] = exp1;
+        if(mp_func[exp2].length()==0)
+            mp_func[exp2] = exp2;
+        ac.pb(mp_func[exp1] + " = " + mp_func[exp2]);
         return;
     }
     void add_address(string exp, string exp1, string exp2) {
-        string result = exp + " points to *(" + exp1 + "+" + exp2 + ")";
+        if(mp_func[exp].length()==0)
+            mp_func[exp] = exp;
+        if(mp_func[exp2].length()==0)
+            mp_func[exp2] = exp2;
+        if(mp_func[exp1].length()==0)
+            mp_func[exp1] = exp1;
+        string result = mp_func[exp] + " points to *(" + exp1 + "+" + exp2 + ")";
         ac.pb(result);
         return;
     }
@@ -1629,19 +1645,19 @@ VariableDeclaratorId {
         add_assignment(s2, s1);
         if(mp_func[$1.var].length() == 0){
             mp_func[$1.var] = local_offset(get_offset($1.type)) ;
-            add_assignment(mp_func[$1.var], s2) ;
+            add_assignment($1.var, s2) ;
         }
-        else add_assignment(mp_func[$1.var], s2) ;
+        else add_assignment($1.var, s2) ;
     }
     else{
         if(mp_func[$1.var].length() == 0){
             mp_func[$1.var] = local_offset(get_offset($1.type)) ;
-            if(check_literal($3.type)) add_assignment(mp_func[$1.var], mp_func[$3.var]) ;
-            else add_assignment(mp_func[$1.var], $3.var) ;
+            if(check_literal($3.type)) add_assignment($1.var, $3.var) ;
+            else add_assignment($1.var, $3.var) ;
         }
         else{
-            if(check_literal($3.type)) add_assignment(mp_func[$1.var], mp_func[$3.var]) ;
-            else add_assignment(mp_func[$1.var], $3.var) ;
+            if(check_literal($3.type)) add_assignment($1.var, $3.var) ;
+            else add_assignment($1.var, $3.var) ;
         }
     }
 
@@ -2523,20 +2539,20 @@ Primary:
 PrimaryNoNewArray {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
 | ArrayCreationExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
 PrimaryNoNewArray:
-Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var;}
-| String_Literal {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var;}
-| Char_Literal {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var;}
-| Int_Literal {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var;}
-| Tb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var;}
-| Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var;}
-| Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var;}
-| This {($$).str = strdup(THIS.c_str()); ($$).type = strdup(THIS.c_str()); ($$).dim1 = 0;  $$.var = $1.var;}
+Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
+| String_Literal {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
+| Char_Literal {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
+| Int_Literal {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
+| Tb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
+| Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
+| Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
+| This {($$).str = strdup(THIS.c_str()); ($$).type = strdup(THIS.c_str()); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
 | Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;  $$.var = $2.var;}
-| ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type; $$.var = $1.var;  $$.var = $1.var;}
-| FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var;  $$.var = $1.var;}
-| MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str; $$.var = $1.var;  $$.var = $1.var;}
+| ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type; $$.var = $1.var;}
+| FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var;}
+| MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str; $$.var = $1.var;}
 | ArrayAccess {($$).type = ($1).type; ($$).str = ($1).str; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
-    ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; $$.var = $1.var;  $$.var = $1.var;}
+    ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; $$.var = $1.var;}
 
 New1:
 {$$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var); add_param($$.var);}
@@ -3758,19 +3774,19 @@ LeftHandSide Eq AssignmentExpression {
         add_assignment(s2, s1);
         if(mp_func[$1.var].length() == 0){
             mp_func[$1.var] = local_offset(get_offset($1.type)) ;
-            add_assignment(mp_func[$1.var], s2) ;
+            add_assignment($1.var, s2) ;
         }
-        else add_assignment(mp_func[$1.var], s2) ;
+        else add_assignment($1.var, s2) ;
     }
     else{
         if(mp_func[$1.var].length() == 0){
             mp_func[$1.var] = local_offset(get_offset($1.type)) ;
-            if(check_literal($3.type)) add_assignment(mp_func[$1.var], mp_func[$3.var]) ;
-            else add_assignment(mp_func[$1.var], $3.var) ;
+            if(check_literal($3.type)) add_assignment($1.var, $3.var) ;
+            else add_assignment($1.var, $3.var) ;
         }
         else{
-            if(check_literal($3.type)) add_assignment(mp_func[$1.var], mp_func[$3.var]) ;
-            else add_assignment(mp_func[$1.var], $3.var) ;
+            if(check_literal($3.type)) add_assignment($1.var, $3.var) ;
+            else add_assignment($1.var, $3.var) ;
         }
     }
     vector<Entry>* c2 ;
