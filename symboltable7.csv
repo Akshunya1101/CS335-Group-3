@@ -1,9 +1,0 @@
-Lexeme, Token, Type, Line, Offset, Scope, Prameters, Dimensions
-a, Identifier, integer, 21, 0, sub Method, , 
-b, Identifier, integer, 21, 4, sub Method, , 
-c, Identifier, float, 21, 8, sub Method, , 
-d, Identifier, character, 21, 12, sub Method, , 
-e, Identifier, integer, 21, 14, sub Method, , 
-f, Identifier, boolean, 21, 18, sub Method, , 
-h, Identifier, integer, 21, 19, sub Method, , 
-i, Identifier, integer, 21, 23, sub Method, , 

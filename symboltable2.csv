@@ -1,7 +1,0 @@
-Lexeme, Token, Type, Line, Offset, Scope, Prameters, Dimensions
-Myclass, Identifier, Reference Type, 1, 0, Global, , 
-Myclass, Identifier, Myclass, 4, 8, Myclass Class, integer , 
-a, Identifier, integer, 2, 0, Myclass Class, , 
-b, Identifier, integer, 3, 4, Myclass Class, , 
-func1, Identifier, Method_integer, 7, 8, Myclass Class, integer integer , 
-main, Identifier, Method_Void, 12, 12, Myclass Class, array(String) , 

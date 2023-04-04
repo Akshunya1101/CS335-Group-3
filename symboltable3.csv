@@ -1,2 +1,0 @@
-Lexeme, Token, Type, Line, Offset, Scope, Prameters, Dimensions
-a, Identifier, integer, 4, 0, Myclass Constructor, , 
