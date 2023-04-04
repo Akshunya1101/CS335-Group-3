@@ -476,14 +476,20 @@
         arg_offset += p_offset ;
     }
     int get_offset(string t){
-        if(t == "integer" || t == "Integer" || t == "float") return 4 ;
-        else if(t == "double") return 8 ;
-        else if(t == "character" || t == "Character") return 2 ;
+        if(t == "integer" || t == "Integer" || t == "float" || t == "Float") return 4 ;
+        else if(t == "Double" || t == "double" || t == "Long" || t == "long") return 8 ;
+        else if(t == "character" || t == "Character" || t == "short" || t == "Short") return 2 ;
+        else if(t == "Boolean" || t == "boolean" || t == "Byte" || t == "byte") return 1 ;
         return 8 ;
     }
     int check_literal(string s){
         if(s == "Boolean" || s == "string" || s == "Character" || s == "Integer" || s == "Float" || s == "Null")
             return 0 ;
+        return 1 ;
+    }
+    int check_obj(string s){
+        if(s == "integer" || s == "character" || s == "boolean" || s == "float" || s == "double" || s == "short" 
+        || s == "byte" || s == "long") return 0 ;
         return 1 ;
     }
     string findscope(bool brkorcont) {
@@ -1668,8 +1674,8 @@ VariableDeclaratorId {
     ($$).str = ($1).str;
 }
 VariableDeclaratorId:
-Identifier {($$).str = ($1).str; ($$).type = strdup(tp.c_str());}
-| VariableDeclaratorId Lsb Rsb {l1++;}
+Identifier {($$).str = ($1).str; ($$).type = strdup(tp.c_str()); if(check_obj(tp)){cout << tp << '\n'; mp_func[$1.str] = $1.str ;}}
+| VariableDeclaratorId Lsb Rsb {l1++; mp_func[$1.str] = $1.str ;}
 VariableInitializer:
 Expression {($$).dim1 = ($1).dim1; l = 0; $$.num = 1; $$.num1 = 0; ($$).type = ($1).type; ($$).str = ($1).str;}
 | ArrayInitializer {l++; $$.num = $1.num; $$.num1 = $1.num1; ($$).type = ($1).type; ($$).str = ($1).str;}
@@ -2530,6 +2536,7 @@ New1:
 {$$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var); add_param($$.var);}
 ClassInstanceCreationExpression:
 New ClassType New1 Lb ArgumentList Rb {
+    func_offset += 8 ;
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $2.var); 
     if(THIS == $2.str || $2.str == "Reference Type")
         head1 = head->find_table($2.str,1);
@@ -2557,6 +2564,7 @@ New ClassType New1 Lb ArgumentList Rb {
     v.clear();
 } 
 | New ClassType New1 Lb Rb {
+    func_offset += 8 ;
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $2.var); 
     if(THIS == $2.str || $2.str == "Reference Type") 
         head1 = head->find_table($2.str,1);
@@ -2587,6 +2595,7 @@ New ClassType New1 Lb ArgumentList Rb {
     f3 = 1;
 }
 | Primary Dot New ClassType New1 Lb ArgumentList Rb {
+    func_offset += 8 ;
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var); 
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
@@ -2610,6 +2619,7 @@ New ClassType New1 Lb ArgumentList Rb {
     v.clear();
 } 
 | Primary Dot New ClassType New1 Lb Rb {
+    func_offset += 8 ;
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var); 
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
@@ -2628,14 +2638,15 @@ New ClassType New1 Lb ArgumentList Rb {
     ($$).type = strdup($$.type+i+1);
     f3 = 1;
 }
-|New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $3.var);
+|New TypeArguments ClassType New1 Lb ArgumentList Rb  { func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $3.var);
     ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function"); }
-| New TypeArguments ClassType New1 Lb Rb { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $3.var); }
-|Primary Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $5.var);
+| New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $3.var); }
+|Primary Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { func_offset += 8 ; func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $5.var);
     ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function"); }
-| Primary Dot New TypeArguments ClassType New1 Lb Rb { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $5.var); }
+| Primary Dot New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $5.var); }
 
 | Name Dot New ClassType New1 Lb ArgumentList Rb {
+    func_offset += 8 ;
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var);
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
@@ -2660,6 +2671,7 @@ New ClassType New1 Lb ArgumentList Rb {
     v.clear();
 } 
 | Name Dot New ClassType New1 Lb Rb {
+    func_offset += 8 ;
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var);
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
@@ -2677,9 +2689,9 @@ New ClassType New1 Lb ArgumentList Rb {
     ($$).type = strdup($$.type+i+1);
     f3 = 1;
 }
-|Name Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+|Name Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     ac.pb("popparam " + to_string(v.size()) + " //Remove the parameters passed in function"); }
-| Name Dot New TypeArguments ClassType New1 Lb Rb { $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var); }
+| Name Dot New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var); }
 
 
 |New ClassType New1 TypeArgumentsOrDiamond Lb ArgumentList Rb | New ClassType New1 TypeArgumentsOrDiamond Lb Rb
@@ -2699,18 +2711,18 @@ Expression {v.push_back($1.type); add_param($1.var);}
 
 
 ArrayCreationExpression:
-New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
-| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
-| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
-| New ClassOrInterfaceType DimExprs {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
-| New PrimitiveType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
+New PrimitiveType DimExprs Dims { func_offset += 8 ;($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
+| New PrimitiveType DimExprs { func_offset += 8 ; ($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
+| New ClassOrInterfaceType DimExprs Dims { func_offset += 8 ; ($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
+| New ClassOrInterfaceType DimExprs { func_offset += 8 ; ($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
+| New PrimitiveType Dims ArrayInitializer { func_offset += 8 ; ($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT; 
     }
      $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);
 }
-| New ClassOrInterfaceType Dims ArrayInitializer {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
+| New ClassOrInterfaceType Dims ArrayInitializer { func_offset += 8 ; ($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT;
