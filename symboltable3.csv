@@ -1,0 +1,4 @@
+Lexeme, Token, Type, Line, Offset, Scope, Prameters, Dimensions
+A, Identifier, Reference Type, 43, 12, GFG Class, , 
+A, Identifier, A, 45, 4, A Class, , 
+z, Identifier, integer, 44, 0, A Class, , 

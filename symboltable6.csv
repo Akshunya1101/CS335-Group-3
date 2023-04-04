@@ -1,0 +1,5 @@
+Lexeme, Token, Type, Line, Offset, Scope, Prameters, Dimensions
+args, Identifier, array(String), 31, 0, main Method, , -1 
+arr, Identifier, array(integer), 35, 6, main Method, , 2 
+x, Identifier, integer, 32, 0, main Method, , 
+y, Identifier, character, 33, 4, main Method, , 
