@@ -2485,7 +2485,7 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string temp($2.var); ac.pb("pop BP\nreturn " + temp);}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string temp = build_string("t", ++varnum["var"]); add_assignment(temp, $2.var); ac.pb("pop BP\nreturn " + temp);}
  | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} ac.pb("pop BP\nreturn");}
 ThrowStatement:
 Throw Expression Semicol
