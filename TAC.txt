@@ -1,14 +1,37 @@
 
+add:
+push BP
+BP = SP
+t0 = [BP + 8]
+a = [BP + 16]
+b = [BP + 24]
+t1 = cast_to_integer(a)
+t2 = cast_to_integer(b)
+t3 = t1 +integer t2
+pop BP
+return t3
+Endadd:
+
+
 main:
 push BP
 BP = SP
 t0 = [BP + 8]
 args = [BP + 16]
+g = [BP + 24]
+t1 points to *(t0+8)
+t1 = 1
 stackpointer +xxx
 Call allocmem
 stackpointer -yyy
-t1 = popparam //Assigning the newly allocated memory
-arr = t1
-[BP - 12] = 1
+t2 = popparam //Assigning the newly allocated memory
+[BP - 4] = t2
+t3 points to *(arr+0)
+t3 = 1
+t4 points to *(arr+1)
+t5 points to *(arr+0)
+t4 = t5
+pop BP
+return 1
 Endmain:
 

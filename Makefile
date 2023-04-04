@@ -10,4 +10,4 @@ parser.tab.o: parser.y parser.tab.h
 	g++ -c parser.tab.c
 
 clean:
-	rm *.o myASTGenerator *.c *.h *.output *.ps *.png
+	rm *.o milestone2 *.c *.h *.output *.ps *.png *.csv *.txt *.out

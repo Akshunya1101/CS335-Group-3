@@ -1,17 +1,7 @@
-public class test {
-    public class A{
-         int x = 1;
-        A(int y){
-            
-        }
-        int re(int x,float y){
-            return 1;
-        }
+public class Example1 {
+    int y ;
+    int add(int a, int b){
+        return a+b ;
     }
-    //Check for String[]
-	public static void main(int args) {
-        A q = new A('c');
-        int w = q.x ;
-	    return;
-	}
+    int z = add(2,3) ;
 }
