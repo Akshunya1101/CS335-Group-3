@@ -1,3 +1,2 @@
 Lexeme, Token, Type, Line, Offset, Scope, Prameters, Dimensions
-x, Identifier, integer, 6, 0, GFG Constructor, , 
-z, Identifier, double, 6, 4, GFG Constructor, , 
+a, Identifier, integer, 4, 0, Myclass Constructor, , 

@@ -1,1 +1,5 @@
 Lexeme, Token, Type, Line, Offset, Scope, Prameters, Dimensions
+alpha, Identifier, integer, 14, 8, main Method, , 
+args, Identifier, array(String), 12, 0, main Method, , -1 
+beta, Identifier, integer, 15, 12, main Method, , 
+z, Identifier, integer, 16, 16, main Method, , 

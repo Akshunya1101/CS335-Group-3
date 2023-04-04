@@ -1,1 +1,5 @@
 Lexeme, Token, Type, Line, Offset, Scope, Prameters, Dimensions
+a, Identifier, integer, 7, 0, func1 Method, , 
+a11, Identifier, integer, 9, 36, func1 Method, , 
+arr, Identifier, array(integer), 8, 8, func1 Method, , 7 
+b, Identifier, integer, 7, 4, func1 Method, , 

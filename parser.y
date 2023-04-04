@@ -437,9 +437,13 @@
     map<string,string> conversion;
     string ttt="";
     string THIS="";
+
+
     // 3AC Expressions
     vector<string> ac;
     map<string, int> varnum;
+    int offset_val = 0;
+    int change_ac_val = 0;
     void add_string(string exp1, string exp2, string exp3, string op) {
         string expr = exp1 + " = " + exp2 + " " + op + " " + exp3;
         ac.pb(expr);
@@ -461,6 +465,17 @@
     void call_func(string exp, string func_name) {
         ac.pb(exp + " = call " + func_name);
         return;
+    }
+    bool check_qualified_name_method(string exp) {
+        return (exp.size() >= 2 && exp[0]=='t' && exp[1] >= '0' && exp[1] <= '9');
+    }
+    void change_ac(string exp) {
+        string temp = ac[change_ac_val];
+        temp = temp.substr(0, temp.size()-11) + exp + " //Offset";
+        ac[change_ac_val] = temp;
+        offset_val = 0;
+        return;
+
     }
     int get_offset(string t){
         if(t == "integer" || t == "Integer" || t == "float" || t == "Float") return 4 ;
@@ -882,6 +897,10 @@ if(!head1){
  Entry c1;
  if(head1){vector<Entry> c = head1->get($3.str); if(THIS == $1.cl){c1 = head1->get1(c,{},head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,{},NULL);} ($$).str = strdup(c1.Type.c_str()) ; if(check_print($1.var)) {$$.var = make_print_string($1.var);}
     else {
+        if(c1.Offset==-1) {
+            offset_val = -1;
+            change_ac_val = ac.size();
+        }
         string temp1 = build_string("t", ++varnum["var"]);
         add_assignment(temp1, to_string(c1.Offset) + " //Offset");
         $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, temp1);
@@ -2805,9 +2824,33 @@ Primary Dot Identifier {
 | Super Dot Identifier {($$).type = (char*)"Super"; ($$).str = ($3).str; vector<Entry> c1 = head->parent->get($$.str); map<int,int> sz1 = head->parent->get1(c1,{},head).Dim;
     ($$).dim1 = sz1.size(); $$.var = build_string("t", ++varnum["var"]); add_address($$.var,(char*)"t0", $3.var);}
 Dummy14:
-Primary Dot Identifier { $$.var = build_string("t", ++varnum["var"]); add_address($$.var,(char*)"t0", $3.var); ($$).type = ($3).str; }
+Primary Dot Identifier { 
+    vector<Entry> c = head->get($3.str);
+    Entry c1 = head->get1(c,v,head);
+    if(c1.Offset==-1) {
+        offset_val = -1;
+        change_ac_val = ac.size();
+    }
+    string temp1 = build_string("t", ++varnum["var"]);
+    add_assignment(temp1, to_string(c1.Offset) + " //Offset");
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, "t0", temp1);
+    ($$).type = ($3).str; 
+}
 Dummy15:
-Super Dot Identifier { $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, $3.var); ($$).type = ($3).str;}
+Super Dot Identifier { 
+    vector<Entry> c = head->get($3.str);
+    Entry c1 = head->get1(c,v,head);
+    if(c1.Offset==-1) {
+        offset_val = -1;
+        change_ac_val = ac.size();
+    }
+    string temp1 = build_string("t", ++varnum["var"]);
+    add_assignment(temp1, to_string(c1.Offset) + " //Offset");
+    $$.var = build_string("t", ++varnum["var"]);
+    add_address($$.var, "super", temp1);
+    ($$).type = ($3).str; 
+    }
 MethodInvocation:
 Name Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
@@ -2828,6 +2871,8 @@ Name Lb ArgumentList Rb {
         c1 = head->get1(c,v,NULL);
         ($$).type = strdup(c1.Type.c_str());
     }
+    if(offset_val == -1)
+        change_ac(to_string(c1.Offset));
     if(!err.empty()){
         err.pop_back();
     }
@@ -2878,7 +2923,10 @@ Name Lb ArgumentList Rb {
     func_params.clear();
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->get($1.type);
-    ($$).type = strdup(head->get1(c,v,head).Type.c_str());
+    Entry c1 = head->get1(c,v,head);
+    if(offset_val == -1)
+        change_ac(to_string(c1.Offset));
+    ($$).type = strdup(c1.Type.c_str());
     if(!err.empty())
         err.pop_back();
     if(!strlen($$.type)){
@@ -2907,7 +2955,10 @@ Name Lb ArgumentList Rb {
     func_params.clear();
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->parent->get($1.type);
-    ($$).type = strdup(head->parent->get1(c,v,NULL).Type.c_str());
+    Entry c1 = head->parent->get1(c,v,NULL);
+    ($$).type = strdup(c1.Type.c_str());
+    if(offset_val == -1)
+        change_ac(to_string(c1.Offset));
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     if(!err.empty())
@@ -2925,7 +2976,10 @@ Name Lb ArgumentList Rb {
 | Dummy15 Lb Rb {
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->parent->get($1.type);
-    ($$).type = strdup(head->parent->get1(c,{},head->parent).Type.c_str());
+    Entry c1 = head->parent->get1(c,{},head->parent);
+    if(offset_val == -1)
+        change_ac(to_string(c1.Offset));
+    ($$).type = strdup(c1.Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
 }

@@ -1,138 +1,44 @@
 
-GFG:
+Myclass:
 push BP
 BP = SP
 t0 = [BP + 8]
-x = [BP + 16]
-z = [BP + 20]
+a = [BP + 16]
 t1 points to *(t0+0)
-t1 = x
-t2 points to *(t0+4)
-t2 = z
-If1:
-t3 = cast_to_double(x) <double z
-if t3 goto IfBody1
-goto EndIf1
-IfBody1:
-pop BP
-return
-EndIf1:
-Else1:
-t4 points to *(t0+4)
-t5 = cast_to_double(x) +double z
-t4 = t5
-EndElse1:
-EndGFG:
+t1 = a
+EndMyclass:
 
 
-sub:
+func1:
 push BP
 BP = SP
 t0 = [BP + 8]
 a = [BP + 16]
 b = [BP + 20]
-c = [BP + 24]
-d = [BP + 28]
-e = [BP + 30]
-f = [BP + 34]
-h = [BP + 35]
-i = [BP + 39]
-pop BP
-return
-Endsub:
-
-
-add:
-push BP
-BP = SP
-t0 = [BP + 8]
-a = [BP + 16]
-b = [BP + 20]
-t6 = a +integer b
-[BP - 4] = t6
-SP = SP - 48
+SP = SP - 28
 Call allocmem
-SP = SP + 40 //Pointer in stack for array present in heap
-t7 = popparam //Assigning the newly allocated memory
-arr = t7
-param 2
-param 2
-param true
-param 1
-param 'c'
-param 1
-param 1
-param 1
-t8 = call sub
-SP = SP + 35
+SP = SP + 20 //Pointer in stack for array present in heap
+t2 = popparam //Assigning the newly allocated memory
+arr = t2
+t3 = a +integer 2
+[BP - 12] = t3
+t4 = a11 +integer b
 pop BP
-return 5
-[BP - 16] = 2
-Endadd:
+return t4
+Endfunc1:
 
 
 main:
 push BP
 BP = SP
 t0 = [BP + 8]
-SP = SP - 8
-Call allocmem
-SP = SP + 0 //Pointer in stack for array present in heap
-t9 = popparam //Assigning the newly allocated memory
-param t9
-param 1.5
-param 1
-t10 = call GFG
-SP = SP + 20
-obj = t10
-t11 = 0 //Offset
-t12 points to *(obj+t11)
-t12 = 2
-t13 = 12 //Offset
-t14 points to *(obj+t13)
-SP = SP - 120
-Call allocmem
-SP = SP + 112 //Pointer in stack for array present in heap
-t15 = popparam //Assigning the newly allocated memory
-t14 = t15
-[BP - 20] = 20
-t16 = cast_to_float(40)
-[BP - 24] = t16
-[BP - 28] = 'a'
-[BP - 30] = true
-t17 = b +float cast_to_float(a)
-[BP - 24] = t17
-t18 = a +integer cast_to_integer(c)
-t19 = cast_to_float(t18)
-[BP - 24] = t19
-t20 = cast_to_float(a) +float b
-t21 = t20 +float cast_to_float(c)
-[BP - 24] = t21
-t22 = b <float cast_to_float(a)
-if t22 goto TernaryOperationFirst1
-goto TernaryOperationSecond1
-TernaryOperationFirst1:
-t_op = true
-goto EndTernaryOperation1
-TernaryOperationSecond1:
-t_op = EndTernaryOperation1
-EndTernaryOperation1:
-[BP - 30] = t_op
-t23 = -1 //Offset
-t24 points to *(obj+t23)
-param 12
-param 1
-t25 = call t24
+args = [BP + 16]
+[BP - 4] = 0
+[BP - 8] = 0
+param beta
+param alpha
+t5 = call func1
 SP = SP + 16
-param 8
-param 7
-param true
-param 5
-param '4'
-param 3
-param 2
-param 1
-t26 = call sub
-SP = SP + 35
+[BP - 12] = t5
 Endmain:
 
