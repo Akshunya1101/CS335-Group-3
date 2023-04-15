@@ -1,10 +1,16 @@
-public class Main
-{
-    public static int func1(int x, float y, char c){
-        return 1 ;
-    }
-	public static void main(int args) {
-        int y = func1(2,'a', 1.2) ;
-        return ;
-	}
+public class Example1 {
+		public class MyClass {
+         int x;
+         float y;
+      }
+
+      int addMyClass(MyClass obj) {
+         int sum = obj.x + (int)obj.y;
+         return sum;
+      }
+
+   public static void main(String[] args) {
+         MyClass obj1 = new MyClass() ;
+   		int z = addMyClass(obj1) ;
+   }
 }

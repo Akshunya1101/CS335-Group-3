@@ -36,10 +36,6 @@
     vector<string> func_params;
     map<string,string> conv;
     map<string,set<string>> conv1;
-    string Type_cast(string t, char*var){
-        string s = var ;
-        return "cast_to_" + t + "(" + s + ")" ;
-    }
     int count_files = 1 ;
     string csv_name(){
         return "symboltable" + to_string(count_files++) + ".csv" ;
@@ -460,7 +456,7 @@
             mp_func[exp1] = exp1;
         if(mp_func[exp2].length()==0)
             mp_func[exp2] = exp2;
-        ac.pb(mp_func[exp1] + " = " + mp_func[exp2]);
+        ac.pb("movl " + mp_func[exp2] + " " + mp_func[exp1]);
         return;
     }
     void add_address(string exp, string exp1, string exp2) {
@@ -532,18 +528,18 @@
         ac.pb("goto " + loc);
     }
     void callee(){
-        ac.pb("push BP\nBP = SP") ;
+        ac.pb("pushq %rbp\nmovq %rsp, %rbp") ;
         arg_offset = 8 ;
         func_offset = 4 ;
         mp_func.clear() ;
     }
     string local_offset(int l_offset){
-        string s = "[BP - " + to_string(func_offset) + "]" ;
+        string s = "-" + to_string(func_offset) + "(%rbp)" ;
         func_offset += l_offset ;
         return s ;
     }
     void param_offset(string s1, int p_offset){
-        ac.pb(s1 + " = [BP + " + to_string(arg_offset) + "]") ;
+        ac.pb(s1 + " = +" + to_string(arg_offset) + "(%rbp)") ;
         arg_offset += p_offset ;
     }
     int check_literal(string s){
@@ -603,6 +599,12 @@
         char* charArray = new char[result.length() + 1];
         strcpy(charArray, result.c_str());
         return charArray;
+    }
+    string Type_cast(string t, char*var){
+        string s = var ;
+        if(mp_func[s].length()==0)
+            mp_func[s] = s;
+        return "cast_to_" + t + "(" + mp_func[s] + ")" ;
     }
 %}
 %union {
@@ -2501,8 +2503,8 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string temp = build_string("t", ++varnum["var"]); add_assignment(temp, $2.var); ac.pb("pop BP\nreturn " + temp);}
- | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} ac.pb("pop BP\nreturn");}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string temp = build_string("t", ++varnum["var"]); add_assignment(temp, $2.var); ac.pb("popq %rbp\nret " + temp);}
+ | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} ac.pb("popq %rbp\nret");}
 ThrowStatement:
 Throw Expression Semicol
 SynchronizedStatement:
@@ -2542,7 +2544,7 @@ PrimaryNoNewArray:
 Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
 | String_Literal {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
 | Char_Literal {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
-| Int_Literal {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
+| Int_Literal {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; string st = $1.var; mp_func[$1.var] = "$" + st ;}
 | Tb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
 | Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
 | Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
@@ -3971,12 +3973,12 @@ int main(int argc, char* argv[]){
     if(!err.empty()){
         cerr << "Incorrect Invocation in line " << err[0]<<endl; 
     }
-    for(auto x:list_tables){
-        ofstream sy (csv_name(), std::ofstream::out);
-        x->print();
-        sy << symtable ;
-        symtable = "" ;
-    }
+    // for(auto x:list_tables){
+    //     ofstream sy (csv_name(), std::ofstream::out);
+    //     x->print();
+    //     sy << symtable ;
+    //     symtable = "" ;
+    // }
     ofstream ac3 ("TAC.txt", std::ofstream::out);
     for(auto s : ac) {
         ac3 << s << endl;

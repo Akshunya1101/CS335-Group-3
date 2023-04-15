@@ -1,16 +1,16 @@
-public class Main
-{
-    public static int add(int x, int y){
-        return x+y ;
+public class MyClass {
+    public float x;
+    public float y;
+
+    public MyClass(float x, float y) {
+        this.x = x;
+        this.y = y;
     }
-    public static float add(float x, float y){
-        return x+y ;
-    }
-	public static void main(int args) {
-        int x = add(2,3) ;
-        float y = add(1.2, 3.4) ;
-        // no. of parameters incorrect
-        int x = add(2) ;
-        return ;
-	}
+    public static int addMyClass() {
+    MyClass obj = new MyClass(10, 2.5f);
+    float sum = obj.x + (int)obj.y;
+    float z = 1 ;
+    int w = (int)z + (int)obj.y + 1 ;
+    return sum;
+}
 }
