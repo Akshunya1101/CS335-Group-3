@@ -568,11 +568,12 @@
         return;
     }
     void if_goto(string exp, string loc) {
-        ac.pb("if " + exp + " goto " + loc);
+        ac.pb("cmpl	$0, " + exp);
+        ac.pb("jne " + loc)
         return;
     }
     void go_to(string loc) {
-        ac.pb("goto " + loc);
+        ac.pb("jmp " + loc);
     }
     void callee(){
         ac.pb("pushq %rbp\nmovq %rsp, %rbp") ;
