@@ -255,6 +255,9 @@
                     parent = NULL;
                     level = 0;
                     table["String"].push_back(Entry("Identifier","String",0,0,"Global",{},map<int,int>(),{}));
+                    table["System"].push_back(Entry("Identifier","Class",0,0,"Global",{},map<int,int>(),{}));
+                    table["out"].push_back(Entry("Identifier","Class",0,0,"Global",{},map<int,int>(),{}));
+                    table["println"].push_back(Entry("Identifier","Method,Void",0,0,"Global",{},map<int,int>(),{}));
                 }
                 sn = scp;
                 scope_name = scp + scp_num;
@@ -288,7 +291,7 @@
                         return ptr->table[lexeme];
                     }
                 }
-                if(f3)
+                if(f3 && lexeme != "out" && lexeme != "println" && lexeme != "System")
                     cerr<<"Undeclared "<< lexeme << " on line "<<yylineno<<endl;
                 return {};
             }
@@ -913,7 +916,9 @@ if(!head1){
  }
 }
  Entry c1;
- if(head1){vector<Entry> c = head1->get($3.str); if(THIS == $1.cl){c1 = head1->get1(c,{},head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,{},NULL);} ($$).str = strdup(c1.Type.c_str()) ; if(check_print($1.var)) {$$.var = make_print_string($1.var);}
+string comp1($3.str), comp2($1.type);
+ if(head1 || comp1 == "out" || comp2 == "System" || comp1 == "println" ){vector<Entry> c = head1->get($3.str); if(THIS == $1.cl){c1 = head1->get1(c,{},head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,{},NULL);} ($$).str = strdup(c1.Type.c_str()) ;
+    if(check_print($1.var)) {$$.var = make_print_string($1.var);}
     else {
         if(c1.Offset==-1) {
             offset_val = -1;
@@ -925,8 +930,9 @@ if(!head1){
         }
     }
 else {
-        cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
-        YYABORT;
+            cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
+            cerr << $1.type << " " << $3.str << endl;
+            YYABORT;
     }
     ($$).dim1 = c1.Dim.size();
 }
