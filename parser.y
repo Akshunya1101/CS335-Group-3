@@ -31,6 +31,7 @@
     int f1 = 0; //for checking new
     int ln,rl = -1;
     int f3=1, f4=0;
+    int reg_flag = 0 ;
     vector<int> err ;
     vector<string> v;
     vector<string> func_params;
@@ -443,6 +444,26 @@
     map<string, int> varnum;
     int offset_val = 0;
     int change_ac_val = 0;
+    string op_exp(string ope){
+        if(ope[0] == '+'){
+            return "addl" ;
+        }
+        else if(ope[0] == '-'){
+            return "subl" ;
+        }
+        else if(ope[0] == '*'){
+            return "imull" ;
+        }
+        else if(ope[0] == '/'){
+            return "idiv" ;
+        }
+        return "addl" ;
+    }
+    int check_reg(string st){
+        if(st.size() < 2) return 0 ;
+        if(st[0] == 't'  && st[1] >= '0' && st[1] <= '9') return 1 ;
+        return 0 ;
+    }
     void add_string(string exp1, string exp2, string exp3, string op) {
         if(mp_func[exp1].length()==0)
             mp_func[exp1] = exp1;
@@ -450,8 +471,30 @@
             mp_func[exp2] = exp2;
         if(mp_func[exp3].length()==0)
             mp_func[exp3] = exp3;
-        string expr = mp_func[exp1] + " = " + mp_func[exp2] + " " + op + " " + mp_func[exp3];
-        ac.pb(expr);
+        //cout << mp_func[exp1] << " " << mp_func[exp2] << " " << op << '\n' ;
+        int c = 1 ;
+        if(!reg_flag){
+            ac.pb("movl " + mp_func[exp2] + ", %eax") ;
+            reg_flag = 1 ;
+            c = 0 ;
+        }
+        if(check_reg(mp_func[exp2]) && check_reg(mp_func[exp3])){
+            ac.pb(op_exp(op) + " %edx, %eax") ;
+        }
+        else if(check_reg(mp_func[exp2])){
+            ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
+        }
+        else if(check_reg(mp_func[exp3])){
+            ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %eax") ;
+        }
+        else{
+            if(reg_flag && c){
+                ac.pb("movl %eax %edx") ;
+                ac.pb("movl " + mp_func[exp2] + ", %eax") ;
+                ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
+            }
+            else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
+        }
         return;
     }
     void add_assignment(string exp1, string exp2) {
@@ -459,7 +502,8 @@
             mp_func[exp1] = exp1;
         if(mp_func[exp2].length()==0)
             mp_func[exp2] = exp2;
-        ac.pb("movl " + mp_func[exp2] + " " + mp_func[exp1]);
+        if(check_reg(exp2)) ac.pb("movl " + mp_func[exp1] + " " + "%eax");
+        else ac.pb("movl " + mp_func[exp2] + " " + mp_func[exp1]);
         return;
     }
     void add_address(string exp, string exp1, string exp2) {
@@ -534,6 +578,7 @@
         ac.pb("pushq %rbp\nmovq %rsp, %rbp") ;
         arg_offset = 8 ;
         func_offset = 4 ;
+        reg_flag = 0 ;
         mp_func.clear() ;
     }
     string local_offset(int l_offset){
