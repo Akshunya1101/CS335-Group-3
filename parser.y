@@ -489,7 +489,7 @@
         }
         else{
             if(reg_flag && c){
-                ac.pb("movl %eax %edx") ;
+                ac.pb("movl %eax, %edx") ;
                 ac.pb("movl " + mp_func[exp2] + ", %eax") ;
                 ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
             }
@@ -569,7 +569,7 @@
     }
     void if_goto(string exp, string loc) {
         ac.pb("cmpl	$0, " + exp);
-        ac.pb("jne " + loc)
+        ac.pb("jne " + loc);
         return;
     }
     void go_to(string loc) {
@@ -659,7 +659,7 @@
 %union {
     int num;
     char * str;
-    struct {int num; int num1; char *str; int size; char *type; char *var; int dim1; char *cl;} s;
+    struct {int num; int num1; char *str; int size; char *type; char *var; int dim1; char *cl; int val;} s;
 }
 %define parse.error verbose
 %token<s> Keyword
@@ -3768,7 +3768,7 @@ string temp = build_string("TernaryOperationFirst", ++varnum["ternaryoperationfi
 Dummy19:
 Dummy18 Expression Col {$$ = $1; add_assignment("t_op", $2.var); $$.var = build_string("EndTernaryOperation", ++varnum["endternaryoperation"]); go_to($$.var); add_label($1.var);}
 ConditionalExpression:
-ConditionalOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
+ConditionalOrExpression {$$ = $1;}
 | Dummy19 ConditionalExpression {
     if(!compare_type($1.type,(char*)"boolean")){
         cerr << "Incompatible Ternary Operator with the given operands in line " << yylineno<<endl;
@@ -3782,10 +3782,11 @@ ConditionalOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 =
     add_assignment("t_op", $1.var);
     add_label($1.var);
     $$.var = (char *)"t_op";
+    $$.val = $2.val;
 }
 AssignmentExpression:
-ConditionalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
-| Assignment {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
+ConditionalExpression {$$ = $1;}
+| Assignment {$$ = $1;}
 Assignment:
 LeftHandSide Eq AssignmentExpression {
     if(!compare_type($1.type,$3.type) && !compare_type1($1.type,$3.type)){
@@ -3816,6 +3817,7 @@ LeftHandSide Eq AssignmentExpression {
             }
             ($$).type = widen(($1).type,($3).type);
             ($$).str = ($1).str;
+            ($$).val = ($3).val;
             $$.dim1 = $1.dim1;
     }
     lev.clear(); lev1.clear(); l1 = 0;
@@ -3905,6 +3907,7 @@ LeftHandSide Eqq AssignmentExpression {
             }
             ($$).type = widen(($1).type,($3).type);
             ($$).str = ($1).str;
+            ($$).val = ($3).val;
             $$.dim1 = $1.dim1;
     }
     lev.clear(); lev1.clear(); l1 = 0;
