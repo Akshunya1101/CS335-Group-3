@@ -502,8 +502,10 @@
             mp_func[exp1] = exp1;
         if(mp_func[exp2].length()==0)
             mp_func[exp2] = exp2;
-        if(check_reg(exp2)) ac.pb("movl " + mp_func[exp1] + " " + "%eax");
+        if(lev1.size() == 0){
+        if(check_reg(exp2)) ac.pb("movl %eax, " + mp_func[exp1]);
         else ac.pb("movl " + mp_func[exp2] + " " + mp_func[exp1]);
+        }
         return;
     }
     void add_address(string exp, string exp1, string exp2) {
@@ -543,14 +545,18 @@
         else if(t == "Boolean" || t == "boolean" || t == "Byte" || t == "byte") return 1 ;
         return 8 ;
     }
+    string local_offset(int l_offset){
+        string s = "-" + to_string(func_offset) + "(%rbp)" ;
+        func_offset += l_offset ;
+        return s ;
+    }
     void alloc_mem(string exp) {
         int x = get_offset(tp);
         for(auto i:lev1)
             x *= i;
-        ac.pb("SP = SP - " + to_string(x));
-        ac.pb("Call allocmem");
-        ac.pb("SP = SP + " + to_string(x-8) + " //Pointer in stack for array present in heap");
-        add_assignment(exp, "popparam //Assigning the newly allocated memory");
+        ac.pb("movl $" + to_string(x) + ", %edi") ;
+        ac.pb("call malloc@PLT");
+        ac.pb("movq %rax, " + local_offset(get_offset(tp))) ;
         return;
     }
     char* build_string(string str, int number) {
@@ -581,11 +587,6 @@
         func_offset = 4 ;
         reg_flag = 0 ;
         mp_func.clear() ;
-    }
-    string local_offset(int l_offset){
-        string s = "-" + to_string(func_offset) + "(%rbp)" ;
-        func_offset += l_offset ;
-        return s ;
     }
     void param_offset(string s1, int p_offset){
         ac.pb(s1 + " = +" + to_string(arg_offset) + "(%rbp)") ;
