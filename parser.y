@@ -575,13 +575,14 @@
     }
     void if_goto(string exp, string loc) {
         ac.pb("cmpl	$0, " + exp);
-        ac.pb("jne " + loc)
+        ac.pb("jne " + loc) ;
         return;
     }
     void go_to(string loc) {
         ac.pb("jmp " + loc);
     }
     void callee(){
+        ac.pb(".cfi_startproc") ;
         ac.pb("pushq %rbp\nmovq %rsp, %rbp") ;
         arg_offset = 8 ;
         func_offset = 4 ;
@@ -1733,7 +1734,7 @@ MethodHeader MethodBody {
     }
     ttt = "";
     rl = -1;
-    add_label("End" + head->scope_name);
+    ac.pb("popq %rbp\nret"); ac.pb(".cfi_endproc") ;
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2556,8 +2557,8 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string temp = build_string("t", ++varnum["var"]); add_assignment(temp, $2.var); ac.pb("popq %rbp\nret " + temp);}
- | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} ac.pb("popq %rbp\nret");}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string temp = build_string("t", ++varnum["var"]); add_assignment(temp, $2.var);}
+ | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";}}
 ThrowStatement:
 Throw Expression Semicol
 SynchronizedStatement:
