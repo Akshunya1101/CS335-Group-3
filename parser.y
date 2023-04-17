@@ -38,6 +38,10 @@
     map<string,string> conv;
     map<string,set<string>> conv1;
     int count_files = 1 ;
+    int op_assoc(string op){
+        if(op[0] == '+' || op[0] == '*') return 0 ;
+        else return 1 ;
+    }
     string csv_name(){
         return "symboltable" + to_string(count_files++) + ".csv" ;
     }
@@ -479,17 +483,30 @@
             c = 0 ;
         }
         if(check_reg(mp_func[exp2]) && check_reg(mp_func[exp3])){
-            ac.pb(op_exp(op) + " %edx, %eax") ;
+            if(op_assoc(op)){
+                ac.pb("popq %rdx") ;
+                ac.pb(op_exp(op) + " %eax, %edx") ;
+                ac.pb("movl %edx, %eax") ;
+            }
+            else{
+                ac.pb("popq %rdx") ;
+                ac.pb(op_exp(op) + " %edx, %eax") ;
+            }
         }
         else if(check_reg(mp_func[exp2])){
             ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
         }
         else if(check_reg(mp_func[exp3])){
-            ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %eax") ;
+            if(op_assoc(op)){
+                ac.pb("movl " + mp_func[exp2] + ", %edx") ;
+                ac.pb(op_exp(op) + " %eax, %edx") ;
+                ac.pb("movl %edx, %eax") ;
+            }
+            else ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %eax") ;
         }
         else{
             if(reg_flag && c){
-                ac.pb("movl %eax, %edx") ;
+                ac.pb("pushq %rax") ;
                 ac.pb("movl " + mp_func[exp2] + ", %eax") ;
                 ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
             }
