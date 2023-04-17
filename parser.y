@@ -39,7 +39,7 @@
     map<string,set<string>> conv1;
     int count_files = 1 ;
     int op_assoc(string op){
-        if(op[0] == '+' || op[0] == '*') return 0 ;
+        if(op[0] == '+' || op[0] == '*' || op[0] == '/' || op[0] == '%') return 0 ;
         else return 1 ;
     }
     string csv_name(){
@@ -468,6 +468,43 @@
         if(st[0] == 't'  && st[1] >= '0' && st[1] <= '9') return 1 ;
         return 0 ;
     }
+    int check_div(string op){
+        if(op[0] == '/' || op[0] == '%') return 1 ;
+        else return 0 ;
+    }
+    void div_op(string op, string exp1, string exp2){
+        if(op[0] == '/'){
+            if(exp1 == "%eax"){
+                ac.pb("idiv " + exp2) ;
+            }
+            else if(exp2 == "%eax"){
+                ac.pb("movl %eax, %ecx") ;
+                ac.pb("movl " + exp1 + ", %eax") ;
+                ac.pb("idiv %ecx") ;
+            }
+            else{
+                ac.pb("movl " + exp1 + ", %eax") ;
+                ac.pb("idiv " + exp2) ;
+            }
+        }
+        else if(op[0] == '%'){
+            if(exp1 == "%eax"){
+                ac.pb("idiv " + exp2) ;
+                ac.pb("movl %edx, %eax") ;
+            }
+            else if(exp2 == "%eax"){
+                ac.pb("movl %eax, %ecx") ;
+                ac.pb("movl " + exp1 + ", %eax") ;
+                ac.pb("idiv %ecx") ; 
+                ac.pb("movl %edx, %eax") ;   
+            }
+            else{
+                ac.pb("movl " + exp1 + ", %eax") ;
+                ac.pb("idiv " + exp2) ;
+                ac.pb("movl %edx, %eax") ;
+            }
+        }
+    }
     void add_string(string exp1, string exp2, string exp3, string op) {
         if(mp_func[exp1].length()==0)
             mp_func[exp1] = exp1;
@@ -490,11 +527,13 @@
             }
             else{
                 ac.pb("popq %rdx") ;
-                ac.pb(op_exp(op) + " %edx, %eax") ;
+                if(check_div(op)) div_op(op, "%edx", "%eax") ;
+                else ac.pb(op_exp(op) + " %edx, %eax") ;
             }
         }
         else if(check_reg(mp_func[exp2])){
-            ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
+            if(check_div(op)) div_op(op, "%eax", mp_func[exp3]) ;
+            else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
         }
         else if(check_reg(mp_func[exp3])){
             if(op_assoc(op)){
@@ -502,15 +541,22 @@
                 ac.pb(op_exp(op) + " %eax, %edx") ;
                 ac.pb("movl %edx, %eax") ;
             }
+            else{
+            if(check_div(op)) div_op(op, mp_func[exp2], "%eax") ;
             else ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %eax") ;
+            }
         }
         else{
             if(reg_flag && c){
                 ac.pb("pushq %rax") ;
                 ac.pb("movl " + mp_func[exp2] + ", %eax") ;
-                ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
+                if(check_div(op)) div_op(op, mp_func[exp3], "%eax") ;
+                else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
             }
-            else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
+            else{
+                if(check_div(op)) div_op(op, mp_func[exp3], "%eax") ;
+                else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
+            }
         }
         return;
     }
