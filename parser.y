@@ -463,6 +463,29 @@
         }
         return "addl" ;
     }
+    string bool_exp(string ope){
+        if(ope.size() >= 2) {
+            if(ope[0] == '=' && ope[1] == '='){
+                return "e" ;
+            }
+            if(ope[0] == '!' && ope[1] == '='){
+                return "ne" ;
+            }
+            if(ope[0] == '>' && ope[1] == '='){
+                return "ge" ;
+            }
+            if(ope[0] == '<' && ope[1] == '='){
+                return "le" ;
+            }
+        }
+        if(ope[0] == '>'){
+            return "g" ;
+        }
+        if(ope[0] == '<'){
+            return "l" ;
+        }
+        return "e" ;
+    }
     int check_reg(string st){
         if(st.size() < 2) return 0 ;
         if(st[0] == 't'  && st[1] >= '0' && st[1] <= '9') return 1 ;
@@ -515,15 +538,15 @@
         //cout << mp_func[exp1] << " " << mp_func[exp2] << " " << op << '\n' ;
         int c = 1 ;
         if(!reg_flag){
-            ac.pb("movl " + mp_func[exp2] + ", %eax") ;
+            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
             reg_flag = 1 ;
             c = 0 ;
         }
         if(check_reg(mp_func[exp2]) && check_reg(mp_func[exp3])){
             if(op_assoc(op)){
                 ac.pb("popq %rdx") ;
-                ac.pb(op_exp(op) + " %eax, %edx") ;
-                ac.pb("movl %edx, %eax") ;
+                ac.pb(op_exp(op) + " %rax, %rdx") ;
+                ac.pb("movq %rdx, %rax") ;
             }
             else{
                 ac.pb("popq %rdx") ;
@@ -537,25 +560,61 @@
         }
         else if(check_reg(mp_func[exp3])){
             if(op_assoc(op)){
-                ac.pb("movl " + mp_func[exp2] + ", %edx") ;
-                ac.pb(op_exp(op) + " %eax, %edx") ;
-                ac.pb("movl %edx, %eax") ;
+                ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+                ac.pb(op_exp(op) + " %rax, %rdx") ;
+                ac.pb("movq %rdx, %rax") ;
             }
-            else{
-            if(check_div(op)) div_op(op, mp_func[exp2], "%eax") ;
-            else ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %eax") ;
+            else ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %rax") ;
+        }
+        else{
+            if(reg_flag && c){
+                ac.pb("pushq %rax") ;
+                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+                ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
             }
+            else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+        }
+        return;
+    }
+    void add_bool(string exp1, string exp2, string exp3, string op) {
+        if(mp_func[exp1].length()==0)
+            mp_func[exp1] = exp1;
+        if(mp_func[exp2].length()==0)
+            mp_func[exp2] = exp2;
+        if(mp_func[exp3].length()==0)
+            mp_func[exp3] = exp3;
+        int c = 1 ;
+        if(!reg_flag){
+            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            reg_flag = 1 ;
+            c = 0 ;
+        }
+        if(check_reg(mp_func[exp2]) && check_reg(mp_func[exp3])){
+            ac.pb("popq %rdx");
+            ac.pb("cmpq %rdx, %rax");
+            ac.pb("set" + bool_exp(op) + " %al");
+            ac.pb("movzbq %al, %rax");
+        }
+        else if(check_reg(mp_func[exp2])){
+            ac.pb("cmpq %rax, " + mp_func[exp3]);
+            ac.pb("set" + bool_exp(op) + " %al");
+            ac.pb("movzbq %al, %rax");
+        }
+        else if(check_reg(mp_func[exp3])){
+            ac.pb("cmpq " + mp_func[exp2] + ", %rax");
+            ac.pb("set" + bool_exp(op) + " %al");
+            ac.pb("movzbq %al, %rax");
         }
         else{
             if(reg_flag && c){
                 ac.pb("pushq %rax") ;
                 ac.pb("movl " + mp_func[exp2] + ", %eax") ;
-                if(check_div(op)) div_op(op, mp_func[exp3], "%eax") ;
-                else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
+                ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
             }
-            else{
-                if(check_div(op)) div_op(op, mp_func[exp3], "%eax") ;
-                else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
+            else {
+                ac.pb("cmpq %rax, " + mp_func[exp3]);
+                ac.pb("set" + bool_exp(op) + " %al");
+                ac.pb("movzbq %al, %rax");
             }
         }
         return;
@@ -566,8 +625,8 @@
         if(mp_func[exp2].length()==0)
             mp_func[exp2] = exp2;
         if(lev1.size() == 0){
-        if(check_reg(exp2)) ac.pb("movl %eax, " + mp_func[exp1]);
-        else ac.pb("movl " + mp_func[exp2] + " " + mp_func[exp1]);
+        if(check_reg(exp2)) ac.pb("movq %rax, " + mp_func[exp1]);
+        else ac.pb("movq " + mp_func[exp2] + " " + mp_func[exp1]);
         }
         return;
     }
@@ -617,7 +676,7 @@
         int x = get_offset(tp);
         for(auto i:lev1)
             x *= i;
-        ac.pb("movl $" + to_string(x) + ", %edi") ;
+        ac.pb("movq $" + to_string(x) + ", %edi") ;
         ac.pb("call malloc@PLT");
         ac.pb("movq %rax, " + local_offset(get_offset(tp))) ;
         return;
@@ -637,7 +696,7 @@
         return;
     }
     void if_goto(string exp, string loc) {
-        ac.pb("cmpl	$0, " + exp);
+        ac.pb("cmpq $0, %rax");
         ac.pb("jne " + loc) ;
         return;
     }
@@ -3576,13 +3635,13 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     int check_type = widen2(($1).type,($3).type) ;
     if(check_type == 1){
         string s2 = Type_cast(($1).type, ($3).var) ;
-        add_string(($$).var, ($1).var, s2, s1);
+        add_bool(($$).var, ($1).var, s2, s1);
     }
     else if(check_type == 0){
         string s2 = Type_cast(($3).type, ($1).var) ;
-        add_string(($$).var, s2, ($3).var, s1);
+        add_bool(($$).var, s2, ($3).var, s1);
     }
-    else add_string(($$).var, ($1).var, ($3).var, s1);
+    else add_bool(($$).var, ($1).var, ($3).var, s1);
     ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 | RelationalExpression Gt ShiftExpression { 
