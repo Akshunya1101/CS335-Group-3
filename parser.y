@@ -32,6 +32,7 @@
     int ln,rl = -1;
     int f3=1, f4=0;
     int reg_flag = 0 ;
+    int func_flag = 0 ;
     vector<int> err ;
     vector<string> v;
     vector<string> func_params;
@@ -425,7 +426,7 @@
     stack<long int> offsets;
     SymbolTable* head = new SymbolTable(NULL, "Global", "");
     SymbolTable* head1;
-    int arg_offset = 8 ;
+    int arg_offset = 16 ;
     int func_offset = 4 ;
     map<string, string> mp_func ;
     stack<string> scopes;
@@ -450,18 +451,15 @@
     int change_ac_val = 0;
     string op_exp(string ope){
         if(ope[0] == '+'){
-            return "addl" ;
+            return "addq" ;
         }
         else if(ope[0] == '-'){
-            return "subl" ;
+            return "subq" ;
         }
         else if(ope[0] == '*'){
-            return "imull" ;
+            return "imulq" ;
         }
-        else if(ope[0] == '/'){
-            return "idiv" ;
-        }
-        return "addl" ;
+        return "addq" ;
     }
     string bool_exp(string ope){
         if(ope.size() >= 2) {
@@ -497,34 +495,34 @@
     }
     void div_op(string op, string exp1, string exp2){
         if(op[0] == '/'){
-            if(exp1 == "%eax"){
-                ac.pb("idiv " + exp2) ;
+            if(exp1 == "%rax"){
+                ac.pb("idiv\ncltd " + exp2) ;
             }
-            else if(exp2 == "%eax"){
-                ac.pb("movl %eax, %ecx") ;
-                ac.pb("movl " + exp1 + ", %eax") ;
-                ac.pb("idiv %ecx") ;
+            else if(exp2 == "%rax"){
+                ac.pb("movl %rax, %rcx") ;
+                ac.pb("movl " + exp1 + ", %rax") ;
+                ac.pb("idiv\ncltd %rcx") ;
             }
             else{
-                ac.pb("movl " + exp1 + ", %eax") ;
-                ac.pb("idiv " + exp2) ;
+                ac.pb("movl " + exp1 + ", %rax") ;
+                ac.pb("idiv\ncltd " + exp2) ;
             }
         }
         else if(op[0] == '%'){
-            if(exp1 == "%eax"){
-                ac.pb("idiv " + exp2) ;
-                ac.pb("movl %edx, %eax") ;
+            if(exp1 == "%rax"){
+                ac.pb("idiv\ncltd " + exp2) ;
+                ac.pb("movl %rdx, %rax") ;
             }
-            else if(exp2 == "%eax"){
-                ac.pb("movl %eax, %ecx") ;
-                ac.pb("movl " + exp1 + ", %eax") ;
-                ac.pb("idiv %ecx") ; 
-                ac.pb("movl %edx, %eax") ;   
+            else if(exp2 == "%rax"){
+                ac.pb("movl %rax, %rcx") ;
+                ac.pb("movl " + exp1 + ", %rax") ;
+                ac.pb("idiv\ncltd %rcx") ; 
+                ac.pb("movl %rdx, %rax") ;   
             }
             else{
-                ac.pb("movl " + exp1 + ", %eax") ;
-                ac.pb("idiv " + exp2) ;
-                ac.pb("movl %edx, %eax") ;
+                ac.pb("movl " + exp1 + ", %rax") ;
+                ac.pb("idiv\ncltd " + exp2) ;
+                ac.pb("movl %rdx, %rax") ;
             }
         }
     }
@@ -550,13 +548,13 @@
             }
             else{
                 ac.pb("popq %rdx") ;
-                if(check_div(op)) div_op(op, "%edx", "%eax") ;
-                else ac.pb(op_exp(op) + " %edx, %eax") ;
+                if(check_div(op)) div_op(op, "%rdx", "%rax") ;
+                else ac.pb(op_exp(op) + " %rdx, %rax") ;
             }
         }
         else if(check_reg(mp_func[exp2])){
-            if(check_div(op)) div_op(op, "%eax", mp_func[exp3]) ;
-            else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
+            if(check_div(op)) div_op(op, "%rax", mp_func[exp3]) ;
+            else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
         }
         else if(check_reg(mp_func[exp3])){
             if(op_assoc(op)){
@@ -564,15 +562,22 @@
                 ac.pb(op_exp(op) + " %rax, %rdx") ;
                 ac.pb("movq %rdx, %rax") ;
             }
-            else ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %rax") ;
+            else{
+                if(check_div(op)) div_op(op, mp_func[exp2], "%rax") ;
+                else ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %rax") ;
+            }
         }
         else{
             if(reg_flag && c){
                 ac.pb("pushq %rax") ;
                 ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-                ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+                if(check_div(op)) div_op(op, "%rax", mp_func[exp3]) ;
+                else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
             }
-            else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+            else{
+                if(check_div(op)) div_op(op, "%rax", mp_func[exp3]) ;
+                else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+            }
         }
         return;
     }
@@ -608,8 +613,8 @@
         else{
             if(reg_flag && c){
                 ac.pb("pushq %rax") ;
-                ac.pb("movl " + mp_func[exp2] + ", %eax") ;
-                ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %eax") ;
+                ac.pb("movl " + mp_func[exp2] + ", %rax") ;
+                ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
             }
             else {
                 ac.pb("cmpq %rax, " + mp_func[exp3]);
@@ -626,7 +631,10 @@
             mp_func[exp2] = exp2;
         if(lev1.size() == 0){
         if(check_reg(exp2)) ac.pb("movq %rax, " + mp_func[exp1]);
-        else ac.pb("movq " + mp_func[exp2] + " " + mp_func[exp1]);
+        else{
+            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            ac.pb("movq %rax, " + mp_func[exp1]) ;
+        }
         }
         return;
     }
@@ -642,11 +650,14 @@
         return;
     }
     void add_param(string exp) {
-        ac.pb("param " + exp);
+        if(!func_flag){
+            ac.pb("pushq %rax") ;
+        }
+        ac.pb("pushq " + mp_func[exp]);
         return;
     }
     void call_func(string exp, string func_name) {
-        ac.pb(exp + " = call " + func_name);
+        ac.pb("call " + func_name);
         return;
     }
     bool check_qualified_name_method(string exp) {
@@ -661,6 +672,7 @@
 
     }
     int get_offset(string t){
+        return 8 ;
         if(t == "integer" || t == "Integer" || t == "float" || t == "Float") return 4 ;
         else if(t == "Double" || t == "double" || t == "Long" || t == "long") return 8 ;
         else if(t == "character" || t == "Character" || t == "short" || t == "Short") return 2 ;
@@ -668,8 +680,8 @@
         return 8 ;
     }
     string local_offset(int l_offset){
-        string s = "-" + to_string(func_offset) + "(%rbp)" ;
         func_offset += l_offset ;
+        string s = "-" + to_string(func_offset) + "(%rbp)" ;
         return s ;
     }
     void alloc_mem(string exp) {
@@ -704,16 +716,20 @@
         ac.pb("jmp " + loc);
     }
     void callee(){
-        ac.pb(".cfi_startproc") ;
         ac.pb("pushq %rbp\nmovq %rsp, %rbp") ;
-        arg_offset = 8 ;
+        arg_offset = 16 ;
         func_offset = 4 ;
         reg_flag = 0 ;
         mp_func.clear() ;
     }
     void param_offset(string s1, int p_offset){
-        ac.pb(s1 + " = +" + to_string(arg_offset) + "(%rbp)") ;
-        arg_offset += p_offset ;
+        string s = "+" + to_string(arg_offset) + "(%rbp)" ;
+        ac.pb("movq " + s + ", %rdx") ;
+        s = local_offset(8) ;
+        if(!mp_func[s1].length()) mp_func[s1] = s ; 
+        ac.pb("movq %rdx, " + s) ;
+        //ac.pb(s1 + " = +" + to_string(arg_offset) + "(%rbp)") ;
+        arg_offset += 8 ;
     }
     int check_literal(string s){
         if(s == "Boolean" || s == "string" || s == "Character" || s == "Integer" || s == "Float" || s == "Null")
@@ -1856,7 +1872,7 @@ MethodHeader MethodBody {
     }
     ttt = "";
     rl = -1;
-    ac.pb("popq %rbp\nret"); ac.pb(".cfi_endproc") ;
+    ac.pb("popq %rbp\nleave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -1908,10 +1924,10 @@ Identifier Lb {
 | MethodDeclarator Lsb Rsb
 FormalParameterList:
 FormalParameter { string tp1 = tp; for(int i=0;i<l1;i++) tp1 = "array("+tp1+")";
-    if(func){func->Params.push_back(tp1);} param_offset($1.var, get_offset($1.type)) ; mp_func[$1.var] = $1.var ;
+    if(func){func->Params.push_back(tp1);} param_offset($1.var, get_offset($1.type)) ;
  lev.clear(); l1 = 0; lev1.clear();}
 | FormalParameterList Comma FormalParameter { string tp1 = tp; for(int i=0;i<l1;i++) tp1 = "array("+tp1+")";
-    if(func){func->Params.push_back(tp1);} param_offset($3.var, get_offset($3.type)) ; mp_func[$3.var] = $3.var ;
+    if(func){func->Params.push_back(tp1);} param_offset($3.var, get_offset($3.type)) ;
  lev.clear(); l1 = 0; lev1.clear();}
 FormalParameter:
 Type VariableDeclaratorId {
@@ -2679,7 +2695,7 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string temp = build_string("t", ++varnum["var"]); add_assignment(temp, $2.var);}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.str ; ac.pb("movl " + st + ", %rax") ;}
  | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";}}
 ThrowStatement:
 Throw Expression Semicol
@@ -3049,7 +3065,9 @@ MethodInvocation:
 Name Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
         add_param(func_params[i]);
+        func_flag = 1 ;
     }
+    func_flag = 0 ;
     func_params.clear();
     if(f4){
         swap(head,head1);
@@ -3082,7 +3100,6 @@ Name Lb ArgumentList Rb {
     for(auto it:c1.Params){
         sum += get_offset(it);
     }
-    ac.pb("SP = SP + " + to_string(sum));
     v.clear();
     f4 = 0;
 } 
@@ -3113,7 +3130,9 @@ Name Lb ArgumentList Rb {
 | Dummy14 Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
         add_param(func_params[i]);
+        func_flag = 1 ;
     }
+    func_flag = 0 ;
     func_params.clear();
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->get($1.type);
@@ -3132,7 +3151,6 @@ Name Lb ArgumentList Rb {
     for(auto it:v){
         sum += get_offset(it);
     }
-    ac.pb("SP = SP + " + to_string(sum));
     v.clear();
 }
 | Dummy14 Lb Rb {
@@ -3145,7 +3163,9 @@ Name Lb ArgumentList Rb {
 | Dummy15 Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
         add_param(func_params[i]);
+        func_flag = 1 ;
     }
+    func_flag = 0 ;
     func_params.clear();
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
     vector<Entry> c = head->parent->get($1.type);
@@ -3164,7 +3184,6 @@ Name Lb ArgumentList Rb {
     for(auto it:v){
         sum += get_offset(it);
     }
-    ac.pb("SP = SP + " + to_string(sum));
     v.clear();
 } 
 | Dummy15 Lb Rb {
@@ -4155,7 +4174,12 @@ int main(int argc, char* argv[]){
     //     sy << symtable ;
     //     symtable = "" ;
     // }
-    ofstream ac3 ("TAC.txt", std::ofstream::out);
+    ofstream ac3 ("x86_code.s", std::ofstream::out);
+    ac3 << ".section    .rodata" << endl ;
+    ac3 << ".LC0:" << endl ;
+    ac3 << "     .string    \"%d\\n\"" << endl ;
+    ac3 << "     .text" << endl ;
+    ac3 << "     .globl    main" << endl ;
     for(auto s : ac) {
         ac3 << s << endl;
     }
