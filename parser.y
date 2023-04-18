@@ -503,7 +503,6 @@
             mp_func[exp2] = exp2;
         if(mp_func[exp3].length()==0)
             mp_func[exp3] = exp3;
-        //cout << mp_func[exp1] << " " << mp_func[exp2] << " " << op << '\n' ;
         int c = 1 ;
         if(!reg_flag){
             ac.pb("movq " + mp_func[exp2] + ", %rax") ;
@@ -530,7 +529,9 @@
                 ac.pb(op_exp(op) + " %rax, %rdx") ;
                 ac.pb("movq %rdx, %rax") ;
             }
-            else ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %rax") ;
+            else{
+                ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %rax") ;
+            }
         }
         else{
             if(reg_flag && c){
@@ -1059,37 +1060,43 @@ SimpleName {($$).type = ($1).type;  $$.var = $1.var;  vector<Entry> c = head->ge
 SimpleName:
 Identifier {($$).type = ($1).str; $$.var = $1.var;}
 QualifiedName:
-Name Dot Identifier { f4 = 1; ($$).type = ($3).str; if(THIS == $1.cl){ head1 = head->find_table($1.cl,1);} else {head1 = head->find_table($1.cl,0);}
-string ss = "Reference Type";
-string st = "Class";
-if(!head1){
- if(st == $1.cl && THIS == $1.type || $1.cl == ss){
-    head1 = head->find_table($1.type,1);
- }
- else if(st == $1.cl){
-    head1 = head->find_table($1.type,0);
- }
-}
- Entry c1;
+Name Dot Identifier { f4 = 1; ($$).type = ($3).str;
 string comp1($3.str), comp2($1.type);
- if(head1 || comp1 == "out" || comp2 == "System" || comp1 == "println" ){vector<Entry> c = head1->get($3.str); if(THIS == $1.cl){c1 = head1->get1(c,{},head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,{},NULL);} ($$).str = strdup(c1.Type.c_str()) ;
-    if(check_print($1.var)) {$$.var = make_print_string($1.var);}
+if(comp1=="out" || comp1=="println"){
+
+}
+else{
+    if(THIS == $1.cl){ head1 = head->find_table($1.cl,1);} else {head1 = head->find_table($1.cl,0);}
+    string ss = "Reference Type";
+    string st = "Class";
+    if(!head1){
+    if(st == $1.cl && THIS == $1.type || $1.cl == ss){
+        head1 = head->find_table($1.type,1);
+    }
+    else if(st == $1.cl){
+        head1 = head->find_table($1.type,0);
+    }
+    }
+    Entry c1;
+    if(head1 || comp1 == "out" || comp2 == "System" || comp1 == "println" ){vector<Entry> c = head1->get($3.str); if(THIS == $1.cl){c1 = head1->get1(c,{},head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,{},NULL);} ($$).str = strdup(c1.Type.c_str()) ;
+        if(check_print($1.var)) {$$.var = make_print_string($1.var);}
+        else {
+            if(c1.Offset==-1) {
+                offset_val = -1;
+                change_ac_val = ac.size();
+            }
+            string temp1 = build_string("t", ++varnum["var"]);
+            add_assignment(temp1, to_string(c1.Offset) + " //Offset","");
+            $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, temp1);
+            }
+        }
     else {
-        if(c1.Offset==-1) {
-            offset_val = -1;
-            change_ac_val = ac.size();
+                cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
+                cerr << $1.type << " " << $3.str << endl;
+                YYABORT;
         }
-        string temp1 = build_string("t", ++varnum["var"]);
-        add_assignment(temp1, to_string(c1.Offset) + " //Offset","");
-        $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, temp1);
-        }
-    }
-else {
-            cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
-            cerr << $1.type << " " << $3.str << endl;
-            YYABORT;
-    }
     ($$).dim1 = c1.Dim.size();
+}
 }
 ClassOrInterfaceType:
 Name {($$).str = ($1).type; ($$).type = ($1).str; tp = ($$).str; $$.var = $1.var;}
@@ -2715,7 +2722,18 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 | FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var;}
 | MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str; $$.var = $1.var;}
 | ArrayAccess {($$).type = ($1).type; ($$).str = ($1).str; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
-    ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; $$.var = $1.var;}
+    ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; $$.var = $1.var;
+    ac.pb("movq "+mp_func[$1.str]+", %rbx");
+    ac.pb("addq %rcx, %rbx");
+    if(!reg_flag){
+    ac.pb("movq %rbx, %rax");
+    reg_flag = 1;
+    }
+    else{
+        ac.pb("pushq %rax") ;
+        ac.pb("movq %rbx, %rax");
+    }
+    }
 
 New1:
 {$$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var); add_param($$.var);}
@@ -3032,44 +3050,53 @@ Super Dot Identifier {
     }
 MethodInvocation:
 Name Lb ArgumentList Rb {
-    for(int i=func_params.size()-1;i>=0;i-=1){
-        add_param(func_params[i]);
-    }
-    func_params.clear();
-    if(f4){
-        swap(head,head1);
-    }
-    Entry c1;
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
-    vector<Entry> c = head->get($1.type);
-    if(THIS == $1.cl){
-        c1 = head->get1(c,v,head);
-        ($$).type = strdup(c1.Type.c_str());
+    if(compare_string($1.type,(char*)"println")){
+        ac.pb("movq %rax, %rsi");
+        ac.pb("leaq .LC0(%rip), %rax");
+        ac.pb("movq %rax, %rdi");
+        ac.pb("movq $0, %rax");
+        ac.pb("call printf@PLT");
     }
     else{
-        c1 = head->get1(c,v,NULL);
-        ($$).type = strdup(c1.Type.c_str());
+        for(int i=func_params.size()-1;i>=0;i-=1){
+            add_param(func_params[i]);
+        }
+        func_params.clear();
+        if(f4){
+            swap(head,head1);
+        }
+        Entry c1;
+        $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+        vector<Entry> c = head->get($1.type);
+        if(THIS == $1.cl){
+            c1 = head->get1(c,v,head);
+            ($$).type = strdup(c1.Type.c_str());
+        }
+        else{
+            c1 = head->get1(c,v,NULL);
+            ($$).type = strdup(c1.Type.c_str());
+        }
+        if(offset_val == -1)
+            change_ac(to_string(c1.Offset));
+        if(!err.empty()){
+            err.pop_back();
+        }
+        if(!strlen($$.type)){
+            err.push_back(yylineno);
+        }
+        int i = find_comma($$.type);
+        ($$).type = strdup($$.type+i+1);
+        if(f4){
+            swap(head,head1);
+        }
+        int sum=8;
+        for(auto it:c1.Params){
+            sum += get_offset(it);
+        }
+        ac.pb("SP = SP + " + to_string(sum));
     }
-    if(offset_val == -1)
-        change_ac(to_string(c1.Offset));
-    if(!err.empty()){
-        err.pop_back();
-    }
-    if(!strlen($$.type)){
-        err.push_back(yylineno);
-    }
-    int i = find_comma($$.type);
-    ($$).type = strdup($$.type+i+1);
-    if(f4){
-        swap(head,head1);
-    }
-    int sum=8;
-    for(auto it:c1.Params){
-        sum += get_offset(it);
-    }
-    ac.pb("SP = SP + " + to_string(sum));
-    v.clear();
     f4 = 0;
+    v.clear();
 } 
 | Name Lb Rb {
     if(f4){
