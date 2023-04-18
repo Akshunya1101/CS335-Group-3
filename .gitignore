@@ -12,3 +12,5 @@ a.out
 *.png
 output.txt
 *.java
+*.s
+x86*

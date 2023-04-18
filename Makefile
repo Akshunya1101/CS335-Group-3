@@ -10,4 +10,4 @@ parser.tab.o: parser.y parser.tab.h
 	g++ -c parser.tab.c
 
 clean:
-	rm *.o milestone4 *.yy.c *.tab.c *.h *.output *.ps *.png *.csv *.txt *.out
+	rm *.o milestone4 *.yy.c *.tab.c *.h *.output *.ps *.png *.csv *.txt *.out x86*

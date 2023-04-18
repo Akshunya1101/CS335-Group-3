@@ -544,40 +544,11 @@
             mp_func[exp2] = exp2;
         if(mp_func[exp3].length()==0)
             mp_func[exp3] = exp3;
-        int c = 1 ;
-        if(!reg_flag){
-            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            reg_flag = 1 ;
-            c = 0 ;
-        }
-        if(check_reg(mp_func[exp2]) && check_reg(mp_func[exp3])){
-            ac.pb("popq %rdx");
-            ac.pb("cmpq %rdx, %rax");
-            ac.pb("set" + bool_exp(op) + " %al");
-            ac.pb("movzbq %al, %rax");
-        }
-        else if(check_reg(mp_func[exp2])){
-            ac.pb("cmpq %rax, " + mp_func[exp3]);
-            ac.pb("set" + bool_exp(op) + " %al");
-            ac.pb("movzbq %al, %rax");
-        }
-        else if(check_reg(mp_func[exp3])){
-            ac.pb("cmpq " + mp_func[exp2] + ", %rax");
-            ac.pb("set" + bool_exp(op) + " %al");
-            ac.pb("movzbq %al, %rax");
-        }
-        else{
-            if(reg_flag && c){
-                ac.pb("pushq %rax") ;
-                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-                ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
-            }
-            else {
-                ac.pb("cmpq %rax, " + mp_func[exp3]);
-                ac.pb("set" + bool_exp(op) + " %al");
-                ac.pb("movzbq %al, %rax");
-            }
-        }
+        ac.pb("movq " + mp_func[exp2] + ", %rax");
+        ac.pb("cmpq %rax, " + mp_func[exp3]);
+        ac.pb("set" + bool_exp(op) + " %al");
+        ac.pb("movzbq %al, %rax");
+        ac.pb("movq %rax, " + mp_func[exp1]) ;
         return;
     }
     void add_assignment(string exp1, string exp2,string exp3) {
@@ -672,7 +643,7 @@
         return;
     }
     void if_goto(string exp, string loc) {
-        ac.pb("cmpq $0, %rax");
+        ac.pb("cmpq $0, " + mp_func[exp]);
         ac.pb("jne " + loc) ;
         return;
     }
@@ -2414,23 +2385,21 @@ Dummy2:
 }
 Dummy4:
 {
-    tables.push(head);
-    string temp = "Else";
-    head = new SymbolTable(head, temp, to_string(++varnum[temp])); list_tables.push_back(head);
-    offsets.push(offset);
-    offset = 0;
-    scopes.push(scope);
-    scope = head->scope_name;
-    flag = true;
-}
-Dummy5:
-{
+    string num_if = head->scope_num;
     head = tables.top();
     tables.pop();
     head->Size = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
+    tables.push(head);
+    string temp = "Else";
+    head = new SymbolTable(head, temp, num_if); list_tables.push_back(head);
+    offsets.push(offset);
+    offset = 0;
+    scopes.push(scope);
+    scope = head->scope_name;
+    flag = true;
 }
 IfThenStatement:
 Dummy8 Statement {
@@ -2450,7 +2419,7 @@ If Lb Dummy2 Expression Rb {
     if_goto($4.var, "IfBody" + head->scope_num); go_to("EndIf" + head->scope_num); add_label("IfBody" + head->scope_num); 
 }
 Dummy9:
-Dummy8 StatementNoShortIf {add_label("EndIf" + head->scope_num);} Dummy5 Else Dummy4 {add_label(head->scope_name);}
+Dummy8 StatementNoShortIf {go_to("EndElse" + head->scope_num); add_label("EndIf" + head->scope_num);} Else Dummy4 {add_label(head->scope_name);}
 IfThenElseStatement:
 Dummy9 Statement {
     add_label("EndElse" + head->scope_num);
@@ -3679,13 +3648,13 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
     int check_type = widen2(($1).type,($3).type) ;
     if(check_type == 1){
         string s2 = Type_cast(($1).type, ($3).var) ;
-        add_string(($$).var, ($1).var, s2, s1);
+        add_bool(($$).var, ($1).var, s2, s1);
     }
     else if(check_type == 0){
         string s2 = Type_cast(($3).type, ($1).var) ;
-        add_string(($$).var, s2, ($3).var, s1);
+        add_bool(($$).var, s2, ($3).var, s1);
     }
-    else add_string(($$).var, ($1).var, ($3).var, s1);
+    else add_bool(($$).var, ($1).var, ($3).var, s1);
     ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 | RelationalExpression Relop ShiftExpression { 
@@ -3710,18 +3679,18 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
     int check_type = widen2(($1).type,($3).type) ;
     if(check_type == 1){
         string s2 = Type_cast(($1).type, ($3).var) ;
-        add_string(($$).var, ($1).var, s2, s1);
+        add_bool(($$).var, ($1).var, s2, s1);
     }
     else if(check_type == 0){
         string s2 = Type_cast(($3).type, ($1).var) ;
-        add_string(($$).var, s2, ($3).var, s1);
+        add_bool(($$).var, s2, ($3).var, s1);
     }
-    else add_string(($$).var, ($1).var, ($3).var, s1);
+    else add_bool(($$).var, ($1).var, ($3).var, s1);
     ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 | RelationalExpression Instanceof ReferenceType
 EqualityExpression:
-RelationalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
+RelationalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar; $$.var = $1.var;}
 | EqualityExpression Eqnq RelationalExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Incompatible Operator " <<$2.str<< " with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
@@ -3740,13 +3709,13 @@ RelationalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1)
     int check_type = widen2(($1).type,($3).type) ;
     if(check_type == 1){
         string s2 = Type_cast(($1).type, ($3).var) ;
-        add_string(($$).var, ($1).var, s2, s1);
+        add_bool(($$).var, ($1).var, s2, s1);
     }
     else if(check_type == 0){
         string s2 = Type_cast(($3).type, ($1).var) ;
-        add_string(($$).var, s2, ($3).var, s1);
+        add_bool(($$).var, s2, ($3).var, s1);
     }
-    else add_string(($$).var, ($1).var, ($3).var, s1);
+    else add_bool(($$).var, ($1).var, ($3).var, s1);
     ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 AndExpression:
