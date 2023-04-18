@@ -545,7 +545,7 @@
         if(mp_func[exp3].length()==0)
             mp_func[exp3] = exp3;
         ac.pb("movq " + mp_func[exp2] + ", %rax");
-        ac.pb("cmpq %rax, " + mp_func[exp3]);
+        ac.pb("cmpq " + mp_func[exp3] + ", %rax");
         ac.pb("set" + bool_exp(op) + " %al");
         ac.pb("movzbq %al, %rax");
         ac.pb("movq %rax, " + mp_func[exp1]) ;
@@ -3824,7 +3824,7 @@ InclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1
     }
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]);
-    string s1 = ($2).str ;
+    string s1 = "*" ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
     string s2 ;
@@ -3852,7 +3852,7 @@ ConditionalAndExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = 
     }
     ($$).dim1 = ($3).dim1; 
     ($$).var = build_string("t", ++varnum["var"]);
-    string s1 = ($2).str ;
+    string s1 = "+" ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
     string s2 ;

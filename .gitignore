@@ -14,3 +14,5 @@ output.txt
 *.java
 *.s
 x86*
+milestone*
+check*
