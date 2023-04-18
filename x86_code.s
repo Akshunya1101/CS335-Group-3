@@ -4,23 +4,53 @@
      .text
      .globl    main
 
+sum:
+pushq %rbp
+movq %rsp, %rbp
+movq +16(%rbp), %rdx
+movq %rdx, -8(%rbp)
+movq +24(%rbp), %rdx
+movq %rdx, -16(%rbp)
+movq +32(%rbp), %rdx
+movq %rdx, -24(%rbp)
+movq +40(%rbp), %rdx
+movq %rdx, -32(%rbp)
+movq $5, -40(%rbp)
+movq -40(%rbp), %rax
+imulq $2, %rax
+movl 2, %rax
+popq %rbp
+leave
+ret
+
+
 main:
 pushq %rbp
 movq %rsp, %rbp
 movq +16(%rbp), %rdx
-movq %rdx, -12(%rbp)
-movq +24(%rbp), %rdx
-movq %rdx, -20(%rbp)
-movq $1, -28(%rbp)
-movq $2, -36(%rbp)
-movq $3, -44(%rbp)
-movq -28(%rbp), %rax
-imulq -36(%rbp), %rax
-movq %rax, -52(%rbp)
+movq %rdx, -8(%rbp)
+movq $19, -16(%rbp)
+movq $2, -24(%rbp)
+movq $3, -32(%rbp)
+movq -16(%rbp), %rax
+addq -24(%rbp), %rax
+imulq -32(%rbp), %rax
+movq %rax, -40(%rbp)
 pushq %rax
-movq -44(%rbp), %rax
-imulq -44(%rbp), %rax
-movq %rax, -60(%rbp)
+movq -32(%rbp), %rax
+imulq -32(%rbp), %rax
+movq %rax, -48(%rbp)
+pushq %rax
+movq -16(%rbp), %rax
+imulq -24(%rbp), %rax
+pushq %rax
+pushq -48(%rbp)
+pushq -32(%rbp)
+pushq t5
+call sum
+SP = SP + 32
+movq %rax, -56(%rbp)
+popq %rbp
 leave
 ret
 
