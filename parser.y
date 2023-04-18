@@ -1749,7 +1749,7 @@ VariableDeclaratorId {
             }
             else{
                 vector<Entry> c1 = head->get($3.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
-                head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},sz1,m),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + sz*(sz1.size());
+                head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},sz1,m),$1.str); lev.clear(); l1 = 0; offset = offset + sz*(sz1.size());
                 head->counter($1.str);
             }
         }
@@ -1771,7 +1771,7 @@ VariableDeclaratorId {
         }
         head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev,m),$1.str); int xx = 1; if(!lev.empty()) {xx =  lev.rbegin()->second;}
         head->counter($1.str);
-        offset = offset + sz*xx; lev.clear(); lev1.clear(); l1 = 0;
+        offset = offset + sz*xx; lev.clear(); l1 = 0;
     }
     else{
         map<int,int> m1;
@@ -1784,7 +1784,7 @@ VariableDeclaratorId {
             cerr << "Types do not match on both the sides in line " << yylineno<<endl;
             YYABORT;
         }
-        head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + term*sz;
+        head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$1.str); lev.clear(); l1 = 0; offset = offset + term*sz;
         head->counter($1.str);
     }
     int check_type = widen2(($1).type,($3).type);
@@ -1811,7 +1811,7 @@ VariableDeclaratorId {
             else add_assignment($1.var, $3.var,$1.str) ;
         }
     }
-
+    lev1.clear();
     ($$).type = widen(($1).type,($3).type);
     ($$).str = ($1).str;
 }
