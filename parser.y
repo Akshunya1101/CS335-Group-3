@@ -35,7 +35,7 @@
     int reg_flag = 0 ;
     int func_flag = 0 ;
     vector<int> err ;
-    vector<string> v;
+    vector<string> v,v1;
     vector<string> func_params;
     map<string,string> conv;
     map<string,set<string>> conv1;
@@ -569,7 +569,7 @@
         else{
             if(reg_flag && c){
                 ac.pb("pushq %rax") ;
-                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+                ac.pb("movl " + mp_func[exp2] + ", %rax") ;
                 ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
             }
             else {
@@ -658,7 +658,7 @@
         ac.pb("movq $" + to_string(x) + ", %edi") ;
         ac.pb("call malloc@PLT");
         int g = func_offset;
-        ac.pb("movq %rax, -" + to_string(g) + "(%rbp)") ;
+        ac.pb("movl %rax, -" + to_string(g) + "(%rbp)") ;
         return;
     }
     char* build_string(string str, int number) {
@@ -767,7 +767,7 @@
 %union {
     int num;
     char * str;
-    struct {int num; int num1; char *str; int size; char *type; char *var; int dim1; char *cl;} s;
+    struct {int num; int num1; char *str; int size; char *type; char *var; int dim1; char *cl; int ar;} s;
 }
 %define parse.error verbose
 %token<s> Keyword
@@ -2079,6 +2079,7 @@ This Lb ArgumentList Rb Semicol {
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
+    v1.clear();
     v.clear();
 }
 | This Lb Rb Semicol {
@@ -2086,6 +2087,7 @@ This Lb ArgumentList Rb Semicol {
     ($$).type = strdup(head->get1(c,{},head).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
+    v1.clear();
     v.clear();
 }
 | Super Lb ArgumentList Rb Semicol {
@@ -2100,6 +2102,7 @@ This Lb ArgumentList Rb Semicol {
     if(!strlen($$.type)){
         err.push_back(yylineno);
     }
+    v1.clear();
     v.clear();
 }
 | Super Lb Rb Semicol {
@@ -2107,6 +2110,7 @@ This Lb ArgumentList Rb Semicol {
     ($$).type = strdup(head->parent->get1(c,{},NULL).Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
+    v1.clear();
     v.clear();
 }
 InterfaceDeclaration:
@@ -2669,7 +2673,7 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.str ; ac.pb("movq " + st + ", %rax") ;}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.str ; ac.pb("movl " + st + ", %rax") ;}
  | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";}}
 ThrowStatement:
 Throw Expression Semicol
@@ -2704,21 +2708,21 @@ Catch {
 Finally:
 finally Block
 Primary:
-PrimaryNoNewArray {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
+PrimaryNoNewArray {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var; ($$).ar = ($1).ar;}
 | ArrayCreationExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
 PrimaryNoNewArray:
-Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
-| String_Literal {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
-| Char_Literal {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
-| Int_Literal {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; string st = $1.var; mp_func[$1.var] = "$" + st ;}
-| Tb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
-| Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
-| Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
-| This {($$).str = strdup(THIS.c_str()); ($$).type = strdup(THIS.c_str()); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
-| Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;  $$.var = $2.var;}
-| ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type; $$.var = $1.var;}
-| FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var;}
-| MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str; $$.var = $1.var;}
+Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var; ($$).ar = 0;}
+| String_Literal {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var; ($$).ar = 0;}
+| Char_Literal {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var; ($$).ar = 0;}
+| Int_Literal {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; string st = $1.var; mp_func[$1.var] = "$" + st ; ($$).ar = 0;}
+| Tb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var; ($$).ar = 0;}
+| Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var; ($$).ar = 0;}
+| Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var; ($$).ar = 0;}
+| This {($$).str = strdup(THIS.c_str()); ($$).type = strdup(THIS.c_str()); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var; ($$).ar = 0;}
+| Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;  $$.var = $2.var; ($$).ar = 0;}
+| ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type; $$.var = $1.var; ($$).ar = 0;}
+| FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var; ($$).ar = 0;}
+| MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str; $$.var = $1.var; ($$).ar = 0;}
 | ArrayAccess {($$).type = ($1).type; ($$).str = ($1).str; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; $$.var = $1.var;
     ac.pb("movq "+mp_func[$1.str]+", %rbx");
@@ -2731,7 +2735,8 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
         ac.pb("pushq %rax") ;
         ac.pb("movq %rbx, %rax");
     }
-    }
+    ($$).ar = 100;
+}
 
 New1:
 {$$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var); add_param($$.var);}
@@ -2775,6 +2780,7 @@ New ClassType New1 Lb ArgumentList Rb {
         sum += get_offset(it);
     }
     ac.pb("SP = SP + " + to_string(sum));
+    v1.clear();
     v.clear();
 } 
 | New ClassType New1 Lb Rb {
@@ -2843,6 +2849,7 @@ New ClassType New1 Lb ArgumentList Rb {
         sum += get_offset(it);
     }
     ac.pb("SP = SP + " + to_string(sum));
+    v1.clear();
     v.clear();
 } 
 | Primary Dot New ClassType New1 Lb Rb {
@@ -2925,6 +2932,7 @@ New ClassType New1 Lb ArgumentList Rb {
         sum += get_offset(it);
     }
     ac.pb("SP = SP + " + to_string(sum));
+    v1.clear();
     v.clear();
 } 
 | Name Dot New ClassType New1 Lb Rb {
@@ -2972,8 +2980,8 @@ New ClassType New1 Lb ArgumentList Rb {
 TypeArgumentsOrDiamond : Lt Gt | TypeArguments
 
 ArgumentList:
-Expression {v.push_back($1.type); func_params.pb($1.var);}
-| ArgumentList Comma Expression {v.push_back($3.type); func_params.pb($3.var);}
+Expression {v.push_back($1.type); v1.push_back($1.str); func_params.pb($1.var); ($$).ar = ($1).ar;}
+| ArgumentList Comma Expression {v.push_back($3.type); v1.push_back($3.str); func_params.pb($3.var);}
 
 
 ArrayCreationExpression:
@@ -3049,6 +3057,8 @@ Super Dot Identifier {
 MethodInvocation:
 Name Lb ArgumentList Rb {
     if(compare_string($1.type,(char*)"println")){
+        if($3.ar != 100)
+            ac.pb("movq "+ mp_func[v1[0]] +", %rax");
         ac.pb("movq %rax, %rsi");
         ac.pb("leaq .LC0(%rip), %rax");
         ac.pb("movq %rax, %rdi");
@@ -3097,6 +3107,7 @@ Name Lb ArgumentList Rb {
     }
     f4 = 0;
     v.clear();
+    v1.clear();
 } 
 | Name Lb Rb {
     if(f4){
@@ -3147,6 +3158,7 @@ Name Lb ArgumentList Rb {
         sum += get_offset(it);
     }
     v.clear();
+    v1.clear();
 }
 | Dummy14 Lb Rb {
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
@@ -3180,6 +3192,7 @@ Name Lb ArgumentList Rb {
         sum += get_offset(it);
     }
     v.clear();
+    v1.clear();
 } 
 | Dummy15 Lb Rb {
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
@@ -3209,7 +3222,7 @@ Name Lsb Expression Rsb {
     ($$).type = ($1).str;
     ($$).str = ($1).type; 
     $$.var = build_string("t", ++varnum["var"]);
-    ac.pb("movq $0, %rcx");
+    ac.pb("movl $0, %rcx");
     add_address1($$.var, $1.var, $3.var, prod, $3.str);
 }
 | ArrayAccess Lsb Expression Rsb {
@@ -3331,8 +3344,8 @@ Name Lsb Expression Rsb {
 }
 
 PostfixExpression:
-Primary {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
-| Name {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type;}
+Primary {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str; ($$).ar = ($1).ar;}
+| Name {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type; ($$).ar = 0;}
 | PostIncrementExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 | PostDecrementExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 PostIncrementExpression:
@@ -3421,7 +3434,7 @@ Dec UnaryExpression {
     head->counter($1.str);
 }
 UnaryExpressionNotPlusMinus:
-PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
+PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | Tilde UnaryExpression {
     $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "~");
     if(!compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
@@ -3446,7 +3459,7 @@ PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).
 }
 | CastExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 MultiplicativeExpression:
-UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var ;}
+UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var ; ($$).ar = ($1).ar;}
 | MultiplicativeExpression Mult UnaryExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Incompatible Operator " <<$2.str<< " with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
@@ -3541,7 +3554,7 @@ UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 AdditiveExpression:
-MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var ;}
+MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var ; ($$).ar = ($1).ar;}
 | AdditiveExpression Plus MultiplicativeExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Incompatible Operator " <<$2.str<< " with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
@@ -3605,7 +3618,7 @@ MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var =
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 ShiftExpression:
-AdditiveExpression {($$).type = ($1).type; ($$).str = ($1).str;}
+AdditiveExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | ShiftExpression Shifter AdditiveExpression { 
     if((!compare_string($1.type,(char*)"long") && !compare_string($1.type,(char*)"integer") && !compare_string($1.type,(char*)"short") && !compare_string($1.type,(char*)"character") && !compare_string($1.type,(char*)"byte")) ||
        (!compare_string($3.type,(char*)"long") && !compare_string($3.type,(char*)"integer") && !compare_string($3.type,(char*)"short") && !compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"byte"))
@@ -3636,7 +3649,7 @@ AdditiveExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 RelationalExpression:
-ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
+ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | RelationalExpression Lt ShiftExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Incompatible Operator " <<$2.str<< " with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
@@ -3732,7 +3745,7 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str;}
 }
 | RelationalExpression Instanceof ReferenceType
 EqualityExpression:
-RelationalExpression {($$).type = ($1).type; ($$).str = ($1).str;}
+RelationalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | EqualityExpression Eqnq RelationalExpression { 
     if(!compare_type($1.type,$3.type) && !compare_type($3.type,$1.type)){
         cerr << "Incompatible Operator " <<$2.str<< " with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
@@ -3761,7 +3774,7 @@ RelationalExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 AndExpression:
-EqualityExpression {($$).type = ($1).type; ($$).str = ($1).str;}
+EqualityExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | AndExpression And EqualityExpression {
     if((!compare_string($1.type,(char*)"long") && !compare_string($1.type,(char*)"integer") && !compare_string($1.type,(char*)"short") && !compare_string($1.type,(char*)"character") && !compare_string($1.type,(char*)"byte") && !compare_string($1.type,(char*)"boolean")) ||
        (!compare_string($3.type,(char*)"long") && !compare_string($3.type,(char*)"integer") && !compare_string($3.type,(char*)"short") && !compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"byte") && !compare_string($3.type,(char*)"boolean"))
@@ -3792,7 +3805,7 @@ EqualityExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 ExclusiveOrExpression:
-AndExpression {($$).type = ($1).type; ($$).str = ($1).str;}
+AndExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | ExclusiveOrExpression Xor AndExpression {
     if((!compare_string($1.type,(char*)"long") && !compare_string($1.type,(char*)"integer") && !compare_string($1.type,(char*)"short") && !compare_string($1.type,(char*)"character") && !compare_string($1.type,(char*)"byte") && !compare_string($1.type,(char*)"boolean")) ||
        (!compare_string($3.type,(char*)"long") && !compare_string($3.type,(char*)"integer") && !compare_string($3.type,(char*)"short") && !compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"byte") && !compare_string($3.type,(char*)"boolean"))
@@ -3823,7 +3836,7 @@ AndExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 InclusiveOrExpression:
-ExclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str;}
+ExclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | InclusiveOrExpression Or ExclusiveOrExpression {
     if((!compare_string($1.type,(char*)"long") && !compare_string($1.type,(char*)"integer") && !compare_string($1.type,(char*)"short") && !compare_string($1.type,(char*)"character") && !compare_string($1.type,(char*)"byte") && !compare_string($1.type,(char*)"boolean")) ||
        (!compare_string($3.type,(char*)"long") && !compare_string($3.type,(char*)"integer") && !compare_string($3.type,(char*)"short") && !compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"byte") && !compare_string($3.type,(char*)"boolean"))
@@ -3854,7 +3867,7 @@ ExclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     ($$).type = widen(($1).type,($3).type); ($$).str = ($3).str;
 }
 ConditionalAndExpression:
-InclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str;}
+InclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | ConditionalAndExpression Bool_and InclusiveOrExpression {
     if(!compare_type($1.type,(char*)"boolean") || !compare_type($3.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< " with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
@@ -3883,7 +3896,7 @@ InclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str;}
     ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 ConditionalOrExpression:
-ConditionalAndExpression {($$).type = ($1).type; ($$).str = ($1).str;}
+ConditionalAndExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | ConditionalOrExpression Bool_or ConditionalAndExpression {
     if(!compare_type($1.type,(char*)"boolean") || !compare_type($3.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$2.str<< " with operands of types "<< $1.type << " and "<< $3.type << " in line " << yylineno<<endl;
@@ -3916,7 +3929,7 @@ string temp = build_string("TernaryOperationFirst", ++varnum["ternaryoperationfi
 Dummy19:
 Dummy18 Expression Col {$$ = $1; add_assignment("t_op", $2.var,$2.str); $$.var = build_string("EndTernaryOperation", ++varnum["endternaryoperation"]); go_to($$.var); add_label($1.var);}
 ConditionalExpression:
-ConditionalOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;}
+ConditionalOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).ar = ($1).ar;}
 | Dummy19 ConditionalExpression {
     if(!compare_type($1.type,(char*)"boolean")){
         cerr << "Incompatible Ternary Operator with the given operands in line " << yylineno<<endl;
@@ -3932,7 +3945,7 @@ ConditionalOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 =
     $$.var = (char *)"t_op";
 }
 AssignmentExpression:
-ConditionalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
+ConditionalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var; ($$).ar = ($1).ar;}
 | Assignment {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var;}
 Assignment:
 LeftHandSide Eq AssignmentExpression {
