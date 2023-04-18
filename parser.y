@@ -2762,11 +2762,8 @@ PrimaryNoNewArray {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).
 PrimaryNoNewArray:
 Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
 | String_Literal {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
-| Char_Literal {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;
-    ac.pb("movq $"+ to_string((int)mp_func[$1.str][0]) +", %rax") ;
-}
-| Int_Literal {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; string st = $1.var; mp_func[$1.var] = "$" + st ;
-    ac.pb("movq "+ mp_func[$1.str] +", %rax") ;}
+| Char_Literal {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
+| Int_Literal {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; string st = $1.var; mp_func[$1.var] = "$" + st ;}
 | Tb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
 | Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
 | Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var;}
@@ -3387,10 +3384,8 @@ Name Lsb Expression Rsb {
 }
 
 PostfixExpression:
-Primary {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str; }
-| Name {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type;
-    ac.pb("movq "+ mp_func[$1.type] +", %rax") ;
-}
+Primary {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
+| Name {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type;}
 | PostIncrementExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 | PostDecrementExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 PostIncrementExpression:
