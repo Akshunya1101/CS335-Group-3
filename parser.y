@@ -432,7 +432,7 @@
     SymbolTable* head = new SymbolTable(NULL, "Global", "");
     SymbolTable* head1;
     int arg_offset = 16 ;
-    int func_offset = 4 ;
+    int func_offset = 0 ;
     map<string, string> mp_func ;
     stack<string> scopes;
     string scope = "Global";
@@ -504,30 +504,30 @@
                 ac.pb("idiv\ncltd " + exp2) ;
             }
             else if(exp2 == "%rax"){
-                ac.pb("movl %rax, %rcx") ;
-                ac.pb("movl " + exp1 + ", %rax") ;
+                ac.pb("movq %rax, %rcx") ;
+                ac.pb("movq " + exp1 + ", %rax") ;
                 ac.pb("idiv\ncltd %rcx") ;
             }
             else{
-                ac.pb("movl " + exp1 + ", %rax") ;
+                ac.pb("movq " + exp1 + ", %rax") ;
                 ac.pb("idiv\ncltd " + exp2) ;
             }
         }
         else if(op[0] == '%'){
             if(exp1 == "%rax"){
                 ac.pb("idiv\ncltd " + exp2) ;
-                ac.pb("movl %rdx, %rax") ;
+                ac.pb("movq %rdx, %rax") ;
             }
             else if(exp2 == "%rax"){
-                ac.pb("movl %rax, %rcx") ;
-                ac.pb("movl " + exp1 + ", %rax") ;
+                ac.pb("movq %rax, %rcx") ;
+                ac.pb("movq " + exp1 + ", %rax") ;
                 ac.pb("idiv\ncltd %rcx") ; 
-                ac.pb("movl %rdx, %rax") ;   
+                ac.pb("movq %rdx, %rax") ;   
             }
             else{
-                ac.pb("movl " + exp1 + ", %rax") ;
+                ac.pb("movq " + exp1 + ", %rax") ;
                 ac.pb("idiv\ncltd " + exp2) ;
-                ac.pb("movl %rdx, %rax") ;
+                ac.pb("movq %rdx, %rax") ;
             }
         }
     }
@@ -618,7 +618,7 @@
         else{
             if(reg_flag && c){
                 ac.pb("pushq %rax") ;
-                ac.pb("movl " + mp_func[exp2] + ", %rax") ;
+                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
                 ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
             }
             else {
@@ -712,7 +712,7 @@
         ac.pb("movq $" + to_string(x) + ", %edi") ;
         ac.pb("call malloc@PLT");
         int g = func_offset;
-        ac.pb("movl %rax, -" + to_string(g) + "(%rbp)") ;
+        ac.pb("movq %rax, -" + to_string(g) + "(%rbp)") ;
         return;
     }
     char* build_string(string str, int number) {
@@ -740,7 +740,7 @@
     void callee(){
         ac.pb("pushq %rbp\nmovq %rsp, %rbp") ;
         arg_offset = 16 ;
-        func_offset = 4 ;
+        func_offset = 0 ;
         reg_flag = 0 ;
         mp_func.clear() ;
     }
@@ -2717,7 +2717,7 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.str ; ac.pb("movl " + st + ", %rax") ;}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.str ; ac.pb("movq " + st + ", %rax") ;}
  | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";}}
 ThrowStatement:
 Throw Expression Semicol
@@ -3236,7 +3236,7 @@ Name Lsb Expression Rsb {
     ($$).type = ($1).str;
     ($$).str = ($1).type; 
     $$.var = build_string("t", ++varnum["var"]);
-    ac.pb("movl $0, %rcx");
+    ac.pb("movq $0, %rcx");
     add_address1($$.var, $1.var, $3.var, prod, $3.str);
 }
 | ArrayAccess Lsb Expression Rsb {
