@@ -498,89 +498,53 @@
         if(op[0] == '/' || op[0] == '%') return 1 ;
         else return 0 ;
     }
-    void div_op(string op, string exp1, string exp2){
+    void div_op(string op, string exp1, string exp2, string exp3){
         if(op[0] == '/'){
-            if(exp1 == "%rax"){
-                ac.pb("idiv\ncltd " + exp2) ;
-            }
-            else if(exp2 == "%rax"){
-                ac.pb("movl %rax, %rcx") ;
-                ac.pb("movl " + exp1 + ", %rax") ;
-                ac.pb("idiv\ncltd %rcx") ;
-            }
-            else{
-                ac.pb("movl " + exp1 + ", %rax") ;
-                ac.pb("idiv\ncltd " + exp2) ;
-            }
+            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            ac.pb("idiv " + mp_func[exp3]) ;
+            ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
         else if(op[0] == '%'){
-            if(exp1 == "%rax"){
-                ac.pb("idiv\ncltd " + exp2) ;
-                ac.pb("movl %rdx, %rax") ;
-            }
-            else if(exp2 == "%rax"){
-                ac.pb("movl %rax, %rcx") ;
-                ac.pb("movl " + exp1 + ", %rax") ;
-                ac.pb("idiv\ncltd %rcx") ; 
-                ac.pb("movl %rdx, %rax") ;   
-            }
-            else{
-                ac.pb("movl " + exp1 + ", %rax") ;
-                ac.pb("idiv\ncltd " + exp2) ;
-                ac.pb("movl %rdx, %rax") ;
-            }
+            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            ac.pb("idiv " + mp_func[exp3]) ;
+            ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
+    }
+    string local_offset(int l_offset){
+        func_offset += l_offset ;
+        string s = "-" + to_string(func_offset) + "(%rbp)" ;
+        return s ;
     }
     void add_string(string exp1, string exp2, string exp3, string op) {
         if(mp_func[exp1].length()==0)
-            mp_func[exp1] = exp1;
+            mp_func[exp1] = local_offset(8);
         if(mp_func[exp2].length()==0)
-            mp_func[exp2] = exp2;
+            mp_func[exp2] = local_offset(8);
         if(mp_func[exp3].length()==0)
-            mp_func[exp3] = exp3;
-        int c = 1 ;
-        if(!reg_flag){
+            mp_func[exp3] = local_offset(8);
+        if(op_assoc(op)){
             ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            reg_flag = 1 ;
-            c = 0 ;
-        }
-        if(check_reg(mp_func[exp2]) && check_reg(mp_func[exp3])){
-            if(op_assoc(op)){
-                ac.pb("popq %rdx") ;
-                ac.pb(op_exp(op) + " %rax, %rdx") ;
-                ac.pb("movq %rdx, %rax") ;
-            }
-            else{
-                ac.pb("popq %rdx") ;
-                if(check_div(op)) div_op(op, "%rdx", "%rax") ;
-                else ac.pb(op_exp(op) + " %rdx, %rax") ;
-            }
-        }
-        else if(check_reg(mp_func[exp2])){
-            if(check_div(op)) div_op(op, "%rax", mp_func[exp3]) ;
-            else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
-        }
-        else if(check_reg(mp_func[exp3])){
-            if(op_assoc(op)){
-                ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
-                ac.pb(op_exp(op) + " %rax, %rdx") ;
-                ac.pb("movq %rdx, %rax") ;
-            }
-            else{
-                if(check_div(op)) div_op(op, mp_func[exp2], "%rax") ;
-                else ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %rax") ;
-            }
+            ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+            ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
         else{
-            if(reg_flag && c){
-                ac.pb("pushq %rax") ;
-                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-                if(check_div(op)) div_op(op, "%rax", mp_func[exp3]) ;
-                else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
-            }
+            if(check_div(op)) div_op(op, exp1, exp2, exp3) ;
             else{
-                if(check_div(op)) div_op(op, "%rax", mp_func[exp3]) ;
-                else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+                if(exp2[0] == 'n'){
+                    ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+                    ac.pb("movq (%rdx), %rax") ;
+                }
+                else{
+                    ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+                }
+                if(exp3[0] == 'n'){
+                    ac.pb("movq " + mp_func[exp3] + ", %rdx") ;
+                    ac.pb(op_exp(op) + " (%rdx), %rax") ;
+                }
+                else{
+                    ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+                }
+                ac.pb("movq %rax, " + mp_func[exp1]) ;
             }
         }
         return;
@@ -617,7 +581,7 @@
         else{
             if(reg_flag && c){
                 ac.pb("pushq %rax") ;
-                ac.pb("movl " + mp_func[exp2] + ", %rax") ;
+                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
                 ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
             }
             else {
@@ -630,18 +594,20 @@
     }
     void add_assignment(string exp1, string exp2,string exp3) {
         if(mp_func[exp1].length()==0)
-            mp_func[exp1] = exp1;
+            mp_func[exp1] = local_offset(8);
         if(mp_func[exp2].length()==0)
-            mp_func[exp2] = exp2;
+            mp_func[exp2] = local_offset(8);
         if(ff){
-            ac.pb("movq "+mp_func[exp3]+", %rbx");
-            ac.pb("addq %rcx, %rbx");
-            if(check_reg(exp2)) ac.pb("movq %rax, (%rbx)");
-            else ac.pb("movq " + mp_func[exp2] + ", (%rbx)");
+            ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+            if(exp2[0] == 'n'){
+                ac.pb("movq (%rdx), %r9") ;
+                ac.pb("movq %r9, (%r8)") ;
+            }
+            else ac.pb("movq %rdx, (%r8)") ;
         }
         else if(lev1.size() == 0){
-            if(check_reg(exp2)) ac.pb("movq %rax, " + mp_func[exp1]);
-            else ac.pb("movq " + mp_func[exp2] + ", " + mp_func[exp1]);
+            ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+            ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
         ff = 0;
         return;
@@ -657,15 +623,13 @@
         ac.pb(result);
         return;
     }
-    void add_address1(string exp, string exp1, string exp2, int prod, string index) {
-        if(mp_func[exp].length()==0)
-            mp_func[exp] = exp;
+    void add_address1(string exp1, string exp2, int prod, string index) {
         if(mp_func[exp2].length()==0)
             mp_func[exp2] = exp2;
         if(mp_func[exp1].length()==0)
             mp_func[exp1] = exp1;
-        ac.pb("movq " + mp_func[index] + ", %rbx");
-        ac.pb("imulq $" + to_string(prod*4) + ", %rbx");
+        ac.pb("movq " + mp_func[exp2] + ", %rbx");
+        ac.pb("imulq $" + to_string(prod*8) + ", %rbx");
         ac.pb("addq %rbx, %rcx");
         return;
     }
@@ -699,19 +663,14 @@
         else if(t == "Boolean" || t == "boolean" || t == "Byte" || t == "byte") return 1 ;
         return 8 ;
     }
-    string local_offset(int l_offset){
-        func_offset += l_offset ;
-        string s = "-" + to_string(func_offset) + "(%rbp)" ;
-        return s ;
-    }
-    void alloc_mem(string exp) {
+    void alloc_mem() {
         int x = get_offset(tp);
         for(auto i:lev1)
             x *= i;
-        ac.pb("movq $" + to_string(x) + ", %edi") ;
+        ac.pb("movl $" + to_string(x) + ", %edi") ;
         ac.pb("call malloc@PLT");
         int g = func_offset;
-        ac.pb("movl %rax, -" + to_string(g) + "(%rbp)") ;
+        ac.pb("movq %rax, -" + to_string(g) + "(%rbp)") ;
         return;
     }
     char* build_string(string str, int number) {
@@ -721,7 +680,7 @@
 
         char* charArray = new char[result.length() + 1];
         strcpy(charArray, result.c_str());
-        mp_func[result] = result ;
+        mp_func[result] = local_offset(8) ;
         return charArray;
     }
     void add_label(string label) {
@@ -1899,7 +1858,8 @@ MethodHeader MethodBody {
     }
     ttt = "";
     rl = -1;
-    ac.pb("popq %rbp\nleave\nret");
+    ac.pb("movq $0, %rax") ;
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2726,7 +2686,7 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.str ; ac.pb("movl " + st + ", %rax") ;}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.str ; ac.pb("movq " + st + ", %rax") ;}
  | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";}}
 ThrowStatement:
 Throw Expression Semicol
@@ -2780,19 +2740,14 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; $$.var = $1.var;
     ac.pb("movq "+mp_func[$1.str]+", %rbx");
     ac.pb("addq %rcx, %rbx");
-    if(!reg_flag){
-    ac.pb("movq (%rbx), %rax");
-    reg_flag = 1;
-    }
-    else{
-        ac.pb("pushq %rax") ;
-        ac.pb("movq (%rbx), %rax");
-    }
+    ($$).var = build_string("n", ++varnum["arr"]);
+    string st = ($$).var ;
+    ac.pb("movq %rbx, " + mp_func[st]) ;
     ($$).ar = 100;
 }
 
 New1:
-{$$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var); add_param($$.var);}
+{$$.var = build_string("t", ++varnum["var"]); alloc_mem(); add_param($$.var);}
 ClassInstanceCreationExpression:
 New ClassType New1 Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
@@ -3033,28 +2988,28 @@ New ClassType New1 Lb ArgumentList Rb {
 TypeArgumentsOrDiamond : Lt Gt | TypeArguments
 
 ArgumentList:
-Expression {v.push_back($1.type); v1.push_back($1.str); func_params.pb($1.var); ($$).ar = ($1).ar;}
-| ArgumentList Comma Expression {v.push_back($3.type); v1.push_back($3.str); func_params.pb($3.var);}
+Expression {v.push_back($1.type); v1.push_back($1.var); func_params.pb($1.var); ($$).ar = ($1).ar;}
+| ArgumentList Comma Expression {v.push_back($3.type); v1.push_back($3.var); func_params.pb($3.var);}
 
 
 ArrayCreationExpression:
-New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
-| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
-| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
-| New ClassOrInterfaceType DimExprs {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);}
+New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); alloc_mem();}
+| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); alloc_mem();}
+| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); alloc_mem();}
+| New ClassOrInterfaceType DimExprs {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); alloc_mem();}
 | New PrimitiveType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT; 
     }
-     $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);
+    alloc_mem();
 }
 | New ClassOrInterfaceType Dims ArrayInitializer { func_offset += 8 ; ($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT;
     }
-     $$.var = build_string("t", ++varnum["var"]); alloc_mem($$.var);
+    alloc_mem();
 }
 
 DimExprs:
@@ -3110,8 +3065,13 @@ Super Dot Identifier {
 MethodInvocation:
 Name Lb ArgumentList Rb {
     if(compare_string($1.type,(char*)"println")){
-        if($3.ar != 100)
-            ac.pb("movq "+ mp_func[v1[0]] +", %rax");
+        if($3.ar != 100) ac.pb("movq "+ mp_func[v1[0]] +", %rax");
+        else{
+            if(v1[0][0] == 'n'){
+                ac.pb("movq " + mp_func[v1[0]] + ", %rdx") ;
+                ac.pb("movq (%rdx), %rax") ;
+            }
+        }
         ac.pb("movq %rax, %rsi");
         ac.pb("leaq .LC0(%rip), %rax");
         ac.pb("movq %rax, %rdi");
@@ -3274,9 +3234,8 @@ Name Lsb Expression Rsb {
     prod /= lev2[ind++];
     ($$).type = ($1).str;
     ($$).str = ($1).type; 
-    $$.var = build_string("t", ++varnum["var"]);
-    ac.pb("movl $0, %rcx");
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    ac.pb("movq $0, %rcx");
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 | ArrayAccess Lsb Expression Rsb {
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3286,8 +3245,7 @@ Name Lsb Expression Rsb {
     prod /= lev2[ind++];
     ($$).str = ($1).str; 
     ($$).type = ($1).type;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 | Bool_Literal Lsb Expression Rsb {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(head->set($1.str,"Bool_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3295,8 +3253,7 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 | String_Literal Lsb Expression Rsb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"String_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3304,8 +3261,7 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 | Char_Literal Lsb Expression Rsb {($$).type = (char*)"Character"; ($$).str = ($1).str; head->check(head->set($1.str,"Char_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3313,8 +3269,7 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 | Int_Literal Lsb Expression Rsb {($$).type = (char*)"Integer"; ($$).str = ($1).str; head->check(head->set($1.str,"Int_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3322,8 +3277,7 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 | Tb Lsb Expression Rsb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3331,8 +3285,7 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 | Float_Literal Lsb Expression Rsb {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3340,8 +3293,7 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 | Null_Literal Lsb Expression Rsb {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3349,8 +3301,7 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 | This Lsb Expression Rsb {($$).str = strdup(THIS.c_str());
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3358,8 +3309,7 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, "t0", $3.var, prod, $3.str);
+    add_address1("t0", $3.var, prod, $3.str);
 }
 | Lb Expression Rb Lsb Expression Rsb {($$).type = ($2).type; ($$).str = ($2).str;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3374,8 +3324,7 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 | FieldAccess Lsb Expression Rsb {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3383,8 +3332,7 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 | MethodInvocation Lsb Expression Rsb {($$).type = ($1).type; ($$).str = ($1).str;
     if(!compare_string($3.type,(char*)"character") && !compare_string($3.type,(char*)"integer")){
@@ -3392,8 +3340,7 @@ Name Lsb Expression Rsb {
         YYABORT;
     } 
     ind++;
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address1($$.var, $1.var, $3.var, prod, $3.str);
+    add_address1($1.var, $3.var, prod, $3.str);
 }
 
 PostfixExpression:
@@ -4168,8 +4115,12 @@ LeftHandSide Eqq AssignmentExpression {
 LeftHandSide:
 Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;}
 |FieldAccess {($$).type = ($1).type; ($$).dim1 = ($1).dim1;}
-|ArrayAccess {($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
-    ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; ff = 1; }
+|ArrayAccess {
+    ($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
+    ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; ff = 1;
+    ac.pb("movq "+mp_func[$1.str]+", %r8");
+    ac.pb("addq %rcx, %r8");
+}
 Expression:
 AssignmentExpression {$$=$1;}
 ConstantExpression:
