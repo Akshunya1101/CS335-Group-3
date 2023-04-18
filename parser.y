@@ -498,89 +498,41 @@
         if(op[0] == '/' || op[0] == '%') return 1 ;
         else return 0 ;
     }
-    void div_op(string op, string exp1, string exp2){
+    void div_op(string op, string exp1, string exp2, string exp3){
         if(op[0] == '/'){
-            if(exp1 == "%rax"){
-                ac.pb("idiv\ncltd " + exp2) ;
-            }
-            else if(exp2 == "%rax"){
-                ac.pb("movq %rax, %rcx") ;
-                ac.pb("movq " + exp1 + ", %rax") ;
-                ac.pb("idiv\ncltd %rcx") ;
-            }
-            else{
-                ac.pb("movq " + exp1 + ", %rax") ;
-                ac.pb("idiv\ncltd " + exp2) ;
-            }
+            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            ac.pb("idiv " + mp_func[exp3]) ;
+            ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
         else if(op[0] == '%'){
-            if(exp1 == "%rax"){
-                ac.pb("idiv\ncltd " + exp2) ;
-                ac.pb("movq %rdx, %rax") ;
-            }
-            else if(exp2 == "%rax"){
-                ac.pb("movq %rax, %rcx") ;
-                ac.pb("movq " + exp1 + ", %rax") ;
-                ac.pb("idiv\ncltd %rcx") ; 
-                ac.pb("movq %rdx, %rax") ;   
-            }
-            else{
-                ac.pb("movq " + exp1 + ", %rax") ;
-                ac.pb("idiv\ncltd " + exp2) ;
-                ac.pb("movq %rdx, %rax") ;
-            }
+            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            ac.pb("idiv " + mp_func[exp3]) ;
+            ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
+    }
+    string local_offset(int l_offset){
+        func_offset += l_offset ;
+        string s = "-" + to_string(func_offset) + "(%rbp)" ;
+        return s ;
     }
     void add_string(string exp1, string exp2, string exp3, string op) {
         if(mp_func[exp1].length()==0)
-            mp_func[exp1] = exp1;
+            mp_func[exp1] = local_offset(8);
         if(mp_func[exp2].length()==0)
-            mp_func[exp2] = exp2;
+            mp_func[exp2] = local_offset(8);
         if(mp_func[exp3].length()==0)
-            mp_func[exp3] = exp3;
-        int c = 1 ;
-        if(!reg_flag){
+            mp_func[exp3] = local_offset(8);
+        if(op_assoc(op)){
             ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            reg_flag = 1 ;
-            c = 0 ;
-        }
-        if(check_reg(mp_func[exp2]) && check_reg(mp_func[exp3])){
-            if(op_assoc(op)){
-                ac.pb("popq %rdx") ;
-                ac.pb(op_exp(op) + " %rax, %rdx") ;
-                ac.pb("movq %rdx, %rax") ;
-            }
-            else{
-                ac.pb("popq %rdx") ;
-                if(check_div(op)) div_op(op, "%rdx", "%rax") ;
-                else ac.pb(op_exp(op) + " %rdx, %rax") ;
-            }
-        }
-        else if(check_reg(mp_func[exp2])){
-            if(check_div(op)) div_op(op, "%rax", mp_func[exp3]) ;
-            else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
-        }
-        else if(check_reg(mp_func[exp3])){
-            if(op_assoc(op)){
-                ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
-                ac.pb(op_exp(op) + " %rax, %rdx") ;
-                ac.pb("movq %rdx, %rax") ;
-            }
-            else{
-                if(check_div(op)) div_op(op, mp_func[exp2], "%rax") ;
-                else ac.pb(op_exp(op) + " " + mp_func[exp2] + ", %rax") ;
-            }
+            ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+            ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
         else{
-            if(reg_flag && c){
-                ac.pb("pushq %rax") ;
-                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-                if(check_div(op)) div_op(op, "%rax", mp_func[exp3]) ;
-                else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
-            }
+            if(check_div(op)) div_op(op, exp1, exp2, exp3) ;
             else{
-                if(check_div(op)) div_op(op, "%rax", mp_func[exp3]) ;
-                else ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+                ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+                ac.pb("movq %rax, " + mp_func[exp1]) ;
             }
         }
         return;
@@ -630,9 +582,9 @@
     }
     void add_assignment(string exp1, string exp2,string exp3) {
         if(mp_func[exp1].length()==0)
-            mp_func[exp1] = exp1;
+            mp_func[exp1] = local_offset(8);
         if(mp_func[exp2].length()==0)
-            mp_func[exp2] = exp2;
+            mp_func[exp2] = local_offset(8);
         if(ff){
             ac.pb("movq "+mp_func[exp3]+", %rbx");
             ac.pb("addq %rcx, %rbx");
@@ -640,8 +592,8 @@
             else ac.pb("movq " + mp_func[exp2] + ", %rbx");
         }
         else if(lev1.size() == 0){
-            if(check_reg(exp2)) ac.pb("movq %rax, " + mp_func[exp1]);
-            else ac.pb("movq " + mp_func[exp2] + ", " + mp_func[exp1]);
+            ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+            ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
         ff = 0;
         return;
@@ -699,11 +651,6 @@
         else if(t == "Boolean" || t == "boolean" || t == "Byte" || t == "byte") return 1 ;
         return 8 ;
     }
-    string local_offset(int l_offset){
-        func_offset += l_offset ;
-        string s = "-" + to_string(func_offset) + "(%rbp)" ;
-        return s ;
-    }
     void alloc_mem(string exp) {
         int x = get_offset(tp);
         for(auto i:lev1)
@@ -721,7 +668,7 @@
 
         char* charArray = new char[result.length() + 1];
         strcpy(charArray, result.c_str());
-        mp_func[result] = result ;
+        mp_func[result] = local_offset(8) ;
         return charArray;
     }
     void add_label(string label) {
@@ -1899,7 +1846,7 @@ MethodHeader MethodBody {
     }
     ttt = "";
     rl = -1;
-    ac.pb("popq %rbp\nleave\nret");
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
