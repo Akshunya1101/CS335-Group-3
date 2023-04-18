@@ -636,8 +636,8 @@
         if(ff){
             ac.pb("movq "+mp_func[exp3]+", %rbx");
             ac.pb("addq %rcx, %rbx");
-            if(check_reg(exp2)) ac.pb("movq %rax, %rbx");
-            else ac.pb("movq " + mp_func[exp2] + ", %rbx");
+            if(check_reg(exp2)) ac.pb("movq %rax, (%rbx)");
+            else ac.pb("movq " + mp_func[exp2] + ", (%rbx)");
         }
         else if(lev1.size() == 0){
             if(check_reg(exp2)) ac.pb("movq %rax, " + mp_func[exp1]);
@@ -2781,12 +2781,12 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
     ac.pb("movq "+mp_func[$1.str]+", %rbx");
     ac.pb("addq %rcx, %rbx");
     if(!reg_flag){
-    ac.pb("movq %rbx, %rax");
+    ac.pb("movq (%rbx), %rax");
     reg_flag = 1;
     }
     else{
         ac.pb("pushq %rax") ;
-        ac.pb("movq %rbx, %rax");
+        ac.pb("movq (%rbx), %rax");
     }
     ($$).ar = 100;
 }

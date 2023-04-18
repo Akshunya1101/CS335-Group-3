@@ -1,14 +1,9 @@
 public class Main
 {
-    public static int sum(int a,int b,int c){
-        int x = 5;
-        return x*2;
-    }
 	public static void main() {
+        int arr[][] = new int[20][5];
         int a = 19, b = 2, c = 3 ;
-        int d = (a+b)*c;
-        int e = c*c;
-        int y = sum(a*b,c,e);
-        return ;
+        arr[a][b] = 2;
+        System.out.println(arr[a]) ;
 	}
 }
