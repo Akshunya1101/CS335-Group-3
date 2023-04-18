@@ -2,7 +2,7 @@
 	.text
 	.section	.rodata
 .LC0:
-	.string	"%d %d\n"
+	.string	"%d\n"
 	.text
 	.globl	main
 	.type	main, @function
@@ -16,43 +16,18 @@ main:
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
 	subq	$32, %rsp
-	movl $500, %edi
+	movl $20, %edi
     call malloc@PLT
     movq %rax, -8(%rbp)
-    movq $1, -12(%rbp)
-    movq $3, -16(%rbp)
-    movq $4, -20(%rbp)
-    movq $0, %rcx
-    movq -12(%rbp), %rbx
-    imulq $100, %rbx
-    addq %rbx, %rcx
-    movq -16(%rbp), %rbx
-    imulq $20, %rbx
-    addq %rbx, %rcx
-    movq -20(%rbp), %rbx
-    imulq $4, %rbx
-    addq %rbx, %rcx
-    movq -8(%rbp), %rbx
-    addq %rcx, %rbx
-    movq $2, %rbx
-    movq $0, %rcx
-    movq $1, %rbx
-    imulq $100, %rbx
-    addq %rbx, %rcx
-    movq $3, %rbx
-    imulq $20, %rbx
-    addq %rbx, %rcx
-    movq $4, %rbx
-    imulq $4, %rbx
-    addq %rbx, %rcx
-    movq -8(%rbp), %rbx
-    movq %rbx, %rdi
-    addq %rcx, %rbx
-    movq $1, %rbx
-	movq %rbx, %rsi
-	movl	$0, %eax
-    lea .LC0(%rip), %rdi
-	call	printf@PLT
+    movl $1, -12(%rbp)
+    movl $2, -16(%rbp)
+    movl $3, -20(%rbp)
+    movq -12(%rbp), %rax
+    movq %rax, %rsi
+    leaq .LC0(%rip), %rax
+    movq %rax, %rdi
+    movl $0, %eax
+    call printf@PLT
 	movl	$0, %eax
 	leave
 	.cfi_def_cfa 7, 8
