@@ -460,7 +460,16 @@
     int offset_val = 0;
     int change_ac_val = 0;
     string op_exp(string ope){
-        if(ope[0] == '+'){
+        if(ope.size()>=3 && ope.substr(0, 3) == ">>>") {
+            return "shrq";
+        }
+        else if(ope.size()>=2 && ope.substr(0, 2) == ">>") {
+            return "sarq";
+        }
+        else if(ope.size()>=2 && ope.substr(0, 2) == "<<") {
+            return "salq";
+        }
+        else if(ope[0] == '+'){
             return "addq" ;
         }
         else if(ope[0] == '-'){
@@ -468,6 +477,15 @@
         }
         else if(ope[0] == '*'){
             return "imulq" ;
+        }
+        else if(ope[0] == '|'){
+            return "orq" ;
+        }
+        else if(ope[0] == '&'){
+            return "andq" ;
+        }
+        else if(ope[0] == '^'){
+            return "xorq" ;
         }
         return "addq" ;
     }
@@ -493,6 +511,15 @@
             return "l" ;
         }
         return "e" ;
+    }
+    string op_unary(string ope) {
+        if(ope[0] == '-') {
+            return "negq";
+        }
+        else if(ope[0] == '~') {
+            return "notq";
+        }
+        return "negq";
     }
     int check_reg(string st){
         if(st.size() < 2) return 0 ;
@@ -583,6 +610,25 @@
         ac.pb("set" + bool_exp(op) + " %al");
         ac.pb("movzbq %al, %rax");
         ac.pb("movq %rax, " + mp_func[exp1]) ;
+        return;
+    }
+    void add_unary(string exp1, string exp2, string op) {
+        if(mp_func[exp1].length()==0)
+            mp_func[exp1] = exp1;
+        if(mp_func[exp2].length()==0)
+            mp_func[exp2] = exp2;
+        if(op != "!") { // ~ and -unary
+            ac.pb("movq " + mp_func[exp2] + ", %rax");
+            ac.pb(op_unary(op) + " %rax");
+            ac.pb("movq %rax, " + mp_func[exp1]) ;
+        }
+        else {
+            ac.pb("movq " + mp_func[exp2] + ", %rax");
+            ac.pb("cmpq $0, %rax");
+            ac.pb("sete %al");
+            ac.pb("movzbq %al, %rax");
+            ac.pb("movq %rax, " + mp_func[exp1]) ;
+        }
         return;
     }
     void add_assignment(string exp1, string exp2,string exp3) {
@@ -3389,7 +3435,7 @@ UnaryExpression:
 PreIncrementExpression
 | PreDecrementExpression
 | Plus UnaryExpression { 
-    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "+");
+    $$ = $2;
     if(!compare_string($2.type,(char*)"float") && !compare_string($2.type,(char*)"double") && !compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3400,7 +3446,7 @@ PreIncrementExpression
     }
 }
 | Minus UnaryExpression {
-     $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "-");
+     $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_unary($$.var, $2.var, "-");
      if(!compare_string($2.type,(char*)"float") && !compare_string($2.type,(char*)"double") && !compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3440,7 +3486,7 @@ Dec UnaryExpression {
 UnaryExpressionNotPlusMinus:
 PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | Tilde UnaryExpression {
-    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "~");
+    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_unary($$.var, $2.var, $1.var);
     if(!compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3451,7 +3497,7 @@ PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).
     }
 }
 | Not UnaryExpression {
-    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "!");
+    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_unary($$.var, $2.var, $1.var);
     if(!compare_string($2.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -4077,15 +4123,11 @@ LeftHandSide Eqq AssignmentExpression {
             $$.dim1 = $1.dim1;
     }
     lev.clear(); l1 = 0;
-    string temp1(mp_func[$1.var]), temp2($2.var), temp3;
+    string temp2($2.var), temp3;
     if(check_literal($3.type)) temp3 = mp_func[$3.var] ;
     else temp3 = $3.var ;
     temp2.pop_back();
-    string sl1 = build_string("t", ++varnum["var"]) ;
-    add_assignment(sl1, temp1,$1.str);
-    string sl2 = build_string("t", ++varnum["var"]) ;
-    add_assignment(sl2, temp3,$1.str);
-    add_string(temp1, sl1, sl2, temp2) ;
+    add_string($1.var, $1.var, $3.var, temp2) ;
     vector<Entry>* c2 ;
                 for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
                     if(ptr->table.find($1.str)!=ptr->table.end()){
