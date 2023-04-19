@@ -32,7 +32,7 @@
     int l = 0, l1 = 0, l2 = 0;
     long long int sz=0;
     int f = 1;
-    int ff=0;
+    int ff=0,ff1=0;
     int inc_flag = 0 ;
     int f1 = 0; //for checking new
     int ln,rl = -1;
@@ -460,7 +460,16 @@
     int offset_val = 0;
     int change_ac_val = 0;
     string op_exp(string ope){
-        if(ope[0] == '+'){
+        if(ope.size()>=3 && ope.substr(0, 3) == ">>>") {
+            return "shrq";
+        }
+        else if(ope.size()>=2 && ope.substr(0, 2) == ">>") {
+            return "sarq";
+        }
+        else if(ope.size()>=2 && ope.substr(0, 2) == "<<") {
+            return "salq";
+        }
+        else if(ope[0] == '+'){
             return "addq" ;
         }
         else if(ope[0] == '-'){
@@ -468,6 +477,15 @@
         }
         else if(ope[0] == '*'){
             return "imulq" ;
+        }
+        else if(ope[0] == '|'){
+            return "orq" ;
+        }
+        else if(ope[0] == '&'){
+            return "andq" ;
+        }
+        else if(ope[0] == '^'){
+            return "xorq" ;
         }
         return "addq" ;
     }
@@ -494,6 +512,15 @@
         }
         return "e" ;
     }
+    string op_unary(string ope) {
+        if(ope[0] == '-') {
+            return "negq";
+        }
+        else if(ope[0] == '~') {
+            return "notq";
+        }
+        return "negq";
+    }
     int check_reg(string st){
         if(st.size() < 2) return 0 ;
         if(st[0] == 't'  && st[1] >= '0' && st[1] <= '9') return 1 ;
@@ -505,13 +532,37 @@
     }
     void div_op(string op, string exp1, string exp2, string exp3){
         if(op[0] == '/'){
-            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+            if(exp2[0] == 'n'){
+                ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+                ac.pb("movq (%rdx), %rax") ;
+            }
+            else{
+                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            }
+            if(exp3[0] == 'n'){
+                ac.pb("movq " + mp_func[exp3] + ", %rdx") ;
+                ac.pb("cltd\nidivq (%rdx)") ;
+            }
+            else{
+                ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+            }
             ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
         else if(op[0] == '%'){
-            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+            if(exp2[0] == 'n'){
+                ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+                ac.pb("movq (%rdx), %rax") ;
+            }
+            else{
+                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            }
+            if(exp3[0] == 'n'){
+                ac.pb("movq " + mp_func[exp3] + ", %rcx") ;
+                ac.pb("cltd\nidivq (%rcx)") ;
+            }
+            else{
+                ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+            }
             ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
     }
@@ -527,30 +578,23 @@
             mp_func[exp2] = local_offset(8);
         if(mp_func[exp3].length()==0)
             mp_func[exp3] = local_offset(8);
-        if(op_assoc(op)){
-            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
-            ac.pb("movq %rax, " + mp_func[exp1]) ;
-        }
+        if(check_div(op)) div_op(op, exp1, exp2, exp3) ;
         else{
-            if(check_div(op)) div_op(op, exp1, exp2, exp3) ;
-            else{
-                if(exp2[0] == 'n'){
-                    ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
-                    ac.pb("movq (%rdx), %rax") ;
-                }
-                else{
-                    ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-                }
-                if(exp3[0] == 'n'){
-                    ac.pb("movq " + mp_func[exp3] + ", %rdx") ;
-                    ac.pb(op_exp(op) + " (%rdx), %rax") ;
-                }
-                else{
-                    ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
-                }
-                ac.pb("movq %rax, " + mp_func[exp1]) ;
+            if(exp2[0] == 'n'){
+                ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+                ac.pb("movq (%rdx), %rax") ;
             }
+            else{
+                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            }
+            if(exp3[0] == 'n'){
+                ac.pb("movq " + mp_func[exp3] + ", %rdx") ;
+                ac.pb(op_exp(op) + " (%rdx), %rax") ;
+            }
+            else{
+                ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+            }
+            ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
         return;
     }
@@ -568,6 +612,25 @@
         ac.pb("movq %rax, " + mp_func[exp1]) ;
         return;
     }
+    void add_unary(string exp1, string exp2, string op) {
+        if(mp_func[exp1].length()==0)
+            mp_func[exp1] = exp1;
+        if(mp_func[exp2].length()==0)
+            mp_func[exp2] = exp2;
+        if(op != "!") { // ~ and -unary
+            ac.pb("movq " + mp_func[exp2] + ", %rax");
+            ac.pb(op_unary(op) + " %rax");
+            ac.pb("movq %rax, " + mp_func[exp1]) ;
+        }
+        else {
+            ac.pb("movq " + mp_func[exp2] + ", %rax");
+            ac.pb("cmpq $0, %rax");
+            ac.pb("sete %al");
+            ac.pb("movzbq %al, %rax");
+            ac.pb("movq %rax, " + mp_func[exp1]) ;
+        }
+        return;
+    }
     void add_assignment(string exp1, string exp2,string exp3) {
         if(mp_func[exp1].length()==0)
             mp_func[exp1] = local_offset(8);
@@ -581,11 +644,20 @@
             }
             else ac.pb("movq %rdx, (%r8)") ;
         }
+        else if(ff1){
+            ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+            if(exp2[0] == 'n'){
+                ac.pb("movq (%rdx), %r9") ;
+                ac.pb("movq %r9, (%r12)") ;
+            }
+            else ac.pb("movq %rdx, (%r12)") ;
+        }
         else if(lev1.size() == 0){
             ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
             ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
         ff = 0;
+        ff1 = 0;
         return;
     }
     void add_address(string exp, string exp1, string exp2) {
@@ -636,14 +708,13 @@
         else if(t == "Boolean" || t == "boolean" || t == "Byte" || t == "byte") return 1 ;
         return 8 ;
     }
-    void alloc_mem() {
+    void alloc_mem(string exp) {
         int x = get_offset(tp);
         for(auto i:lev1)
             x *= i;
         ac.pb("movl $" + to_string(x) + ", %edi") ;
         ac.pb("call malloc@PLT");
-        int g = func_offset;
-        ac.pb("movq %rax, -" + to_string(g) + "(%rbp)") ;
+        ac.pb("movq %rax, " + mp_func[exp]) ;
         return;
     }
     char* build_string(string str, int number) {
@@ -676,7 +747,7 @@
         mp_func.clear() ;
     }
     void param_offset(string s1, int p_offset){
-        string s = "+" + to_string(arg_offset) + "(%rbp)" ;
+        string s = to_string(arg_offset) + "(%rbp)" ;
         ac.pb("movq " + s + ", %rdx") ;
         s = local_offset(8) ;
         if(!mp_func[s1].length()) mp_func[s1] = s ; 
@@ -1039,7 +1110,7 @@ CompilationUnit
 Name:
 SimpleName {($$).type = ($1).type;  $$.var = $1.var;  vector<Entry> c = head->get($1.type); Entry c1 = head->get1(c,{},head); ($$).str = strdup(c1.Type.c_str()) ; map<int,int> sz1 = c1.Dim;
     ($$).dim1 = sz1.size(); ($$).cl = ($$).str;} 
-| QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1;}
+| QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1; ($$).ar = 101;}
 SimpleName:
 Identifier {($$).type = ($1).str; $$.var = $1.var;}
 QualifiedName:
@@ -1801,12 +1872,15 @@ VariableDeclaratorId {
         else add_assignment($1.var, s2,$1.str) ;
     }
     else{
+        string sarr = $3.var ;
         if(mp_func[$1.var].length() == 0){
-            mp_func[$1.var] = local_offset(get_offset($1.type)) ;
+            if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
+            else mp_func[$1.var] = local_offset(get_offset($1.type)) ;
             if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
             else add_assignment($1.var, $3.var,$1.str) ;
         }
         else{
+            if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
             if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
             else add_assignment($1.var, $3.var,$1.str) ;
         }
@@ -1817,7 +1891,7 @@ VariableDeclaratorId {
 }
 VariableDeclaratorId:
 Identifier {($$).str = ($1).str; ($$).type = strdup(tp.c_str()); if(check_obj(tp) && !mp_func[$1.str].length()){mp_func[$1.str] = $1.str ;}}
-| VariableDeclaratorId Lsb Rsb {l1++; if(!mp_func[$1.str].length()){mp_func[$1.str] = local_offset(get_offset(tp));}}
+| VariableDeclaratorId Lsb Rsb {l1++;}
 VariableInitializer:
 Expression {($$).dim1 = ($1).dim1; l = 0; $$.num = 1; $$.num1 = 0; ($$).type = ($1).type; ($$).str = ($1).str;}
 | ArrayInitializer {l++; $$.num = $1.num; $$.num1 = $1.num1; ($$).type = ($1).type; ($$).str = ($1).str;}
@@ -2718,7 +2792,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 }
 
 New1:
-{$$.var = build_string("n", ++varnum["var"]); alloc_mem(); add_param($$.var);}
+{$$.var = build_string("t", ++varnum["var"]); alloc_mem(""); add_param($$.var);}
 ClassInstanceCreationExpression:
 New ClassType New1 Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
@@ -2964,23 +3038,23 @@ Expression {v.push_back($1.type); v1.push_back($1.var); func_params.pb($1.var); 
 
 
 ArrayCreationExpression:
-New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); alloc_mem();}
-| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); alloc_mem();}
-| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); alloc_mem();}
-| New ClassOrInterfaceType DimExprs {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); alloc_mem();}
+New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
+| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
+| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
+| New ClassOrInterfaceType DimExprs {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
 | New PrimitiveType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT; 
     }
-    alloc_mem();
+    $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);
 }
 | New ClassOrInterfaceType Dims ArrayInitializer { func_offset += 8 ; ($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT;
     }
-    alloc_mem();
+    $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);
 }
 
 DimExprs:
@@ -3366,7 +3440,7 @@ UnaryExpression:
 PreIncrementExpression
 | PreDecrementExpression
 | Plus UnaryExpression { 
-    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "+");
+    $$ = $2;
     if(!compare_string($2.type,(char*)"float") && !compare_string($2.type,(char*)"double") && !compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3377,7 +3451,7 @@ PreIncrementExpression
     }
 }
 | Minus UnaryExpression {
-     $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "-");
+     $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_unary($$.var, $2.var, "-");
      if(!compare_string($2.type,(char*)"float") && !compare_string($2.type,(char*)"double") && !compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3417,7 +3491,7 @@ Dec UnaryExpression {
 UnaryExpressionNotPlusMinus:
 PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | Tilde UnaryExpression {
-    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "~");
+    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_unary($$.var, $2.var, $1.var);
     if(!compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3428,7 +3502,7 @@ PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).
     }
 }
 | Not UnaryExpression {
-    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_string($$.var, "", $2.var, "!");
+    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_unary($$.var, $2.var, $1.var);
     if(!compare_string($2.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3975,12 +4049,15 @@ LeftHandSide Eq AssignmentExpression {
         else add_assignment($1.var, s2,$1.str) ;
     }
     else{
+        string sarr = $3.var ;
         if(mp_func[$1.var].length() == 0){
-            mp_func[$1.var] = local_offset(get_offset($1.type)) ;
+            if(sarr[0] == 'n') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
+            else mp_func[$1.var] = local_offset(get_offset($1.type)) ;
             if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
             else add_assignment($1.var, $3.var,$1.str) ;
         }
         else{
+            if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
             if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
             else add_assignment($1.var, $3.var,$1.str) ;
         }
@@ -4051,15 +4128,11 @@ LeftHandSide Eqq AssignmentExpression {
             $$.dim1 = $1.dim1;
     }
     lev.clear(); l1 = 0;
-    string temp1(mp_func[$1.var]), temp2($2.var), temp3;
+    string temp2($2.var), temp3;
     if(check_literal($3.type)) temp3 = mp_func[$3.var] ;
     else temp3 = $3.var ;
     temp2.pop_back();
-    string sl1 = build_string("t", ++varnum["var"]) ;
-    add_assignment(sl1, temp1,$1.str);
-    string sl2 = build_string("t", ++varnum["var"]) ;
-    add_assignment(sl2, temp3,$1.str);
-    add_string(temp1, sl1, sl2, temp2) ;
+    add_string($1.var, $1.var, $3.var, temp2) ;
     vector<Entry>* c2 ;
                 for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
                     if(ptr->table.find($1.str)!=ptr->table.end()){
@@ -4095,7 +4168,8 @@ LeftHandSide Eqq AssignmentExpression {
 }
 LeftHandSide:
 Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;}
-|FieldAccess {($$).type = ($1).type; ($$).dim1 = ($1).dim1;}
+|FieldAccess {($$).type = ($1).type; ($$).dim1 = ($1).dim1;
+}
 |ArrayAccess {
     ($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; ff = 1;
