@@ -3195,6 +3195,8 @@ Name Lsb Expression Rsb {
     vector<Entry> c = head->get($1.type);
     Entry c1 = head->get1(c,{},head);
     stack<int> s = c1.refine_dim();
+    lev2.clear();
+    cerr<<prod<<endl;
     while(!s.empty()){
         prod *= s.top();
         lev2.push_back(s.top());
