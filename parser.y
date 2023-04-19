@@ -1136,12 +1136,15 @@ else{
         if(check_print($1.var)) {$$.var = make_print_string($1.var);}
         else {
             if(c1.Offset==-1) {
-                offset_val = -1;
+                // offset_val = -1;
                 change_ac_val = ac.size();
+                $$.var = $3.var;
             }
-            add_address("", $1.var, to_string(c1.Offset));
+            else{
+                add_address("", $1.var, to_string(c1.Offset));
+                ($$).dim1 = c1.Dim.size();
             }
-            ($$).dim1 = c1.Dim.size();
+        }
         }
     else {
                 cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
@@ -1924,7 +1927,6 @@ Identifier Lb {
     tp = "Method," + tp;
     func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev,m);
     m.clear();
-    offset += sz;
     tables.push(head);
     string temp($1.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
@@ -1944,7 +1946,6 @@ Identifier Lb {
     tp = "Method," + tp;
     func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev,m);
     m.clear();
-    offset += sz;
     tables.push(head);
     string temp($1.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
@@ -3097,7 +3098,7 @@ Primary Dot Identifier {
     vector<Entry> c = head->get($3.str);
     Entry c1 = head->get1(c,v,head);
     if(c1.Offset==-1) {
-        offset_val = -1;
+        // offset_val = -1;
         change_ac_val = ac.size();
     }
     add_address("", "t0", to_string(c1.Offset));
@@ -3108,7 +3109,7 @@ Super Dot Identifier {
     vector<Entry> c = head->get($3.str);
     Entry c1 = head->get1(c,v,head);
     if(c1.Offset==-1) {
-        offset_val = -1;
+        // offset_val = -1;
         change_ac_val = ac.size();
     }
     string temp1 = build_string("t", ++varnum["var"]);
@@ -3156,8 +3157,8 @@ Name Lb ArgumentList Rb {
             c1 = head->get1(c,v,NULL);
             ($$).type = strdup(c1.Type.c_str());
         }
-        if(offset_val == -1)
-            change_ac(to_string(c1.Offset));
+        // if(offset_val == -1)
+        //     change_ac(to_string(c1.Offset));
         if(!err.empty()){
             err.pop_back();
         }
@@ -3216,8 +3217,8 @@ Name Lb ArgumentList Rb {
     ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
     Entry c1 = head->get1(c,v,head);
-    if(offset_val == -1)
-        change_ac(to_string(c1.Offset));
+    // if(offset_val == -1)
+    //     change_ac(to_string(c1.Offset));
     ($$).type = strdup(c1.Type.c_str());
     if(!err.empty())
         err.pop_back();
@@ -3255,8 +3256,8 @@ Name Lb ArgumentList Rb {
     vector<Entry> c = head->parent->get($1.type);
     Entry c1 = head->parent->get1(c,v,NULL);
     ($$).type = strdup(c1.Type.c_str());
-    if(offset_val == -1)
-        change_ac(to_string(c1.Offset));
+    // if(offset_val == -1)
+    //     change_ac(to_string(c1.Offset));
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     if(!err.empty())
@@ -3277,8 +3278,8 @@ Name Lb ArgumentList Rb {
     ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->parent->get($1.type);
     Entry c1 = head->parent->get1(c,{},head->parent);
-    if(offset_val == -1)
-        change_ac(to_string(c1.Offset));
+    // if(offset_val == -1)
+    //     change_ac(to_string(c1.Offset));
     ($$).type = strdup(c1.Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
