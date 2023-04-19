@@ -12,7 +12,7 @@ public class Main
         obj.x = 1 ;
         obj.y = 5 ;
         int d = obj.sum(2, 3) ;
-        System.out.println(d);
+        System.out.println(d+2*d);
         return ;
 	}
 }
