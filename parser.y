@@ -20,8 +20,15 @@
         {"verbose", no_argument, 0, 'v'},
         {0, 0, 0, 0}
 };
+    int nearestPowerOf2(int N){
+    int a = log2(N);
+    if (pow(2, a) == N)
+        return N;
+    return pow(2, a + 1);
+}
     map<int,int> lev;
     vector<int> lev1,lev2;
+    map<string, int> sp_offset ;
     string symtable = "" ;
     class SymbolTable;
     int l = 0, l1 = 0, l2 = 0;
@@ -501,12 +508,12 @@
     void div_op(string op, string exp1, string exp2, string exp3){
         if(op[0] == '/'){
             ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            ac.pb("idiv " + mp_func[exp3]) ;
+            ac.pb("cltd\nidivq " + mp_func[exp3]) ;
             ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
         else if(op[0] == '%'){
             ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            ac.pb("idiv " + mp_func[exp3]) ;
+            ac.pb("cltd\nidivq " + mp_func[exp3]) ;
             ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
     }
@@ -605,9 +612,6 @@
         return;
     }
     void add_param(string exp) {
-        if(!func_flag){
-            ac.pb("pushq %rax") ;
-        }
         ac.pb("pushq " + mp_func[exp]);
         return;
     }
@@ -667,7 +671,7 @@
         ac.pb("jmp " + loc);
     }
     void callee(){
-        ac.pb("pushq %rbp\nmovq %rsp, %rbp") ;
+        ac.pb("pushq %rbp\nmovq %rsp, %rbp*") ;
         arg_offset = 16 ;
         func_offset = 0 ;
         reg_flag = 0 ;
@@ -1749,7 +1753,7 @@ VariableDeclaratorId {
             }
             else{
                 vector<Entry> c1 = head->get($3.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
-                head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},sz1,m),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + sz*(sz1.size());
+                head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},sz1,m),$1.str); lev.clear(); l1 = 0; offset = offset + sz*(sz1.size());
                 head->counter($1.str);
             }
         }
@@ -1771,7 +1775,7 @@ VariableDeclaratorId {
         }
         head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev,m),$1.str); int xx = 1; if(!lev.empty()) {xx =  lev.rbegin()->second;}
         head->counter($1.str);
-        offset = offset + sz*xx; lev.clear(); lev1.clear(); l1 = 0;
+        offset = offset + sz*xx; lev.clear(); l1 = 0;
     }
     else{
         map<int,int> m1;
@@ -1784,7 +1788,7 @@ VariableDeclaratorId {
             cerr << "Types do not match on both the sides in line " << yylineno<<endl;
             YYABORT;
         }
-        head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$1.str); lev.clear(); lev1.clear(); l1 = 0; offset = offset + term*sz;
+        head->check(head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m),$1.str); lev.clear(); l1 = 0; offset = offset + term*sz;
         head->counter($1.str);
     }
     int check_type = widen2(($1).type,($3).type);
@@ -1811,7 +1815,7 @@ VariableDeclaratorId {
             else add_assignment($1.var, $3.var,$1.str) ;
         }
     }
-
+    lev1.clear();
     ($$).type = widen(($1).type,($3).type);
     ($$).str = ($1).str;
 }
@@ -1829,7 +1833,9 @@ MethodHeader MethodBody {
     }
     ttt = "";
     rl = -1;
-    ac.pb("movq $0, %rax") ;
+    sp_offset[head->scope_name] = func_offset ;
+    string st = head->scope_name ;
+    if(st == "main") ac.pb("movq $0, %rax") ;
     ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
@@ -1857,7 +1863,7 @@ Identifier Lb {
     ac.pb("");
     add_label(head->scope_name);
     callee() ;
-    param_offset("t0", 8) ;
+    
 } FormalParameterList Rb {tables.top()->check(func,$1.str);}
 | Identifier Lb Rb {
     tp = "Method," + tp;
@@ -1877,7 +1883,7 @@ Identifier Lb {
     ac.pb("");
     add_label(head->scope_name);
     callee() ;
-    param_offset("t0", 8) ;
+    
 }
 | MethodDeclarator Lsb Rsb
 FormalParameterList:
@@ -1985,7 +1991,7 @@ SimpleName Lb {
     scope += " Constructor";
     ac.pb("");
     add_label(head->scope_name);
-    callee() ; param_offset("t0",8);
+    callee() ; 
 } FormalParameterList Rb {tables.top()->check(func,$1.type);}
 | SimpleName Lb Rb {
     tp = THIS;
@@ -2004,7 +2010,7 @@ SimpleName Lb {
     ac.pb("");
     add_label(head->scope_name);
     callee() ;
-    param_offset("t0",8);
+    
 }
 |TypeParameters SimpleName Lb {tp = THIS; sz = 0; 
     func = head->set($2.type,"Identifier",tp,yylineno,offset,scope,{},lev,m);
@@ -2020,7 +2026,7 @@ SimpleName Lb {
     ac.pb("");
     add_label(head->scope_name);
     callee();
-    param_offset("t0",8);
+    
 } FormalParameterList Rb {tables.top()->check(func,$2.type);}
 | TypeParameters SimpleName Lb Rb {
     tp = THIS;
@@ -2039,7 +2045,7 @@ SimpleName Lb {
     ac.pb("");
     add_label(head->scope_name);
     callee();
-    param_offset("t0",8);
+    
 }
 ConstructorBody:
 Lcb
@@ -2655,7 +2661,7 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.str ; ac.pb("movq " + st + ", %rax") ;}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.var ; ac.pb("movq " + mp_func[st] + ", %rax") ;}
  | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";}}
 ThrowStatement:
 Throw Expression Semicol
@@ -3059,6 +3065,8 @@ Name Lb ArgumentList Rb {
         }
         Entry c1;
         $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+        string st = $$.var ;
+        ac.pb("movq %rax, " + mp_func[st]) ;
         vector<Entry> c = head->get($1.type);
         if(THIS == $1.cl){
             c1 = head->get1(c,v,head);
@@ -3085,7 +3093,6 @@ Name Lb ArgumentList Rb {
         for(auto it:c1.Params){
             sum += get_offset(it);
         }
-        ac.pb("SP = SP + " + to_string(sum));
     }
     f4 = 0;
     v.clear();
@@ -3096,6 +3103,8 @@ Name Lb ArgumentList Rb {
         swap(head,head1);
     }
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    string st = $$.var ;
+    ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
     if(THIS == $1.cl)
         ($$).type = strdup(head->get1(c,v,head).Type.c_str());
@@ -3123,6 +3132,8 @@ Name Lb ArgumentList Rb {
     func_flag = 0 ;
     func_params.clear();
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    string st = $$.var ;
+    ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
     Entry c1 = head->get1(c,v,head);
     if(offset_val == -1)
@@ -3144,6 +3155,8 @@ Name Lb ArgumentList Rb {
 }
 | Dummy14 Lb Rb {
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    string st = $$.var ;
+    ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
     ($$).type = strdup(head->get1(c,{},NULL).Type.c_str());
     int i = find_comma($$.type);
@@ -3157,6 +3170,8 @@ Name Lb ArgumentList Rb {
     func_flag = 0 ;
     func_params.clear();
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    string st = $$.var ;
+    ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->parent->get($1.type);
     Entry c1 = head->parent->get1(c,v,NULL);
     ($$).type = strdup(c1.Type.c_str());
@@ -3178,6 +3193,8 @@ Name Lb ArgumentList Rb {
 } 
 | Dummy15 Lb Rb {
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    string st = $$.var ;
+    ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->parent->get($1.type);
     Entry c1 = head->parent->get1(c,{},head->parent);
     if(offset_val == -1)
@@ -3195,6 +3212,7 @@ Name Lsb Expression Rsb {
     vector<Entry> c = head->get($1.type);
     Entry c1 = head->get1(c,{},head);
     stack<int> s = c1.refine_dim();
+    lev2.clear() ;
     while(!s.empty()){
         prod *= s.top();
         lev2.push_back(s.top());
@@ -4169,8 +4187,13 @@ int main(int argc, char* argv[]){
     ac3 << "     .string    \"%d\\n\"" << endl ;
     ac3 << "     .text" << endl ;
     ac3 << "     .globl    main" << endl ;
-    for(auto s : ac) {
-        ac3 << s << endl;
+    int i ;
+    for(i=0; i<ac.size(); i++) {
+        if(ac[i][ac[i].size() - 1] == '*'){
+            ac3 << ac[i].substr(0, ac[i].size() - 1) << endl ;
+            ac3 << "subq $" + to_string(nearestPowerOf2(sp_offset[ac[i-1].substr(0, ac[i-1].size() - 1)])) + ", %rsp" << endl ;
+        }
+        else ac3 << ac[i] << endl;
     }
     return 0;
 }
