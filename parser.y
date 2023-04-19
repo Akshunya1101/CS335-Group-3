@@ -505,13 +505,37 @@
     }
     void div_op(string op, string exp1, string exp2, string exp3){
         if(op[0] == '/'){
-            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+            if(exp2[0] == 'n'){
+                ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+                ac.pb("movq (%rdx), %rax") ;
+            }
+            else{
+                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            }
+            if(exp3[0] == 'n'){
+                ac.pb("movq " + mp_func[exp3] + ", %rdx") ;
+                ac.pb("cltd\nidivq (%rdx)") ;
+            }
+            else{
+                ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+            }
             ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
         else if(op[0] == '%'){
-            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+            if(exp2[0] == 'n'){
+                ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+                ac.pb("movq (%rdx), %rax") ;
+            }
+            else{
+                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            }
+            if(exp3[0] == 'n'){
+                ac.pb("movq " + mp_func[exp3] + ", %rcx") ;
+                ac.pb("cltd\nidivq (%rcx)") ;
+            }
+            else{
+                ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+            }
             ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
     }
@@ -527,30 +551,23 @@
             mp_func[exp2] = local_offset(8);
         if(mp_func[exp3].length()==0)
             mp_func[exp3] = local_offset(8);
-        if(op_assoc(op)){
-            ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
-            ac.pb("movq %rax, " + mp_func[exp1]) ;
-        }
+        if(check_div(op)) div_op(op, exp1, exp2, exp3) ;
         else{
-            if(check_div(op)) div_op(op, exp1, exp2, exp3) ;
-            else{
-                if(exp2[0] == 'n'){
-                    ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
-                    ac.pb("movq (%rdx), %rax") ;
-                }
-                else{
-                    ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-                }
-                if(exp3[0] == 'n'){
-                    ac.pb("movq " + mp_func[exp3] + ", %rdx") ;
-                    ac.pb(op_exp(op) + " (%rdx), %rax") ;
-                }
-                else{
-                    ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
-                }
-                ac.pb("movq %rax, " + mp_func[exp1]) ;
+            if(exp2[0] == 'n'){
+                ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+                ac.pb("movq (%rdx), %rax") ;
             }
+            else{
+                ac.pb("movq " + mp_func[exp2] + ", %rax") ;
+            }
+            if(exp3[0] == 'n'){
+                ac.pb("movq " + mp_func[exp3] + ", %rdx") ;
+                ac.pb(op_exp(op) + " (%rdx), %rax") ;
+            }
+            else{
+                ac.pb(op_exp(op) + " " + mp_func[exp3] + ", %rax") ;
+            }
+            ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
         return;
     }
@@ -675,7 +692,7 @@
         mp_func.clear() ;
     }
     void param_offset(string s1, int p_offset){
-        string s = "+" + to_string(arg_offset) + "(%rbp)" ;
+        string s = to_string(arg_offset) + "(%rbp)" ;
         ac.pb("movq " + s + ", %rdx") ;
         s = local_offset(8) ;
         if(!mp_func[s1].length()) mp_func[s1] = s ; 
