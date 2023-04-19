@@ -652,14 +652,12 @@
         return;
     }
     void add_address(string exp, string exp1, string exp2) {
-        if(mp_func[exp].length()==0)
-            mp_func[exp] = exp;
         if(mp_func[exp2].length()==0)
             mp_func[exp2] = exp2;
         if(mp_func[exp1].length()==0)
             mp_func[exp1] = exp1;
-        string result = mp_func[exp] + " points to *(" + exp1 + "+" + exp2 + ")";
-        ac.pb(result);
+        ac.pb("movq " + mp_func[exp1] + ", %rbx") ;
+        ac.pb("addq $" + exp2 + ", %rbx") ;
         return;
     }
     void add_address1(string exp1, string exp2, int prod, string index) {
@@ -1130,9 +1128,7 @@ else{
                 offset_val = -1;
                 change_ac_val = ac.size();
             }
-            string temp1 = build_string("t", ++varnum["var"]);
-            add_assignment(temp1, to_string(c1.Offset) + " //Offset","");
-            $$.var = build_string("t", ++varnum["var"]); add_address($$.var, $1.var, temp1);
+            add_address("", $1.var, to_string(c1.Offset));
             }
         }
     else {
@@ -1867,15 +1863,19 @@ VariableDeclaratorId {
     else{
         string sarr = $3.var ;
         if(mp_func[$1.var].length() == 0){
-            if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
-            else mp_func[$1.var] = local_offset(get_offset($1.type)) ;
-            if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
-            else add_assignment($1.var, $3.var,$1.str) ;
+            if(sarr[0] == 'n') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
+            else{
+                mp_func[$1.var] = local_offset(get_offset($1.type)) ;
+                if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
+                else add_assignment($1.var, $3.var,$1.str) ;
+            }
         }
         else{
             if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
-            if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
-            else add_assignment($1.var, $3.var,$1.str) ;
+            else{
+                if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
+                else add_assignment($1.var, $3.var,$1.str) ;
+            }
         }
     }
     lev1.clear();
@@ -2785,7 +2785,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 }
 
 New1:
-{$$.var = build_string("t", ++varnum["var"]); alloc_mem(""); add_param($$.var);}
+{$$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var); add_param($$.var);}
 ClassInstanceCreationExpression:
 New ClassType New1 Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
@@ -2794,7 +2794,8 @@ New ClassType New1 Lb ArgumentList Rb {
     func_params.clear();
     Entry c1;
     func_offset += 8 ;
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $2.var); 
+    $$.var = $3.var ;
+    call_func($$.var, $2.var); 
     if(THIS == $2.str || $2.str == "Reference Type")
         head1 = head->find_table($2.str,1);
     else
@@ -2825,13 +2826,13 @@ New ClassType New1 Lb ArgumentList Rb {
     for(auto it:c1.Params){
         sum += get_offset(it);
     }
-    ac.pb("SP = SP + " + to_string(sum));
     v1.clear();
     v.clear();
 } 
 | New ClassType New1 Lb Rb {
     func_offset += 8 ;
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $2.var); 
+    $$.var = $3.var ;
+    call_func($$.var, $2.var); 
     if(THIS == $2.str || $2.str == "Reference Type") 
         head1 = head->find_table($2.str,1);
     else
@@ -2867,7 +2868,8 @@ New ClassType New1 Lb ArgumentList Rb {
     func_params.clear();
     Entry c1;
     func_offset += 8 ;
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var); 
+    $$.var = $5.var ;
+    call_func($$.var, $4.var); 
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
     else
@@ -2894,13 +2896,13 @@ New ClassType New1 Lb ArgumentList Rb {
     for(auto it:c1.Params){
         sum += get_offset(it);
     }
-    ac.pb("SP = SP + " + to_string(sum));
     v1.clear();
     v.clear();
 } 
 | Primary Dot New ClassType New1 Lb Rb {
+    $$.var = $5.var ;
     func_offset += 8 ;
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var); 
+    call_func($$.var, $4.var); 
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
     else
@@ -2923,25 +2925,25 @@ New ClassType New1 Lb ArgumentList Rb {
         add_param(func_params[i]);
     }
     func_params.clear();
-    func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $3.var);
+    func_offset += 8 ; $$.var = $4.var ; call_func($$.var, $3.var);
     int sum=8;
     for(auto it:v){
         sum += get_offset(it);
     }
-    ac.pb("SP = SP + " + to_string(sum)); }
-| New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $3.var); }
+     }
+| New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; call_func($$.var, $3.var); }
 |Primary Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { 
     for(int i=func_params.size()-1;i>=0;i-=1){
         add_param(func_params[i]);
     }
     func_params.clear();
-    func_offset += 8 ; func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $5.var);
+    func_offset += 8 ; func_offset += 8 ; call_func($$.var, $5.var);
     int sum=8;
     for(auto it:v){
         sum += get_offset(it);
     }
-    ac.pb("SP = SP + " + to_string(sum)); }
-| Primary Dot New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $5.var); }
+    }
+| Primary Dot New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; call_func($$.var, $5.var); }
 
 | Name Dot New ClassType New1 Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
@@ -2950,7 +2952,8 @@ New ClassType New1 Lb ArgumentList Rb {
     func_params.clear();
     Entry c1;
     func_offset += 8 ;
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var);
+    $$.var = $5.var ;
+    call_func($$.var, $4.var);
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
     else
@@ -2977,13 +2980,13 @@ New ClassType New1 Lb ArgumentList Rb {
     for(auto it:c1.Params){
         sum += get_offset(it);
     }
-    ac.pb("SP = SP + " + to_string(sum));
     v1.clear();
     v.clear();
 } 
 | Name Dot New ClassType New1 Lb Rb {
+    $$.var = $5.var ;
     func_offset += 8 ;
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $4.var);
+    call_func($$.var, $4.var);
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
     else
@@ -3005,13 +3008,13 @@ New ClassType New1 Lb ArgumentList Rb {
         add_param(func_params[i]);
     }
     func_params.clear();
-     func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    func_offset += 8 ; call_func($$.var, $1.var);
     int sum=8;
     for(auto it:v){
         sum += get_offset(it);
     }
-    ac.pb("SP = SP + " + to_string(sum)); }
-| Name Dot New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var); }
+    }
+| Name Dot New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; call_func($$.var, $1.var); }
 
 
 |New ClassType New1 TypeArgumentsOrDiamond Lb ArgumentList Rb | New ClassType New1 TypeArgumentsOrDiamond Lb Rb
@@ -3069,9 +3072,9 @@ Primary Dot Identifier {
         cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
         YYABORT;
     }
-    $$.var = build_string("t", ++varnum["var"]); add_address($$.var,(char*)"t0",to_string(c1.Offset));}
+    add_address("",(char*)"t0",to_string(c1.Offset));}
 | Super Dot Identifier {($$).type = (char*)"Super"; ($$).str = ($3).str; vector<Entry> c1 = head->parent->get($$.str); map<int,int> sz1 = head->parent->get1(c1,{},head).Dim;
-    ($$).dim1 = sz1.size(); $$.var = build_string("t", ++varnum["var"]); add_address($$.var,(char*)"t0", $3.var);}
+    ($$).dim1 = sz1.size(); add_address("",(char*)"t0", $3.var);}
 Dummy14:
 Primary Dot Identifier { 
     vector<Entry> c = head->get($3.str);
@@ -3080,10 +3083,7 @@ Primary Dot Identifier {
         offset_val = -1;
         change_ac_val = ac.size();
     }
-    string temp1 = build_string("t", ++varnum["var"]);
-    add_assignment(temp1, to_string(c1.Offset) + " //Offset","");
-    $$.var = build_string("t", ++varnum["var"]);
-    add_address($$.var, "t0", temp1);
+    add_address("", "t0", to_string(c1.Offset));
     ($$).type = ($3).str; 
 }
 Dummy15:
@@ -4047,14 +4047,18 @@ LeftHandSide Eq AssignmentExpression {
         string sarr = $3.var ;
         if(mp_func[$1.var].length() == 0){
             if(sarr[0] == 'n') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
-            else mp_func[$1.var] = local_offset(get_offset($1.type)) ;
-            if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
-            else add_assignment($1.var, $3.var,$1.str) ;
+            else{
+                mp_func[$1.var] = local_offset(get_offset($1.type)) ;
+                if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
+                else add_assignment($1.var, $3.var,$1.str) ;
+            }
         }
         else{
             if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
-            if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
-            else add_assignment($1.var, $3.var,$1.str) ;
+            else{
+                if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
+                else add_assignment($1.var, $3.var,$1.str) ;
+            }
         }
     }
     vector<Entry>* c2 ;
