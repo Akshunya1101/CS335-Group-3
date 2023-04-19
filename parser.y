@@ -2013,7 +2013,7 @@ StaticInitializer:
 Static Block
 ConstructorDeclaration:
 Modifiers ConstructorDeclarator Throws ConstructorBody {
-    add_label("End" + head->scope_name);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2023,7 +2023,7 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 } 
 | ConstructorDeclarator ConstructorBody {
-    add_label("End" + head->scope_name);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2033,7 +2033,7 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 }
 | Modifiers ConstructorDeclarator ConstructorBody {
-    add_label("End" + head->scope_name);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2043,7 +2043,7 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 } 
 | ConstructorDeclarator Throws ConstructorBody {
-    add_label("End" + head->scope_name);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
