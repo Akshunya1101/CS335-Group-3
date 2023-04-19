@@ -441,6 +441,7 @@
     map<string, string> mp_func ;
     stack<string> scopes;
     string scope = "Global";
+    string scope_func = "Global";
     string tp;
     string tpp;
     vector<string> m;
@@ -1898,6 +1899,7 @@ MethodHeader MethodBody {
     rl = -1;
     sp_offset[head->scope_name] = func_offset ;
     string st = head->scope_name ;
+    add_label("Return" + scope_func);
     if(st == "main") ac.pb("movq $0, %rax") ;
     ac.pb("leave\nret");
     ac.pb("");
@@ -1921,6 +1923,7 @@ Identifier Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.str);
+    scope_func = scope;
     scope += " Method";
     flag = true;
     ac.pb("");
@@ -1940,6 +1943,7 @@ Identifier Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.str);
+    scope_func = scope;
     scope += " Method";
     flag = true;
     tables.top()->check(func,$1.str);
@@ -2051,6 +2055,7 @@ SimpleName Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.type);
+    scope_func = scope;
     scope += " Constructor";
     ac.pb("");
     add_label(head->scope_name);
@@ -2068,6 +2073,7 @@ SimpleName Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.type);
+    scope_func = scope;
     scope += " Constructor";
     tables.top()->check(func,$1.type);
     ac.pb("");
@@ -2085,6 +2091,7 @@ SimpleName Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($2.type);
+    scope_func = scope;
     scope += " Constructor";
     ac.pb("");
     add_label(head->scope_name);
@@ -2097,12 +2104,13 @@ SimpleName Lb {
     func = head->set($2.type,"Identifier",tp,yylineno,offset,scope,{},lev,m);
     m.clear();
     tables.push(head);
-    string temp($1.str);
+    string temp($2.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
     scope = ($2.type);
+    scope_func = scope;
     scope += " Constructor";
     tables.top()->check(func,$2.type);
     ac.pb("");
@@ -2724,8 +2732,8 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.var ; ac.pb("movq " + mp_func[st] + ", %rax") ;}
- | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";}}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.var ; ac.pb("movq " + mp_func[st] + ", %rax") ; go_to("Return" + scope_func);}
+ | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} go_to("Return" + scope_func);}
 ThrowStatement:
 Throw Expression Semicol
 SynchronizedStatement:
