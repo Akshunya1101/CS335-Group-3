@@ -22,8 +22,6 @@
 };
     int nearestPowerOf2(int N){
     int a = log2(N);
-    if (pow(2, a) == N)
-        return N;
     return pow(2, a + 1);
 }
     map<int,int> lev;
@@ -684,14 +682,13 @@
         else if(t == "Boolean" || t == "boolean" || t == "Byte" || t == "byte") return 1 ;
         return 8 ;
     }
-    void alloc_mem() {
+    void alloc_mem(string exp) {
         int x = get_offset(tp);
         for(auto i:lev1)
             x *= i;
         ac.pb("movl $" + to_string(x) + ", %edi") ;
         ac.pb("call malloc@PLT");
-        int g = func_offset;
-        ac.pb("movq %rax, -" + to_string(g) + "(%rbp)") ;
+        ac.pb("movq %rax, " + mp_func[exp]) ;
         return;
     }
     char* build_string(string str, int number) {
@@ -1851,12 +1848,15 @@ VariableDeclaratorId {
         else add_assignment($1.var, s2,$1.str) ;
     }
     else{
+        string sarr = $3.var ;
         if(mp_func[$1.var].length() == 0){
-            mp_func[$1.var] = local_offset(get_offset($1.type)) ;
+            if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
+            else mp_func[$1.var] = local_offset(get_offset($1.type)) ;
             if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
             else add_assignment($1.var, $3.var,$1.str) ;
         }
         else{
+            if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
             if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
             else add_assignment($1.var, $3.var,$1.str) ;
         }
@@ -1867,7 +1867,7 @@ VariableDeclaratorId {
 }
 VariableDeclaratorId:
 Identifier {($$).str = ($1).str; ($$).type = strdup(tp.c_str()); if(check_obj(tp) && !mp_func[$1.str].length()){mp_func[$1.str] = $1.str ;}}
-| VariableDeclaratorId Lsb Rsb {l1++; if(!mp_func[$1.str].length()){mp_func[$1.str] = local_offset(get_offset(tp));}}
+| VariableDeclaratorId Lsb Rsb {l1++;}
 VariableInitializer:
 Expression {($$).dim1 = ($1).dim1; l = 0; $$.num = 1; $$.num1 = 0; ($$).type = ($1).type; ($$).str = ($1).str;}
 | ArrayInitializer {l++; $$.num = $1.num; $$.num1 = $1.num1; ($$).type = ($1).type; ($$).str = ($1).str;}
@@ -2768,7 +2768,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 }
 
 New1:
-{$$.var = build_string("t", ++varnum["var"]); alloc_mem(); add_param($$.var);}
+{$$.var = build_string("t", ++varnum["var"]); alloc_mem(""); add_param($$.var);}
 ClassInstanceCreationExpression:
 New ClassType New1 Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
@@ -3014,23 +3014,23 @@ Expression {v.push_back($1.type); v1.push_back($1.var); func_params.pb($1.var); 
 
 
 ArrayCreationExpression:
-New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); alloc_mem();}
-| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); alloc_mem();}
-| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); alloc_mem();}
-| New ClassOrInterfaceType DimExprs {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); alloc_mem();}
+New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
+| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
+| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
+| New ClassOrInterfaceType DimExprs {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
 | New PrimitiveType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT; 
     }
-    alloc_mem();
+    $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);
 }
 | New ClassOrInterfaceType Dims ArrayInitializer { func_offset += 8 ; ($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT;
     }
-    alloc_mem();
+    $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);
 }
 
 DimExprs:
@@ -4027,12 +4027,15 @@ LeftHandSide Eq AssignmentExpression {
         else add_assignment($1.var, s2,$1.str) ;
     }
     else{
+        string sarr = $3.var ;
         if(mp_func[$1.var].length() == 0){
-            mp_func[$1.var] = local_offset(get_offset($1.type)) ;
+            if(sarr[0] == 'n') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
+            else mp_func[$1.var] = local_offset(get_offset($1.type)) ;
             if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
             else add_assignment($1.var, $3.var,$1.str) ;
         }
         else{
+            if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
             if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
             else add_assignment($1.var, $3.var,$1.str) ;
         }
