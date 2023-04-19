@@ -501,12 +501,12 @@
     void div_op(string op, string exp1, string exp2, string exp3){
         if(op[0] == '/'){
             ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            ac.pb("idiv " + mp_func[exp3]) ;
+            ac.pb("cltd\nidivq " + mp_func[exp3]) ;
             ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
         else if(op[0] == '%'){
             ac.pb("movq " + mp_func[exp2] + ", %rax") ;
-            ac.pb("idiv " + mp_func[exp3]) ;
+            ac.pb("cltd\nidivq " + mp_func[exp3]) ;
             ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
     }
@@ -2670,7 +2670,7 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.str ; ac.pb("movq " + st + ", %rax") ;}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.var ; ac.pb("movq " + mp_func[st] + ", %rax") ;}
  | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";}}
 ThrowStatement:
 Throw Expression Semicol
@@ -3066,6 +3066,8 @@ Name Lb ArgumentList Rb {
         }
         Entry c1;
         $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+        string st = $$.var ;
+        ac.pb("movq %rax, " + mp_func[st]) ;
         vector<Entry> c = head->get($1.type);
         if(THIS == $1.cl){
             c1 = head->get1(c,v,head);
@@ -3092,7 +3094,6 @@ Name Lb ArgumentList Rb {
         for(auto it:c1.Params){
             sum += get_offset(it);
         }
-        ac.pb("SP = SP + " + to_string(sum));
     }
     f4 = 0;
     v.clear();
@@ -3103,6 +3104,8 @@ Name Lb ArgumentList Rb {
         swap(head,head1);
     }
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    string st = $$.var ;
+    ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
     if(THIS == $1.cl)
         ($$).type = strdup(head->get1(c,v,head).Type.c_str());
@@ -3130,6 +3133,8 @@ Name Lb ArgumentList Rb {
     func_flag = 0 ;
     func_params.clear();
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    string st = $$.var ;
+    ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
     Entry c1 = head->get1(c,v,head);
     if(offset_val == -1)
@@ -3151,6 +3156,8 @@ Name Lb ArgumentList Rb {
 }
 | Dummy14 Lb Rb {
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    string st = $$.var ;
+    ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
     ($$).type = strdup(head->get1(c,{},NULL).Type.c_str());
     int i = find_comma($$.type);
@@ -3164,6 +3171,8 @@ Name Lb ArgumentList Rb {
     func_flag = 0 ;
     func_params.clear();
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    string st = $$.var ;
+    ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->parent->get($1.type);
     Entry c1 = head->parent->get1(c,v,NULL);
     ($$).type = strdup(c1.Type.c_str());
@@ -3185,6 +3194,8 @@ Name Lb ArgumentList Rb {
 } 
 | Dummy15 Lb Rb {
     $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    string st = $$.var ;
+    ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->parent->get($1.type);
     Entry c1 = head->parent->get1(c,{},head->parent);
     if(offset_val == -1)
