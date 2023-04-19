@@ -4039,15 +4039,11 @@ LeftHandSide Eqq AssignmentExpression {
             $$.dim1 = $1.dim1;
     }
     lev.clear(); l1 = 0;
-    string temp1(mp_func[$1.var]), temp2($2.var), temp3;
+    string temp2($2.var), temp3;
     if(check_literal($3.type)) temp3 = mp_func[$3.var] ;
     else temp3 = $3.var ;
     temp2.pop_back();
-    string sl1 = build_string("t", ++varnum["var"]) ;
-    add_assignment(sl1, temp1,$1.str);
-    string sl2 = build_string("t", ++varnum["var"]) ;
-    add_assignment(sl2, temp3,$1.str);
-    add_string(temp1, sl1, sl2, temp2) ;
+    add_string($1.var, $1.var, $3.var, temp2) ;
     vector<Entry>* c2 ;
                 for(auto ptr=head; ptr!=NULL; ptr=ptr->parent){
                     if(ptr->table.find($1.str)!=ptr->table.end()){
