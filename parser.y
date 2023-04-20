@@ -32,7 +32,7 @@
     int l = 0, l1 = 0, l2 = 0;
     long long int sz=0;
     int f = 1;
-    int ff=0;
+    int ff=0,ff1=0;
     int inc_flag = 0 ;
     int f1 = 0; //for checking new
     int ln,rl = -1;
@@ -441,6 +441,7 @@
     map<string, string> mp_func ;
     stack<string> scopes;
     string scope = "Global";
+    string scope_func = "Global";
     string tp;
     string tpp;
     vector<string> m;
@@ -644,11 +645,20 @@
             }
             else ac.pb("movq %rdx, (%r8)") ;
         }
+        else if(ff1){
+            ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
+            if(exp2[0] == 'n'){
+                ac.pb("movq (%rdx), %r9") ;
+                ac.pb("movq %r9, (%r12)") ;
+            }
+            else ac.pb("movq %rdx, (%r12)") ;
+        }
         else if(lev1.size() == 0){
             ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
             ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
         ff = 0;
+        ff1 = 0;
         return;
     }
     void add_address(string exp, string exp1, string exp2) {
@@ -1099,7 +1109,7 @@ CompilationUnit
 Name:
 SimpleName {($$).type = ($1).type;  $$.var = $1.var;  vector<Entry> c = head->get($1.type); Entry c1 = head->get1(c,{},head); ($$).str = strdup(c1.Type.c_str()) ; map<int,int> sz1 = c1.Dim;
     ($$).dim1 = sz1.size(); ($$).cl = ($$).str;} 
-| QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1;}
+| QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1; ($$).ar = 100;}
 SimpleName:
 Identifier {($$).type = ($1).str; $$.var = $1.var;}
 QualifiedName:
@@ -1121,22 +1131,25 @@ else{
     }
     }
     Entry c1;
-    if(head1 || comp1 == "out" || comp2 == "System" || comp1 == "println" ){vector<Entry> c = head1->get($3.str); if(THIS == $1.cl){c1 = head1->get1(c,{},head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,{},NULL);} ($$).str = strdup(c1.Type.c_str()) ;
+    vector<Entry> c = head1->get($3.str); 
+    if(head1){if(THIS == $1.cl){c1 = head1->get1(c,{},head1);} else if($1.cl== st && THIS == $1.type || $1.cl == ss){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,head1);} else if($1.cl == st){vector<string> v1 = {"0"}; c1 = head1->get1(c,v1,NULL);} else{c1 = head1->get1(c,{},NULL);} ($$).str = strdup(c1.Type.c_str()) ;
         if(check_print($1.var)) {$$.var = make_print_string($1.var);}
         else {
             if(c1.Offset==-1) {
-                offset_val = -1;
+                // offset_val = -1;
                 change_ac_val = ac.size();
+                $$.var = $3.var;
             }
-            add_address("", $1.var, to_string(c1.Offset));
+            else{
+                add_address("", $1.var, to_string(c1.Offset));
+                ($$).dim1 = c1.Dim.size();
             }
+        }
         }
     else {
                 cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
-                cerr << $1.type << " " << $3.str << endl;
                 YYABORT;
         }
-    ($$).dim1 = c1.Dim.size();
 }
 }
 ClassOrInterfaceType:
@@ -1899,6 +1912,7 @@ MethodHeader MethodBody {
     rl = -1;
     sp_offset[head->scope_name] = func_offset ;
     string st = head->scope_name ;
+    add_label("Return" + scope_func);
     if(st == "main") ac.pb("movq $0, %rax") ;
     ac.pb("leave\nret");
     ac.pb("");
@@ -1914,7 +1928,6 @@ Identifier Lb {
     tp = "Method," + tp;
     func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev,m);
     m.clear();
-    offset += sz;
     tables.push(head);
     string temp($1.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
@@ -1922,6 +1935,7 @@ Identifier Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.str);
+    scope_func = scope;
     scope += " Method";
     flag = true;
     ac.pb("");
@@ -1933,7 +1947,6 @@ Identifier Lb {
     tp = "Method," + tp;
     func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev,m);
     m.clear();
-    offset += sz;
     tables.push(head);
     string temp($1.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
@@ -1941,6 +1954,7 @@ Identifier Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.str);
+    scope_func = scope;
     scope += " Method";
     flag = true;
     tables.top()->check(func,$1.str);
@@ -2001,7 +2015,7 @@ StaticInitializer:
 Static Block
 ConstructorDeclaration:
 Modifiers ConstructorDeclarator Throws ConstructorBody {
-    add_label("End" + head->scope_name);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2011,7 +2025,7 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 } 
 | ConstructorDeclarator ConstructorBody {
-    add_label("End" + head->scope_name);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2021,7 +2035,7 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 }
 | Modifiers ConstructorDeclarator ConstructorBody {
-    add_label("End" + head->scope_name);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2031,7 +2045,7 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 } 
 | ConstructorDeclarator Throws ConstructorBody {
-    add_label("End" + head->scope_name);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2052,6 +2066,7 @@ SimpleName Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.type);
+    scope_func = scope;
     scope += " Constructor";
     ac.pb("");
     add_label(head->scope_name);
@@ -2069,6 +2084,7 @@ SimpleName Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.type);
+    scope_func = scope;
     scope += " Constructor";
     tables.top()->check(func,$1.type);
     ac.pb("");
@@ -2086,6 +2102,7 @@ SimpleName Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($2.type);
+    scope_func = scope;
     scope += " Constructor";
     ac.pb("");
     add_label(head->scope_name);
@@ -2098,12 +2115,13 @@ SimpleName Lb {
     func = head->set($2.type,"Identifier",tp,yylineno,offset,scope,{},lev,m);
     m.clear();
     tables.push(head);
-    string temp($1.str);
+    string temp($2.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
     scope = ($2.type);
+    scope_func = scope;
     scope += " Constructor";
     tables.top()->check(func,$2.type);
     ac.pb("");
@@ -2725,8 +2743,8 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.var ; ac.pb("movq " + mp_func[st] + ", %rax") ;}
- | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";}}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.var ; ac.pb("movq " + mp_func[st] + ", %rax") ; go_to("Return" + scope_func);}
+ | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} go_to("Return" + scope_func);}
 ThrowStatement:
 Throw Expression Semicol
 SynchronizedStatement:
@@ -2786,7 +2804,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 }
 
 New1:
-{$$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var); add_param($$.var);}
+{$$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
 ClassInstanceCreationExpression:
 New ClassType New1 Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
@@ -2794,6 +2812,7 @@ New ClassType New1 Lb ArgumentList Rb {
     }
     func_params.clear();
     Entry c1;
+
     $$.var = $3.var ;
     call_func($$.var, $2.var); 
     if(THIS == $2.str || $2.str == "Reference Type")
@@ -2830,6 +2849,7 @@ New ClassType New1 Lb ArgumentList Rb {
     v.clear();
 } 
 | New ClassType New1 Lb Rb {
+
     $$.var = $3.var ;
     call_func($$.var, $2.var); 
     if(THIS == $2.str || $2.str == "Reference Type") 
@@ -2866,6 +2886,7 @@ New ClassType New1 Lb ArgumentList Rb {
     }
     func_params.clear();
     Entry c1;
+
     $$.var = $5.var ;
     call_func($$.var, $4.var); 
     if(THIS == $4.str || $4.str == "Reference Type")
@@ -2899,6 +2920,7 @@ New ClassType New1 Lb ArgumentList Rb {
 } 
 | Primary Dot New ClassType New1 Lb Rb {
     $$.var = $5.var ;
+
     call_func($$.var, $4.var); 
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
@@ -2922,7 +2944,7 @@ New ClassType New1 Lb ArgumentList Rb {
         add_param(func_params[i]);
     }
     func_params.clear();
-    $$.var = $4.var ; call_func($$.var, $3.var);
+ $$.var = $4.var ; call_func($$.var, $3.var);
     int sum=8;
     for(auto it:v){
         sum += get_offset(it);
@@ -2933,13 +2955,14 @@ New ClassType New1 Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
         add_param(func_params[i]);
     }
-    func_params.clear(); call_func($$.var, $5.var);
+    func_params.clear();
+ call_func($$.var, $5.var);
     int sum=8;
     for(auto it:v){
         sum += get_offset(it);
     }
     }
-| Primary Dot New TypeArguments ClassType New1 Lb Rb {  call_func($$.var, $5.var); }
+| Primary Dot New TypeArguments ClassType New1 Lb Rb { call_func($$.var, $5.var); }
 
 | Name Dot New ClassType New1 Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
@@ -2947,6 +2970,7 @@ New ClassType New1 Lb ArgumentList Rb {
     }
     func_params.clear();
     Entry c1;
+
     $$.var = $5.var ;
     call_func($$.var, $4.var);
     if(THIS == $4.str || $4.str == "Reference Type")
@@ -2980,6 +3004,7 @@ New ClassType New1 Lb ArgumentList Rb {
 } 
 | Name Dot New ClassType New1 Lb Rb {
     $$.var = $5.var ;
+
     call_func($$.var, $4.var);
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
@@ -3002,7 +3027,7 @@ New ClassType New1 Lb ArgumentList Rb {
         add_param(func_params[i]);
     }
     func_params.clear();
-     call_func($$.var, $1.var);
+ call_func($$.var, $1.var);
     int sum=8;
     for(auto it:v){
         sum += get_offset(it);
@@ -3074,7 +3099,7 @@ Primary Dot Identifier {
     vector<Entry> c = head->get($3.str);
     Entry c1 = head->get1(c,v,head);
     if(c1.Offset==-1) {
-        offset_val = -1;
+        // offset_val = -1;
         change_ac_val = ac.size();
     }
     add_address("", "t0", to_string(c1.Offset));
@@ -3085,7 +3110,7 @@ Super Dot Identifier {
     vector<Entry> c = head->get($3.str);
     Entry c1 = head->get1(c,v,head);
     if(c1.Offset==-1) {
-        offset_val = -1;
+        // offset_val = -1;
         change_ac_val = ac.size();
     }
     string temp1 = build_string("t", ++varnum["var"]);
@@ -3133,8 +3158,8 @@ Name Lb ArgumentList Rb {
             c1 = head->get1(c,v,NULL);
             ($$).type = strdup(c1.Type.c_str());
         }
-        if(offset_val == -1)
-            change_ac(to_string(c1.Offset));
+        // if(offset_val == -1)
+        //     change_ac(to_string(c1.Offset));
         if(!err.empty()){
             err.pop_back();
         }
@@ -3193,8 +3218,8 @@ Name Lb ArgumentList Rb {
     ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
     Entry c1 = head->get1(c,v,head);
-    if(offset_val == -1)
-        change_ac(to_string(c1.Offset));
+    // if(offset_val == -1)
+    //     change_ac(to_string(c1.Offset));
     ($$).type = strdup(c1.Type.c_str());
     if(!err.empty())
         err.pop_back();
@@ -3232,8 +3257,8 @@ Name Lb ArgumentList Rb {
     vector<Entry> c = head->parent->get($1.type);
     Entry c1 = head->parent->get1(c,v,NULL);
     ($$).type = strdup(c1.Type.c_str());
-    if(offset_val == -1)
-        change_ac(to_string(c1.Offset));
+    // if(offset_val == -1)
+    //     change_ac(to_string(c1.Offset));
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
     if(!err.empty())
@@ -3254,8 +3279,8 @@ Name Lb ArgumentList Rb {
     ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->parent->get($1.type);
     Entry c1 = head->parent->get1(c,{},head->parent);
-    if(offset_val == -1)
-        change_ac(to_string(c1.Offset));
+    // if(offset_val == -1)
+    //     change_ac(to_string(c1.Offset));
     ($$).type = strdup(c1.Type.c_str());
     int i = find_comma($$.type);
     ($$).type = strdup($$.type+i+1);
@@ -3389,7 +3414,13 @@ Name Lsb Expression Rsb {
 
 PostfixExpression:
 Primary {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str; ($$).ar = ($1).ar;}
-| Name {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type; ($$).ar = 0;}
+| Name {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type; ($$).ar = 0;
+    if($1.ar == 100){
+        ($$).var = build_string("n", ++varnum["arr"]);
+        string st = ($$).var ;
+        ac.pb("movq %rbx, " + mp_func[st]) ;
+    }
+}
 | PostIncrementExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 | PostDecrementExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str;}
 PostIncrementExpression:
@@ -4160,7 +4191,12 @@ LeftHandSide Eqq AssignmentExpression {
      lev1.clear();
 }
 LeftHandSide:
-Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;}
+Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;
+    if($1.ar==100){
+        ff1=1;
+        ac.pb("movq %rbx, %r12");
+    }
+}
 |FieldAccess {($$).type = ($1).type; ($$).dim1 = ($1).dim1;}
 |ArrayAccess {
     ($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;

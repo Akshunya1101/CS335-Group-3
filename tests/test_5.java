@@ -1,12 +1,18 @@
 public class Main
 {
+        int x ;
+        int y ;
+        Main(){
+        }
+        int sum(int a, int b){
+            return a + b ;
+        }
 	public static void main() {
-        int k = 5;
-        int arr[][] = new int[20][5];
-        int a = 19, b = 4, c = 3 ;
-        arr[1][1] = 20;
-        arr[0][0] = 3;
-        arr[a][b] = arr[a-18][b-3]*arr[a-19][c-3] ;
-        System.out.println(arr[1][1]+20);
+        Main obj = new Main() ;
+        obj.x = 1 ;
+        obj.y = 5 ;
+        int d = obj.sum(2, 3) ;
+        System.out.println(d);
+        return ;
 	}
 }
