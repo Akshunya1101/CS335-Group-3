@@ -441,6 +441,7 @@
     map<string, string> mp_func ;
     stack<string> scopes;
     string scope = "Global";
+    string scope_func = "Global";
     string tp;
     string tpp;
     vector<string> m;
@@ -1874,6 +1875,7 @@ VariableDeclaratorId {
     }
     else{
         string sarr = $3.var ;
+        cerr << "ajsdfh " << $1.var << " - " << mp_func[$1.var] << endl;
         if(mp_func[$1.var].length() == 0){
             if(sarr[0] == 'n') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
             else{
@@ -1909,6 +1911,10 @@ MethodHeader MethodBody {
     ttt = "";
     rl = -1;
     sp_offset[head->scope_name] = func_offset ;
+    string st = head->scope_name ;
+    add_label("Return" + scope_func);
+    if(st == "main") ac.pb("movq $0, %rax") ;
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -1929,6 +1935,7 @@ Identifier Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.str);
+    scope_func = scope;
     scope += " Method";
     flag = true;
     ac.pb("");
@@ -1947,6 +1954,7 @@ Identifier Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.str);
+    scope_func = scope;
     scope += " Method";
     flag = true;
     tables.top()->check(func,$1.str);
@@ -2007,7 +2015,8 @@ StaticInitializer:
 Static Block
 ConstructorDeclaration:
 Modifiers ConstructorDeclarator Throws ConstructorBody {
-    add_label("End" + head->scope_name);
+    add_label("Return" + scope_func);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2017,7 +2026,8 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 } 
 | ConstructorDeclarator ConstructorBody {
-    add_label("End" + head->scope_name);
+    add_label("Return" + scope_func);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2027,7 +2037,8 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 }
 | Modifiers ConstructorDeclarator ConstructorBody {
-    add_label("End" + head->scope_name);
+    add_label("Return" + scope_func);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2037,7 +2048,8 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 } 
 | ConstructorDeclarator Throws ConstructorBody {
-    add_label("End" + head->scope_name);
+    add_label("Return" + scope_func);
+    ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
     tables.pop();
@@ -2058,6 +2070,7 @@ SimpleName Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.type);
+    scope_func = scope;
     scope += " Constructor";
     ac.pb("");
     add_label(head->scope_name);
@@ -2075,6 +2088,7 @@ SimpleName Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($1.type);
+    scope_func = scope;
     scope += " Constructor";
     tables.top()->check(func,$1.type);
     ac.pb("");
@@ -2092,6 +2106,7 @@ SimpleName Lb {
     offset = 0;
     scopes.push(scope);
     scope = ($2.type);
+    scope_func = scope;
     scope += " Constructor";
     ac.pb("");
     add_label(head->scope_name);
@@ -2104,12 +2119,13 @@ SimpleName Lb {
     func = head->set($2.type,"Identifier",tp,yylineno,offset,scope,{},lev,m);
     m.clear();
     tables.push(head);
-    string temp($1.str);
+    string temp($2.str);
     head = new SymbolTable(head, temp, ""); list_tables.push_back(head);
     offsets.push(offset);
     offset = 0;
     scopes.push(scope);
     scope = ($2.type);
+    scope_func = scope;
     scope += " Constructor";
     tables.top()->check(func,$2.type);
     ac.pb("");
@@ -2731,10 +2747,8 @@ ContinueStatement:
 Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 | Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
 ReturnStatement:
-Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.var ; ac.pb("movq " + mp_func[st] + ", %rax") ; string st1 = head->scope_name ;
-    if(st1 == "main") ac.pb("movq $0, %rax") ; ac.pb("leave\nret");}
- | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} string st = head->scope_name ;
-    if(st == "main") ac.pb("movq $0, %rax") ; ac.pb("leave\nret");}
+Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.var ; ac.pb("movq " + mp_func[st] + ", %rax") ; go_to("Return" + scope_func);}
+ | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} go_to("Return" + scope_func);}
 ThrowStatement:
 Throw Expression Semicol
 SynchronizedStatement:
@@ -3119,6 +3133,7 @@ Name Lb ArgumentList Rb {
                 ac.pb("movq (%rdx), %rax") ;
             }
         }
+        // Print Statements
         ac.pb("movq %rax, %rsi");
         ac.pb("leaq .LC0(%rip), %rax");
         ac.pb("movq %rax, %rdi");
