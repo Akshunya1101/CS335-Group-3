@@ -1,16 +1,25 @@
-class test_13 {
-	static int fib(int n,int k)
-	{
-		if (n <= 1)
-			return n; 
-        int val = fib(n-1,k) +fib(n-2,k);
-		return val;
-	}
-
-	public static void main()
-	{
-		int n = 9;
-        int k = fib(n,1);
-		System.out.println(k);
+public class Main
+{
+        int x ;
+        int y ;
+        int z ;
+        Main(){
+        }
+        int sum1(int x){
+            return 500;
+        }
+        int sum(int a){
+            x = 2;
+            a = this.sum1(0);
+            return a ;
+        }
+	public static void main() {
+        Main obj = new Main() ;
+        obj.x = 6 ;
+        obj.y = 9;
+        int d = 5;
+        d = obj.sum(2) ;
+        System.out.println(d) ;
+        return ;
 	}
 }
