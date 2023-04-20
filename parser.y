@@ -1875,7 +1875,6 @@ VariableDeclaratorId {
     }
     else{
         string sarr = $3.var ;
-        cerr << "ajsdfh " << $1.var << " - " << mp_func[$1.var] << endl;
         if(mp_func[$1.var].length() == 0){
             if(sarr[0] == 'n') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
             else{
@@ -4004,10 +4003,10 @@ ConditionalAndExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = 
     ($$).type = (char*)"boolean"; ($$).str = ($3).str;
 }
 Dummy18:
-ConditionalOrExpression Qm {$$ = $1; $$.var = build_string("TernaryOperationSecond", ++varnum["ternaryoperationsecond"]);
-string temp = build_string("TernaryOperationFirst", ++varnum["ternaryoperationfirst"]); if_goto($1.var, temp); go_to($$.var); add_label(temp);}
+ConditionalOrExpression Qm {$$ = $1; $$.num = ++varnum["ternary"]; string tern_num = to_string($$.num); $$.var = (char *)tern_num.c_str();
+if_goto($1.var, "TernaryFirst" + tern_num); go_to("TernarySecond" + tern_num); add_label("TernaryFirst" + tern_num);}
 Dummy19:
-Dummy18 Expression Col {$$ = $1; add_assignment("t_op", $2.var,$2.str); $$.var = build_string("EndTernaryOperation", ++varnum["endternaryoperation"]); go_to($$.var); add_label($1.var);}
+Dummy18 Expression Col {$$ = $1; string tern_num = to_string($1.num); add_assignment("t_op" + tern_num, $2.var,$2.str); go_to("EndTernary" + tern_num); add_label("TernarySecond" + tern_num);}
 ConditionalExpression:
 ConditionalOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).ar = ($1).ar;}
 | Dummy19 ConditionalExpression {
@@ -4020,9 +4019,11 @@ ConditionalOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 =
         YYABORT;
     }
     $$.type = $2.type;
-    add_assignment("t_op", $1.var,$2.str);
-    add_label($1.var);
-    $$.var = (char *)"t_op";
+    $$.num = $1.num;
+    string tern_num =  to_string($1.num);
+    add_assignment("t_op" + tern_num, $2.var,$2.str);
+    add_label("EndTernary" + tern_num);
+    $$.var = (char *)("t_op" + tern_num).c_str();
 }
 AssignmentExpression:
 ConditionalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; ($$).var = ($1).var; ($$).ar = ($1).ar;}
@@ -4079,15 +4080,13 @@ LeftHandSide Eq AssignmentExpression {
             if(sarr[0] == 'n') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
             else{
                 mp_func[$1.var] = local_offset(get_offset($1.type)) ;
-                if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
-                else add_assignment($1.var, $3.var,$1.str) ;
+                add_assignment($1.var, sarr,$1.str) ;
             }
         }
         else{
             if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
             else{
-                if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
-                else add_assignment($1.var, $3.var,$1.str) ;
+                add_assignment($1.var, sarr,$1.str) ;
             }
         }
     }
