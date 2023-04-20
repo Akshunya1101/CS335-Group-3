@@ -2015,6 +2015,7 @@ StaticInitializer:
 Static Block
 ConstructorDeclaration:
 Modifiers ConstructorDeclarator Throws ConstructorBody {
+    add_label("Return" + scope_func);
     ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
@@ -2025,6 +2026,7 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 } 
 | ConstructorDeclarator ConstructorBody {
+    add_label("Return" + scope_func);
     ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
@@ -2035,6 +2037,7 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 }
 | Modifiers ConstructorDeclarator ConstructorBody {
+    add_label("Return" + scope_func);
     ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
@@ -2045,6 +2048,7 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 } 
 | ConstructorDeclarator Throws ConstructorBody {
+    add_label("Return" + scope_func);
     ac.pb("leave\nret");
     ac.pb("");
     head = tables.top();
@@ -3129,6 +3133,7 @@ Name Lb ArgumentList Rb {
                 ac.pb("movq (%rdx), %rax") ;
             }
         }
+        // Print Statements
         ac.pb("movq %rax, %rsi");
         ac.pb("leaq .LC0(%rip), %rax");
         ac.pb("movq %rax, %rdi");
