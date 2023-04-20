@@ -443,6 +443,7 @@
     stack<string> scopes;
     string scope = "Global";
     string scope_func = "Global";
+    string scope_class = "Global";
     string tp;
     string tpp;
     vector<string> m;
@@ -1451,6 +1452,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($3.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1474,6 +1476,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($2.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1497,6 +1500,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($3.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1520,6 +1524,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($2.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1543,6 +1548,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($3.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1566,6 +1572,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($2.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1589,6 +1596,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($3.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1612,6 +1620,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($2.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1635,6 +1644,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($3.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1658,6 +1668,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($2.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1681,6 +1692,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($3.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1704,6 +1716,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($2.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1727,6 +1740,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($3.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1750,6 +1764,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($2.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1773,6 +1788,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($3.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1796,6 +1812,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     offset = 0;
     scopes.push(scope);
     scope = ($2.str);
+    scope_class = scope;
     scope += " Class";
 } ClassBody {
     head = tables.top();
@@ -1945,7 +1962,7 @@ MethodHeader MethodBody {
     }
     ttt = "";
     rl = -1;
-    sp_offset[head->scope_name] = func_offset ;
+    sp_offset[scope_class + "." + head->scope_name] = func_offset ;
     string st = head->scope_name ;
     add_label("Return" + scope_func);
     if(st == "main") ac.pb("movq $0, %rax") ;
@@ -1974,7 +1991,12 @@ Identifier Lb {
     scope += " Method";
     flag = true;
     ac.pb("");
-    add_label(head->scope_name);
+    if(head->scope_name == "main") {
+        add_label(head->scope_name);
+    }
+    else {
+        add_label(scope_class + "." + head->scope_name);
+    }
     callee() ;
     
 } FormalParameterList Rb {tables.top()->check(func,$1.str); param_offset("this", 8) ;}
@@ -1994,7 +2016,12 @@ Identifier Lb {
     flag = true;
     tables.top()->check(func,$1.str);
     ac.pb("");
-    add_label(head->scope_name);
+    if(head->scope_name == "main") {
+        add_label(head->scope_name);
+    }
+    else {
+        add_label(scope_class + "." + head->scope_name);
+    }
     callee() ;
     param_offset("this", 8) ;
 }
@@ -3495,6 +3522,7 @@ PostfixExpression Inc {
     }
     $$ = $1 ;
     $$.var = build_string("#", ++varnum["var"]) ;
+    mp_func["1"] = "$1";
     add_assignment($$.var, $1.var,$1.str) ;
     add_string($1.var, $1.var, "1", "+");
     head->counter($1.str);
@@ -3513,6 +3541,7 @@ PostfixExpression Dec {
     $$ = $1 ;
     $$.var = build_string("#", ++varnum["var"]) ;
     add_assignment($$.var, $1.var,$1.str) ;
+    mp_func["1"] = "$1";
     add_string($1.var, $1.var, "1", "-");
     head->counter($1.str);
 }
@@ -3552,6 +3581,7 @@ Inc UnaryExpression {
         cerr << "Incompatible Operator " <<$1.str<< " in line " << yylineno<<endl;
         YYABORT;
     }
+    mp_func["1"] = "$1";
     add_string($2.var, $2.var, "1", "+"); $$ = $2;
     head->counter($1.str);
 }
@@ -3565,6 +3595,7 @@ Dec UnaryExpression {
         cerr << "Incompatible Operator " <<$1.str<< " in line " << yylineno<<endl;
         YYABORT;
     }
+    mp_func["1"] = "$1";
     add_string($2.var, $2.var, "1", "-"); $$ = $2;
     head->counter($1.str);
 }
