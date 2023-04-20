@@ -7,5 +7,8 @@ public class Example1 {
         int w = p + q + r ;
         return a+b ;
     }
-    int z = add(2,3) ;
+    public static void main(String[] args){
+        int z = add(2,3) ;
+        System.out.println(z);
+    }
 }

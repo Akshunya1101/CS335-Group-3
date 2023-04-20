@@ -525,7 +525,7 @@
     }
     int check_reg(string st){
         if(st.size() < 2) return 0 ;
-        if(st[0] == 't'  && st[1] >= '0' && st[1] <= '9') return 1 ;
+        if(st[0] == '#'  && st[1] >= '0' && st[1] <= '9') return 1 ;
         return 0 ;
     }
     int check_div(string op){
@@ -534,36 +534,46 @@
     }
     void div_op(string op, string exp1, string exp2, string exp3){
         if(op[0] == '/'){
-            if(exp2[0] == 'n'){
+            if(exp2[0] == '@'){
                 ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
                 ac.pb("movq (%rdx), %rax") ;
             }
             else{
                 ac.pb("movq " + mp_func[exp2] + ", %rax") ;
             }
-            if(exp3[0] == 'n'){
+            if(exp3[0] == '@'){
                 ac.pb("movq " + mp_func[exp3] + ", %rdx") ;
                 ac.pb("cltd\nidivq (%rdx)") ;
             }
             else{
-                ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+                if(mp_func[exp3][0] == '$'){
+                    ac.pb("movq "+mp_func[exp3]+", %rcx");
+                    ac.pb("cltd\nidivq %rcx") ;
+                }
+                else
+                    ac.pb("cltd\nidivq " + mp_func[exp3]) ;
             }
             ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
         else if(op[0] == '%'){
-            if(exp2[0] == 'n'){
+            if(exp2[0] == '@'){
                 ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
                 ac.pb("movq (%rdx), %rax") ;
             }
             else{
                 ac.pb("movq " + mp_func[exp2] + ", %rax") ;
             }
-            if(exp3[0] == 'n'){
+            if(exp3[0] == '@'){
                 ac.pb("movq " + mp_func[exp3] + ", %rcx") ;
                 ac.pb("cltd\nidivq (%rcx)") ;
             }
             else{
-                ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+                if(mp_func[exp3][0] == '$'){
+                    ac.pb("movq "+mp_func[exp3]+", %rcx");
+                    ac.pb("cltd\nidivq %rcx") ;
+                }
+                else
+                    ac.pb("cltd\nidivq " + mp_func[exp3]) ;
             }
             ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
@@ -582,14 +592,14 @@
             mp_func[exp3] = local_offset(8);
         if(check_div(op)) div_op(op, exp1, exp2, exp3) ;
         else{
-            if(exp2[0] == 'n'){
+            if(exp2[0] == '@'){
                 ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
                 ac.pb("movq (%rdx), %rax") ;
             }
             else{
                 ac.pb("movq " + mp_func[exp2] + ", %rax") ;
             }
-            if(exp3[0] == 'n'){
+            if(exp3[0] == '@'){
                 ac.pb("movq " + mp_func[exp3] + ", %rdx") ;
                 ac.pb(op_exp(op) + " (%rdx), %rax") ;
             }
@@ -640,7 +650,7 @@
             mp_func[exp2] = local_offset(8);
         if(ff){
             ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
-            if(exp2[0] == 'n'){
+            if(exp2[0] == '@'){
                 ac.pb("movq (%rdx), %r9") ;
                 ac.pb("movq %r9, (%r8)") ;
             }
@@ -648,7 +658,7 @@
         }
         else if(ff1){
             ac.pb("movq " + mp_func[exp2] + ", %rdx") ;
-            if(exp2[0] == 'n'){
+            if(exp2[0] == '@'){
                 ac.pb("movq (%rdx), %r9") ;
                 ac.pb("movq %r9, (%r12)") ;
             }
@@ -690,7 +700,7 @@
         return;
     }
     bool check_qualified_name_method(string exp) {
-        return (exp.size() >= 2 && exp[0]=='t' && exp[1] >= '0' && exp[1] <= '9');
+        return (exp.size() >= 2 && exp[0]=='#' && exp[1] >= '0' && exp[1] <= '9');
     }
     void change_ac(string exp) {
         string temp = ac[change_ac_val];
@@ -833,7 +843,7 @@
 %union {
     int num;
     char * str;
-    struct {int num; int num1; char *str; int size; char *type; char *var; int dim1; char *cl; int ar;} s;
+    struct {int num; int num1; char *str; int size; char *type; char *var; int dim1; char *cl; int ar; char* var1;} s;
 }
 %define parse.error verbose
 %token<s> Keyword
@@ -1125,16 +1135,17 @@ SimpleName {($$).type = ($1).type;  $$.var = $1.var;  vector<Entry> c = head->ge
     if(len-5>=0 && s1[len-5]=='C' && s1[len-4]=='l' && s1[len-3]=='a' && s1[len-2]=='s' && s1[len-1]=='s'){
         ac.pb("movq "+mp_func["this"]+", %rbx");
         ac.pb("addq $"+to_string(c1.Offset)+", %rbx");
-        ($$).var = build_string("n", ++varnum["arr"]);
+        ($$).var = build_string("@", ++varnum["arr"]);
         string st = ($$).var ;
         ac.pb("movq %rbx, " + mp_func[st]) ;
         ($$).type = ($$).var;
         ($$).ar = 100;
     }
+    $$.var1 = build_string("#", ++varnum["var"]) ;
 } 
-| QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1; ($$).ar = 100;}
+| QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1; ($$).ar = 100; ($$).var1 = ($1).var1;}
 SimpleName:
-Identifier {($$).type = ($1).str; $$.var = $1.var;}
+Identifier {($$).type = ($1).str; $$.var = $1.var; }
 QualifiedName:
 Name Dot Identifier { f4 = 1; ($$).type = ($3).str;
 string comp1($3.str), comp2($1.type);
@@ -1162,7 +1173,8 @@ else{
                 // offset_val = -1;
                 change_ac_val = ac.size();
                 $$.var = $3.var;
-                ac.pb("pushq " + mp_func[$1.var]) ;
+                $$.var1 = $1.var;
+                //ac.pb("pushq " + mp_func[$1.var]) ;
             }
             else{
                 add_address("", $1.var, to_string(c1.Offset));
@@ -1279,7 +1291,7 @@ Lb PrimitiveType Dims Rb UnaryExpression {
     ($$).dim1 = ($4).dim1;
     ($$).str = ($4).str;
     string s1 = Type_cast(($2).type, ($4).var) ;
-    $$.var = build_string("t", ++varnum["var"]) ;
+    $$.var = build_string("#", ++varnum["var"]) ;
     add_assignment($$.var,s1,$4.str) ;
 }
 | Lb Expression Rb UnaryExpressionNotPlusMinus {
@@ -1298,7 +1310,7 @@ Lb PrimitiveType Dims Rb UnaryExpression {
     ($$).dim1 = ($4).dim1;
     ($$).str = ($4).str;
     string s1 = Type_cast(($2).type, ($4).var) ;
-    $$.var = build_string("t", ++varnum["var"]) ;
+    $$.var = build_string("#", ++varnum["var"]) ;
     add_assignment($$.var,s1,$4.str) ;
 }
 | Lb Name Dims Rb UnaryExpressionNotPlusMinus {
@@ -1889,7 +1901,7 @@ VariableDeclaratorId {
         string s1 ;
         if(check_literal($3.type)){s1 = Type_cast($1.type, strdup(mp_func[$3.var].c_str()));}
         else{s1 = Type_cast($1.type, $3.var);}
-        string s2 = build_string("t", ++varnum["var"]) ;
+        string s2 = build_string("#", ++varnum["var"]) ;
         add_assignment(s2, s1,$1.str);
         if(mp_func[$1.var].length() == 0){
             mp_func[$1.var] = local_offset(get_offset($1.type)) ;
@@ -1900,7 +1912,7 @@ VariableDeclaratorId {
     else{
         string sarr = $3.var ;
         if(mp_func[$1.var].length() == 0){
-            if(sarr[0] == 'n') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
+            if(sarr[0] == '@') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
             else{
                 mp_func[$1.var] = local_offset(get_offset($1.type)) ;
                 if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
@@ -1908,7 +1920,7 @@ VariableDeclaratorId {
             }
         }
         else{
-            if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
+            if(sarr[0] == '@') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
             else{
                 if(check_literal($3.type)) add_assignment($1.var, $3.var,$1.str) ;
                 else add_assignment($1.var, $3.var,$1.str) ;
@@ -2106,7 +2118,7 @@ SimpleName Lb {
     ac.pb("");
     add_label(head->scope_name);
     callee() ; 
-} FormalParameterList Rb {tables.top()->check(func,$1.type);}
+} FormalParameterList Rb {param_offset("this", 8) ;tables.top()->check(func,$1.type);}
 | SimpleName Lb Rb {
     tp = THIS;
     sz = 0;
@@ -2125,6 +2137,7 @@ SimpleName Lb {
     ac.pb("");
     add_label(head->scope_name);
     callee() ;
+    param_offset("this", 8) ;
     
 }
 |TypeParameters SimpleName Lb {tp = THIS; sz = 0; 
@@ -2827,7 +2840,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 | Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;  $$.var = $2.var; ($$).ar = 0;}
 | ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type; $$.var = $1.var; ($$).ar = 0;}
 | FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var; ($$).ar = 100;
-        ($$).var = build_string("n", ++varnum["arr"]);
+        ($$).var = build_string("@", ++varnum["arr"]);
         string st = ($$).var ;
         ac.pb("movq %rbx, " + mp_func[st]) ;
 }
@@ -2836,16 +2849,17 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; $$.var = $1.var;
     ac.pb("movq "+mp_func[$1.str]+", %rbx");
     ac.pb("addq %rcx, %rbx");
-    ($$).var = build_string("n", ++varnum["arr"]);
+    ($$).var = build_string("@", ++varnum["arr"]);
     string st = ($$).var ;
     ac.pb("movq %rbx, " + mp_func[st]) ;
     ($$).ar = 100;
 }
 
 New1:
-{$$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
+{$$.var = build_string("@", ++varnum["var"]); alloc_mem($$.var);}
 ClassInstanceCreationExpression:
 New ClassType New1 Lb ArgumentList Rb {
+    add_param($3.var);
     for(int i=func_params.size()-1;i>=0;i-=1){
         add_param(func_params[i]);
     }
@@ -2888,7 +2902,7 @@ New ClassType New1 Lb ArgumentList Rb {
     v.clear();
 } 
 | New ClassType New1 Lb Rb {
-
+    add_param($3.var);
     $$.var = $3.var ;
     call_func($$.var, $2.var); 
     if(THIS == $2.str || $2.str == "Reference Type") 
@@ -3092,30 +3106,30 @@ Expression {v.push_back($1.type); v1.push_back($1.var); func_params.pb($1.var); 
 
 
 ArrayCreationExpression:
-New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
-| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
-| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
-| New ClassOrInterfaceType DimExprs {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);}
+New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("@", ++varnum["var"]); alloc_mem($$.var);}
+| New PrimitiveType DimExprs {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("@", ++varnum["var"]); alloc_mem($$.var);}
+| New ClassOrInterfaceType DimExprs Dims {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size(); $$.var = build_string("@", ++varnum["var"]); alloc_mem($$.var);}
+| New ClassOrInterfaceType DimExprs {($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); ($$).dim1 = lev1.size(); $$.var = build_string("@", ++varnum["var"]); alloc_mem($$.var);}
 | New PrimitiveType Dims ArrayInitializer {($$).type = ($2).type; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT; 
     }
-    $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);
+    $$.var = build_string("@", ++varnum["var"]); alloc_mem($$.var);
 }
 | New ClassOrInterfaceType Dims ArrayInitializer { ($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT;
     }
-    $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);
+    $$.var = build_string("@", ++varnum["var"]); alloc_mem($$.var);
 }
 
 DimExprs:
 DimExpr
 | DimExprs DimExpr
 DimExpr:
-Lsb Expression Rsb {f1 = 1; lev1.push_back(stoi($2.str));
+Lsb Expression Rsb {f1 = 1; lev1.push_back(atoi($2.str));
     if(!compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"integer")){
         cerr << "Array index cannot be of type " << $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3153,9 +3167,9 @@ Super Dot Identifier {
         // offset_val = -1;
         change_ac_val = ac.size();
     }
-    string temp1 = build_string("t", ++varnum["var"]);
+    string temp1 = build_string("#", ++varnum["var"]);
     add_assignment(temp1, to_string(c1.Offset) + " //Offset","");
-    $$.var = build_string("t", ++varnum["var"]);
+    $$.var = build_string("#", ++varnum["var"]);
     add_address($$.var, "super", temp1);
     ($$).type = ($3).str; 
     }
@@ -3164,7 +3178,7 @@ Name Lb ArgumentList Rb {
     if(compare_string($1.type,(char*)"println")){
         if($3.ar != 100) ac.pb("movq "+ mp_func[v1[0]] +", %rax");
         else{
-            if(v1[0][0] == 'n'){
+            if(v1[0][0] == '@'){
                 ac.pb("movq " + mp_func[v1[0]] + ", %rdx") ;
                 ac.pb("movq (%rdx), %rax") ;
             }
@@ -3177,6 +3191,7 @@ Name Lb ArgumentList Rb {
         ac.pb("call printf@PLT");
     }
     else{
+        add_param($1.var1);
         for(int i=func_params.size()-1;i>=0;i-=1){
             add_param(func_params[i]);
             func_flag = 1 ;
@@ -3187,7 +3202,7 @@ Name Lb ArgumentList Rb {
             swap(head,head1);
         }
         Entry c1;
-        $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+        $$.var = build_string("#", ++varnum["var"]); call_func($$.var, $1.var);
         string st = $$.var ;
         ac.pb("movq %rax, " + mp_func[st]) ;
         vector<Entry> c = head->get($1.type);
@@ -3225,7 +3240,8 @@ Name Lb ArgumentList Rb {
     if(f4){
         swap(head,head1);
     }
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    add_param($1.var1);
+    $$.var = build_string("#", ++varnum["var"]); call_func($$.var, $1.var);
     string st = $$.var ;
     ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
@@ -3248,13 +3264,14 @@ Name Lb ArgumentList Rb {
 | Super Dot TypeArguments Identifier Lb Rb
 
 | Dummy14 Lb ArgumentList Rb {
+    add_param("this");
     for(int i=func_params.size()-1;i>=0;i-=1){
         add_param(func_params[i]);
         func_flag = 1 ;
     }
     func_flag = 0 ;
     func_params.clear();
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    $$.var = build_string("#", ++varnum["var"]); call_func($$.var, $1.var);
     string st = $$.var ;
     ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
@@ -3277,7 +3294,8 @@ Name Lb ArgumentList Rb {
     v1.clear();
 }
 | Dummy14 Lb Rb {
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    add_param("this");
+    $$.var = build_string("#", ++varnum["var"]); call_func($$.var, $1.var);
     string st = $$.var ;
     ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
@@ -3292,7 +3310,7 @@ Name Lb ArgumentList Rb {
     }
     func_flag = 0 ;
     func_params.clear();
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    $$.var = build_string("#", ++varnum["var"]); call_func($$.var, $1.var);
     string st = $$.var ;
     ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->parent->get($1.type);
@@ -3315,7 +3333,7 @@ Name Lb ArgumentList Rb {
     v1.clear();
 } 
 | Dummy15 Lb Rb {
-    $$.var = build_string("t", ++varnum["var"]); call_func($$.var, $1.var);
+    $$.var = build_string("#", ++varnum["var"]); call_func($$.var, $1.var);
     string st = $$.var ;
     ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->parent->get($1.type);
@@ -3458,7 +3476,7 @@ Primary {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str; ($$).
 | Name {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type; ($$).ar = 0;
     if($1.ar == 100){
         ($$).ar = 100;
-        ($$).var = build_string("n", ++varnum["arr"]);
+        ($$).var = build_string("@", ++varnum["arr"]);
         string st = ($$).var ;
         ac.pb("movq %rbx, " + mp_func[st]) ;
     }
@@ -3476,7 +3494,7 @@ PostfixExpression Inc {
         YYABORT;
     }
     $$ = $1 ;
-    $$.var = build_string("t", ++varnum["var"]) ;
+    $$.var = build_string("#", ++varnum["var"]) ;
     add_assignment($$.var, $1.var,$1.str) ;
     add_string($1.var, $1.var, "1", "+");
     head->counter($1.str);
@@ -3493,7 +3511,7 @@ PostfixExpression Dec {
         YYABORT;
     }
     $$ = $1 ;
-    $$.var = build_string("t", ++varnum["var"]) ;
+    $$.var = build_string("#", ++varnum["var"]) ;
     add_assignment($$.var, $1.var,$1.str) ;
     add_string($1.var, $1.var, "1", "-");
     head->counter($1.str);
@@ -3513,7 +3531,7 @@ PreIncrementExpression
     }
 }
 | Minus UnaryExpression {
-     $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_unary($$.var, $2.var, "-");
+     $$ = $2; ($$).var = build_string("#", ++varnum["var"]); add_unary($$.var, $2.var, "-");
      if(!compare_string($2.type,(char*)"float") && !compare_string($2.type,(char*)"double") && !compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3553,7 +3571,7 @@ Dec UnaryExpression {
 UnaryExpressionNotPlusMinus:
 PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | Tilde UnaryExpression {
-    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_unary($$.var, $2.var, $1.var);
+    $$ = $2; ($$).var = build_string("#", ++varnum["var"]); add_unary($$.var, $2.var, $1.var);
     if(!compare_string($2.type,(char*)"long") && !compare_string($2.type,(char*)"integer") && !compare_string($2.type,(char*)"short") && !compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"byte")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3564,7 +3582,7 @@ PostfixExpression {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).
     }
 }
 | Not UnaryExpression {
-    $$ = $2; ($$).var = build_string("t", ++varnum["var"]); add_unary($$.var, $2.var, $1.var);
+    $$ = $2; ($$).var = build_string("#", ++varnum["var"]); add_unary($$.var, $2.var, $1.var);
     if(!compare_string($2.type,(char*)"boolean")){
         cerr << "Incompatible Operator " <<$1.str<< " with operand of type "<< $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3591,7 +3609,7 @@ UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3622,7 +3640,7 @@ UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3653,7 +3671,7 @@ UnaryExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var = ($1).var
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3686,7 +3704,7 @@ MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var =
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3717,7 +3735,7 @@ MultiplicativeExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).var =
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3748,7 +3766,7 @@ AdditiveExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).a
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3781,7 +3799,7 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3812,7 +3830,7 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3843,7 +3861,7 @@ ShiftExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3873,7 +3891,7 @@ RelationalExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1)
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3904,7 +3922,7 @@ EqualityExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).a
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3935,7 +3953,7 @@ AndExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1).ar;}
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3966,7 +3984,7 @@ ExclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = ($2).str ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -3995,7 +4013,7 @@ InclusiveOrExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = ($1
         YYABORT;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = "*" ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -4023,7 +4041,7 @@ ConditionalAndExpression {($$).type = ($1).type; ($$).str = ($1).str; ($$).ar = 
         cerr << "Types do not match inside the array in line " << yylineno<<endl;
     }
     ($$).dim1 = ($3).dim1; 
-    ($$).var = build_string("t", ++varnum["var"]);
+    ($$).var = build_string("#", ++varnum["var"]);
     string s1 = "+" ;
     string temp = widen(($1).type,($3).type);
     s1 = s1 + temp ;
@@ -4092,7 +4110,7 @@ LeftHandSide Eq AssignmentExpression {
                         term = m1[i];
                     }
                 }
-                head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m); offset = offset + term*sz;
+                head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m); offset = offset + 8;
             }
             ($$).type = widen(($1).type,($3).type);
             ($$).str = ($1).str;
@@ -4104,7 +4122,7 @@ LeftHandSide Eq AssignmentExpression {
         string s1 ;
         if(check_literal($3.type)){s1 = Type_cast($1.type, strdup(mp_func[$3.var].c_str()));}
         else{s1 = Type_cast($1.type, $3.var);}
-        string s2 = build_string("t", ++varnum["var"]) ;
+        string s2 = build_string("#", ++varnum["var"]) ;
         add_assignment(s2, s1,$1.str);
         if(mp_func[$1.var].length() == 0){
             mp_func[$1.var] = local_offset(get_offset($1.type)) ;
@@ -4115,17 +4133,14 @@ LeftHandSide Eq AssignmentExpression {
     else{
         string sarr = $3.var ;
         if(mp_func[$1.var].length() == 0){
-            if(sarr[0] == 'n') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
+            if(sarr[0] == '@') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
             else{
                 mp_func[$1.var] = local_offset(get_offset($1.type)) ;
                 add_assignment($1.var, sarr,$1.str) ;
             }
         }
         else{
-            if(sarr[0] == 'n') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
-            else{
-                add_assignment($1.var, sarr,$1.str) ;
-            }
+            add_assignment($1.var, sarr,$1.str) ;
         }
     }
     vector<Entry>* c2 ;
@@ -4187,7 +4202,7 @@ LeftHandSide Eqq AssignmentExpression {
                         term = m1[i];
                     }
                 }
-                head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m); offset = offset + term*sz;
+                head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m); offset = offset + 8;
             }
             ($$).type = widen(($1).type,($3).type);
             ($$).str = ($1).str;
