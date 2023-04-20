@@ -1149,8 +1149,7 @@ SimpleName {($$).type = ($1).type;  $$.var = $1.var; vector<Entry> c = head->get
     if(!c1.Mod.empty() && find(c1.Mod.begin(),c1.Mod.end(),"static") != c1.Mod.end()) {
         $$.var = $1.var;
     }
-    else if(c1.Type.substr(0, 6) == "Method"){
-    }
+    else if(c1.Type.substr(0, 6) == "Method"){}
     else if(len-5>=0 && s1[len-5]=='C' && s1[len-4]=='l' && s1[len-3]=='a' && s1[len-2]=='s' && s1[len-1]=='s'){
         ac.pb("movq "+mp_func["this"]+", %rbx");
         ac.pb("addq $"+to_string(c1.Offset)+", %rbx");
