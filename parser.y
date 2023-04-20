@@ -749,7 +749,7 @@
         string s = to_string(arg_offset) + "(%rbp)" ;
         ac.pb("movq " + s + ", %rdx") ;
         s = local_offset(8) ;
-        if(!mp_func[s1].length()) mp_func[s1] = s ; 
+        mp_func[s1] = s ; 
         ac.pb("movq %rdx, " + s) ;
         //ac.pb(s1 + " = +" + to_string(arg_offset) + "(%rbp)") ;
         arg_offset += 8 ;
@@ -1139,6 +1139,7 @@ else{
                 // offset_val = -1;
                 change_ac_val = ac.size();
                 $$.var = $3.var;
+                ac.pb("pushq " + mp_func[$1.var]) ;
             }
             else{
                 add_address("", $1.var, to_string(c1.Offset));
@@ -1941,7 +1942,7 @@ Identifier Lb {
     add_label(head->scope_name);
     callee() ;
     
-} FormalParameterList Rb {tables.top()->check(func,$1.str);}
+} FormalParameterList Rb {tables.top()->check(func,$1.str); param_offset("this", 8) ;}
 | Identifier Lb Rb {
     tp = "Method," + tp;
     func = head->set($1.str,"Identifier",tp,yylineno,-1,scope,{},lev,m);
@@ -1960,7 +1961,7 @@ Identifier Lb {
     ac.pb("");
     add_label(head->scope_name);
     callee() ;
-    
+    param_offset("this", 8) ;
 }
 | MethodDeclarator Lsb Rsb
 FormalParameterList:
@@ -2014,6 +2015,8 @@ StaticInitializer:
 Static Block
 ConstructorDeclaration:
 Modifiers ConstructorDeclarator Throws ConstructorBody {
+    string sof = head->scope_name ;
+    sp_offset[sof] = func_offset ;
     add_label("Return" + scope_func);
     ac.pb("leave\nret");
     ac.pb("");
@@ -2025,6 +2028,8 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 } 
 | ConstructorDeclarator ConstructorBody {
+    string sof = head->scope_name ;
+    sp_offset[sof] = func_offset ;
     add_label("Return" + scope_func);
     ac.pb("leave\nret");
     ac.pb("");
@@ -2036,6 +2041,8 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 }
 | Modifiers ConstructorDeclarator ConstructorBody {
+    string sof = head->scope_name ;
+    sp_offset[sof] = func_offset ;
     add_label("Return" + scope_func);
     ac.pb("leave\nret");
     ac.pb("");
@@ -2047,6 +2054,8 @@ Modifiers ConstructorDeclarator Throws ConstructorBody {
     scopes.pop();
 } 
 | ConstructorDeclarator Throws ConstructorBody {
+    string sof = head->scope_name ;
+    sp_offset[sof] = func_offset ;
     add_label("Return" + scope_func);
     ac.pb("leave\nret");
     ac.pb("");
@@ -2791,7 +2800,7 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 | Tb {($$).type = (char*)"string"; ($$).str = ($1).str; head->check(head->set($1.str,"Tb",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var; ($$).ar = 0;}
 | Float_Literal {($$).type = (char*)"Float"; ($$).str = ($1).str; head->check(head->set($1.str,"Float_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var; ($$).ar = 0;}
 | Null_Literal {($$).type = (char*)"Null"; ($$).str = ($1).str; head->check(head->set($1.str,"Null_Literal",$$.type,yylineno,offset,scope,{},{},m),$1.str); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var; ($$).ar = 0;}
-| This {($$).str = strdup(THIS.c_str()); ($$).type = strdup(THIS.c_str()); ($$).dim1 = 0;  $$.var = $1.var; mp_func[$1.var] = $1.var; ($$).ar = 0;}
+| This {($$).str = strdup(THIS.c_str()); ($$).type = strdup(THIS.c_str()); ($$).dim1 = 0;  $$.var = $1.var; ($$).ar = 0;}
 | Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;  $$.var = $2.var; ($$).ar = 0;}
 | ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type; $$.var = $1.var; ($$).ar = 0;}
 | FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var; ($$).ar = 0;}
@@ -3094,7 +3103,7 @@ Primary Dot Identifier {
         cerr<<"Class mentioned in line " << yylineno << " not found"<<endl;
         YYABORT;
     }
-    add_address("",(char*)"t0",to_string(c1.Offset));}
+    add_address("",mp_func["this"],to_string(c1.Offset));}
 | Super Dot Identifier {($$).type = (char*)"Super"; ($$).str = ($3).str; vector<Entry> c1 = head->parent->get($$.str); map<int,int> sz1 = head->parent->get1(c1,{},head).Dim;
     ($$).dim1 = sz1.size(); add_address("",(char*)"t0", $3.var);}
 Dummy14:
@@ -3105,7 +3114,7 @@ Primary Dot Identifier {
         // offset_val = -1;
         change_ac_val = ac.size();
     }
-    add_address("", "t0", to_string(c1.Offset));
+    add_address("", mp_func["this"], to_string(c1.Offset));
     ($$).type = ($3).str; 
 }
 Dummy15:
