@@ -439,6 +439,7 @@
     int arg_offset = 16 ;
     int func_offset = 0 ;
     map<string, string> mp_func ;
+    map<string,int> mp_sz;
     stack<string> scopes;
     string scope = "Global";
     string scope_func = "Global";
@@ -710,8 +711,18 @@
     }
     void alloc_mem(string exp) {
         int x = get_offset(tp);
-        for(auto i:lev1)
-            x *= i;
+        if(lev1.size()){
+            for(auto i:lev1)
+                x *= i;
+        }
+        else{
+            if(THIS == tp){
+                x = offsets.top();
+            }
+            else{
+                x += mp_sz[tp];
+            }
+        }
         ac.pb("movl $" + to_string(x) + ", %edi") ;
         ac.pb("call malloc@PLT");
         ac.pb("movq %rax, " + mp_func[exp]) ;
@@ -1109,7 +1120,19 @@ Goal:
 CompilationUnit
 Name:
 SimpleName {($$).type = ($1).type;  $$.var = $1.var;  vector<Entry> c = head->get($1.type); Entry c1 = head->get1(c,{},head); ($$).str = strdup(c1.Type.c_str()) ; map<int,int> sz1 = c1.Dim;
-    ($$).dim1 = sz1.size(); ($$).cl = ($$).str;} 
+    ($$).dim1 = sz1.size(); ($$).cl = ($$).str;
+    string s1 = c1.Scope;
+    int len = s1.length();
+    if(len-5>=0 && s1[len-5]=='C' && s1[len-4]=='l' && s1[len-3]=='a' && s1[len-2]=='s' && s1[len-1]=='s'){
+        ac.pb("movq "+mp_func["this"]+", %rbx");
+        ac.pb("addq $"+to_string(c1.Offset)+", %rbx");
+        ($$).var = build_string("n", ++varnum["arr"]);
+        string st = ($$).var ;
+        ac.pb("movq %rbx, " + mp_func[st]) ;
+        ($$).type = ($$).var;
+        ($$).ar = 100;
+    }
+} 
 | QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1; ($$).ar = 100;}
 SimpleName:
 Identifier {($$).type = ($1).str; $$.var = $1.var;}
@@ -1340,11 +1363,11 @@ Bbyte {
     ($$).type = (char*)"byte";
 }
 | Short {
-    ($$).size = 2;
+    ($$).size = 8;
     ($$).type = (char*)"short";
 }
 | Int {
-    ($$).size = 4;
+    ($$).size = 8;
     ($$).type = (char*)"integer";
 }
 | Long {
@@ -1423,7 +1446,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$3.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1447,7 +1470,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$2.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1471,7 +1494,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$3.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1495,7 +1518,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$2.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1519,7 +1542,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$3.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1543,7 +1566,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$2.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1567,7 +1590,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$3.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1591,7 +1614,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$2.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1615,7 +1638,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$3.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1639,7 +1662,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$2.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1663,7 +1686,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$3.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1687,7 +1710,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$2.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1711,7 +1734,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$3.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1735,7 +1758,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$2.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1759,7 +1782,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$3.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1783,7 +1806,7 @@ Modifiers Class Identifier TypeParameters Superr Interfaces {
     head = tables.top();
     THIS = head->sn;
     tables.pop();
-    head->Size = offset; offset = offsets.top();
+    head->Size = offset; mp_sz[$2.str] = offset; offset = offsets.top();
     offsets.pop();
     scope = scopes.top();
     scopes.pop();
@@ -1943,7 +1966,7 @@ MethodHeader MethodBody {
 MethodDeclarator:
 Identifier Lb {
     tp = "Method," + tp;
-    func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev,m);
+    func = head->set($1.str,"Identifier",tp,yylineno,-1,scope,{},lev,m);
     m.clear();
     tables.push(head);
     string temp($1.str);
@@ -1967,7 +1990,7 @@ Identifier Lb {
 } FormalParameterList Rb {tables.top()->check(func,$1.str); param_offset("this", 8) ;}
 | Identifier Lb Rb {
     tp = "Method," + tp;
-    func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev,m);
+    func = head->set($1.str,"Identifier",tp,yylineno,-1,scope,{},lev,m);
     m.clear();
     tables.push(head);
     string temp($1.str);
@@ -2830,7 +2853,11 @@ Bool_Literal {($$).type = (char*)"Boolean"; ($$).str = ($1).str; head->check(hea
 | This {($$).str = strdup(THIS.c_str()); ($$).type = strdup(THIS.c_str()); ($$).dim1 = 0;  $$.var = $1.var; ($$).ar = 0;}
 | Lb Expression Rb {($$).type = ($2).type; ($$).str = ($2).str; ($$).var = ($2).var ;  $$.var = $2.var; ($$).ar = 0;}
 | ClassInstanceCreationExpression {($$).type = ($1).type; ($$).str = ($1).type; $$.var = $1.var; ($$).ar = 0;}
-| FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var; ($$).ar = 0;}
+| FieldAccess {($$).type = ($1).type; ($$).str = ($1).str; ($$).dim1 = ($1).dim1; $$.var = $1.var; ($$).ar = 100;
+        ($$).var = build_string("n", ++varnum["arr"]);
+        string st = ($$).var ;
+        ac.pb("movq %rbx, " + mp_func[st]) ;
+}
 | MethodInvocation {($$).type = ($1).type; ($$).str = ($1).str; $$.var = $1.var; ($$).ar = 0;}
 | ArrayAccess {($$).type = ($1).type; ($$).str = ($1).str; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; $$.var = $1.var;
@@ -3141,8 +3168,9 @@ Primary Dot Identifier {
         // offset_val = -1;
         change_ac_val = ac.size();
     }
-    add_address("", mp_func["this"], to_string(c1.Offset));
+    //add_address("", mp_func["this"], to_string(c1.Offset));
     ($$).type = ($3).str; 
+    ($$).var = ($3).str;
 }
 Dummy15:
 Super Dot Identifier { 
@@ -3456,6 +3484,7 @@ PostfixExpression:
 Primary {($$).type = ($1).type; ($$).var = ($1).var ; ($$).str = ($1).str; ($$).ar = ($1).ar;}
 | Name {($$).type = ($1).str; ($$).var = ($1).var ; ($$).str = ($1).type; ($$).ar = 0;
     if($1.ar == 100){
+        ($$).ar = 100;
         ($$).var = build_string("n", ++varnum["arr"]);
         string st = ($$).var ;
         ac.pb("movq %rbx, " + mp_func[st]) ;
@@ -4241,7 +4270,10 @@ Name {($$).type = ($1).str; ($$).str = ($1).type; ($$).dim1 = ($1).dim1;
         ac.pb("movq %rbx, %r12");
     }
 }
-|FieldAccess {($$).type = ($1).type; ($$).dim1 = ($1).dim1;}
+|FieldAccess {($$).type = ($1).type; ($$).dim1 = ($1).dim1;
+ff1 = 1;
+ac.pb("movq %rbx, %r12");
+}
 |ArrayAccess {
     ($$).type = ($1).type; vector<Entry> c1 = head->get($$.str); map<int,int> sz1 = head->get1(c1,{},head).Dim;
     ($1).dim1 = sz1.size()-ind; ($$).dim1 = ($1).dim1; ind = 0; ff = 1;
