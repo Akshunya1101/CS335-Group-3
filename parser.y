@@ -1875,7 +1875,6 @@ VariableDeclaratorId {
     }
     else{
         string sarr = $3.var ;
-        cerr << "ajsdfh " << $1.var << " - " << mp_func[$1.var] << endl;
         if(mp_func[$1.var].length() == 0){
             if(sarr[0] == 'n') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
             else{
@@ -1926,7 +1925,7 @@ MethodHeader MethodBody {
 MethodDeclarator:
 Identifier Lb {
     tp = "Method," + tp;
-    func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev,m);
+    func = head->set($1.str,"Identifier",tp,yylineno,-1,scope,{},lev,m);
     m.clear();
     tables.push(head);
     string temp($1.str);
@@ -1945,7 +1944,7 @@ Identifier Lb {
 } FormalParameterList Rb {tables.top()->check(func,$1.str);}
 | Identifier Lb Rb {
     tp = "Method," + tp;
-    func = head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},lev,m);
+    func = head->set($1.str,"Identifier",tp,yylineno,-1,scope,{},lev,m);
     m.clear();
     tables.push(head);
     string temp($1.str);
