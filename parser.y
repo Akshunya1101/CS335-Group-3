@@ -1119,7 +1119,19 @@ Goal:
 CompilationUnit
 Name:
 SimpleName {($$).type = ($1).type;  $$.var = $1.var;  vector<Entry> c = head->get($1.type); Entry c1 = head->get1(c,{},head); ($$).str = strdup(c1.Type.c_str()) ; map<int,int> sz1 = c1.Dim;
-    ($$).dim1 = sz1.size(); ($$).cl = ($$).str;} 
+    ($$).dim1 = sz1.size(); ($$).cl = ($$).str;
+    string s1 = c1.Scope;
+    int len = s1.length();
+    if(len-5>=0 && s1[len-5]=='C' && s1[len-4]=='l' && s1[len-3]=='a' && s1[len-2]=='s' && s1[len-1]=='s'){
+        ac.pb("movq "+mp_func["this"]+", %rbx");
+        ac.pb("addq $"+to_string(c1.Offset)+", %rbx");
+        ($$).var = build_string("n", ++varnum["arr"]);
+        string st = ($$).var ;
+        ac.pb("movq %rbx, " + mp_func[st]) ;
+        ($$).type = ($$).var;
+        ($$).ar = 100;
+    }
+} 
 | QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1; ($$).ar = 100;}
 SimpleName:
 Identifier {($$).type = ($1).str; $$.var = $1.var;}

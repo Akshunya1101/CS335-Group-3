@@ -1,17 +1,13 @@
 public class test {
-    public class A{
-        final int x = 1;
-        A(int y){
-            
-        }
-        int re(int x,float y){
-            return 1;
-        }
+    int mult(int w, int k){
+        if(w <= 0)
+            return w+1;
+        return mult(w-1, 1)+mult(w-1, 1);
     }
     //Check for String[]
 	public static void main(int args) {
-        A q = new A('c');
-        int w = q.x ;
+        int k = mult(7, 1);
+        System.out.println(k);
 	    return;
 	}
 }
