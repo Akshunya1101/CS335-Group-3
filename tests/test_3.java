@@ -1,7 +1,6 @@
 public class Main {
   public static void main(String[] args) {
     int time = 22;
-    String s ;
     if (time < 10 && time > 0) {
         s = "Good morning.";
     } 
