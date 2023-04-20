@@ -552,7 +552,12 @@
                 ac.pb("cltd\nidivq (%rdx)") ;
             }
             else{
-                ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+                if(mp_func[exp3][0] == '$'){
+                    ac.pb("movq "+mp_func[exp3]+", %rcx");
+                    ac.pb("cltd\nidivq %rcx") ;
+                }
+                else
+                    ac.pb("cltd\nidivq " + mp_func[exp3]) ;
             }
             ac.pb("movq %rax, " + mp_func[exp1]) ;
         }
@@ -569,7 +574,12 @@
                 ac.pb("cltd\nidivq (%rcx)") ;
             }
             else{
-                ac.pb("cltd\nidivq " + mp_func[exp3]) ;
+                if(mp_func[exp3][0] == '$'){
+                    ac.pb("movq "+mp_func[exp3]+", %rcx");
+                    ac.pb("cltd\nidivq %rcx") ;
+                }
+                else
+                    ac.pb("cltd\nidivq " + mp_func[exp3]) ;
             }
             ac.pb("movq %rdx, " + mp_func[exp1]) ;
         }
@@ -847,7 +857,7 @@
 %union {
     int num;
     char * str;
-    struct {int num; int num1; char *str; int size; char *type; char *var; int dim1; char *cl; int ar;} s;
+    struct {int num; int num1; char *str; int size; char *type; char *var; int dim1; char *cl; int ar; char* var1;} s;
 }
 %define parse.error verbose
 %token<s> Keyword
@@ -1148,10 +1158,11 @@ SimpleName {($$).type = ($1).type;  $$.var = $1.var; vector<Entry> c = head->get
         ($$).type = ($$).var;
         ($$).ar = 100;
     }
+    $$.var1 = build_string("#", ++varnum["var"]) ;
 } 
-| QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1; ($$).ar = $1.ar;}
+| QualifiedName {($$).type = ($1).type;  $$.var = $1.var; ($$).str = ($1).str; ($$).dim1 = $1.dim1; ($$).ar = $1.ar; ($$).var1 = ($1).var1;}
 SimpleName:
-Identifier {($$).type = ($1).str; $$.var = $1.var;}
+Identifier {($$).type = ($1).str; $$.var = $1.var; }
 QualifiedName:
 Name Dot Identifier { f4 = 1; ($$).type = ($3).str;
 string comp1($3.str), comp2($1.type);
@@ -1179,7 +1190,8 @@ else{
                 // offset_val = -1;
                 change_ac_val = ac.size();
                 $$.var = $3.var;
-                ac.pb("pushq " + mp_func[$1.var]) ;
+                $$.var1 = $1.var;
+                //ac.pb("pushq " + mp_func[$1.var]) ;
             }
             else{
                 if(!c1.Mod.empty() && find(c1.Mod.begin(),c1.Mod.end(),"static") != c1.Mod.end()) {
@@ -2177,7 +2189,7 @@ SimpleName Lb {
     ac.pb("");
     add_label(head->scope_name);
     callee() ; 
-} FormalParameterList Rb {tables.top()->check(func,$1.type);}
+} FormalParameterList Rb {param_offset("this", 8) ;tables.top()->check(func,$1.type);}
 | SimpleName Lb Rb {
     tp = THIS;
     sz = 0;
@@ -2196,6 +2208,7 @@ SimpleName Lb {
     ac.pb("");
     add_label(head->scope_name);
     callee() ;
+    param_offset("this", 8) ;
     
 }
 |TypeParameters SimpleName Lb {tp = THIS; sz = 0; 
@@ -2917,6 +2930,7 @@ New1:
 {$$.var = build_string("@", ++varnum["var"]); alloc_mem($$.var);}
 ClassInstanceCreationExpression:
 New ClassType New1 Lb ArgumentList Rb {
+    add_param($3.var);
     for(int i=func_params.size()-1;i>=0;i-=1){
         add_param(func_params[i]);
     }
@@ -2959,7 +2973,7 @@ New ClassType New1 Lb ArgumentList Rb {
     v.clear();
 } 
 | New ClassType New1 Lb Rb {
-
+    add_param($3.var);
     $$.var = $3.var ;
     call_func($$.var, $2.var); 
     if(THIS == $2.str || $2.str == "Reference Type") 
@@ -3186,7 +3200,7 @@ DimExprs:
 DimExpr
 | DimExprs DimExpr
 DimExpr:
-Lsb Expression Rsb {f1 = 1; lev1.push_back(stoi($2.str));
+Lsb Expression Rsb {f1 = 1; lev1.push_back(atoi($2.str));
     if(!compare_string($2.type,(char*)"character") && !compare_string($2.type,(char*)"integer")){
         cerr << "Array index cannot be of type " << $2.type << " in line " << yylineno<<endl;
         YYABORT;
@@ -3248,6 +3262,7 @@ Name Lb ArgumentList Rb {
         ac.pb("call printf@PLT");
     }
     else{
+        add_param($1.var1);
         for(int i=func_params.size()-1;i>=0;i-=1){
             add_param(func_params[i]);
             func_flag = 1 ;
@@ -3296,6 +3311,7 @@ Name Lb ArgumentList Rb {
     if(f4){
         swap(head,head1);
     }
+    add_param($1.var1);
     $$.var = build_string("#", ++varnum["var"]); string temp($1.var); call_func($$.var, scope_class + "." + temp);
     string st = $$.var ;
     ac.pb("movq %rax, " + mp_func[st]) ;
@@ -3319,6 +3335,7 @@ Name Lb ArgumentList Rb {
 | Super Dot TypeArguments Identifier Lb Rb
 
 | Dummy14 Lb ArgumentList Rb {
+    add_param("this");
     for(int i=func_params.size()-1;i>=0;i-=1){
         add_param(func_params[i]);
         func_flag = 1 ;
@@ -3348,6 +3365,7 @@ Name Lb ArgumentList Rb {
     v1.clear();
 }
 | Dummy14 Lb Rb {
+    add_param("this");
     $$.var = build_string("#", ++varnum["var"]); call_func($$.var, $1.var);
     string st = $$.var ;
     ac.pb("movq %rax, " + mp_func[st]) ;
@@ -4167,7 +4185,7 @@ LeftHandSide Eq AssignmentExpression {
                         term = m1[i];
                     }
                 }
-                head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m); offset = offset + term*sz;
+                head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m); offset = offset + 8;
             }
             ($$).type = widen(($1).type,($3).type);
             ($$).str = ($1).str;
@@ -4197,10 +4215,7 @@ LeftHandSide Eq AssignmentExpression {
             }
         }
         else{
-            if(sarr[0] == '@') mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;
-            else{
-                add_assignment($1.var, sarr,$1.str) ;
-            }
+            add_assignment($1.var, sarr,$1.str) ;
         }
     }
     vector<Entry>* c2 ;
@@ -4262,7 +4277,7 @@ LeftHandSide Eqq AssignmentExpression {
                         term = m1[i];
                     }
                 }
-                head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m); offset = offset + term*sz;
+                head->set($1.str,"Identifier",tp,yylineno,offset,scope,{},m1,m); offset = offset + 8;
             }
             ($$).type = widen(($1).type,($3).type);
             ($$).str = ($1).str;
