@@ -1862,6 +1862,7 @@ VariableDeclaratorId {
     }
     else{
         string sarr = $3.var ;
+        cerr << "ajsdfh " << $1.var << " - " << mp_func[$1.var] << endl;
         if(mp_func[$1.var].length() == 0){
             if(sarr[0] == 'n') {mp_func[$1.var] = "-" + to_string(func_offset) + "(%rbp)" ;}
             else{
@@ -2793,7 +2794,6 @@ New ClassType New1 Lb ArgumentList Rb {
     }
     func_params.clear();
     Entry c1;
-    func_offset += 8 ;
     $$.var = $3.var ;
     call_func($$.var, $2.var); 
     if(THIS == $2.str || $2.str == "Reference Type")
@@ -2830,7 +2830,6 @@ New ClassType New1 Lb ArgumentList Rb {
     v.clear();
 } 
 | New ClassType New1 Lb Rb {
-    func_offset += 8 ;
     $$.var = $3.var ;
     call_func($$.var, $2.var); 
     if(THIS == $2.str || $2.str == "Reference Type") 
@@ -2867,7 +2866,6 @@ New ClassType New1 Lb ArgumentList Rb {
     }
     func_params.clear();
     Entry c1;
-    func_offset += 8 ;
     $$.var = $5.var ;
     call_func($$.var, $4.var); 
     if(THIS == $4.str || $4.str == "Reference Type")
@@ -2901,7 +2899,6 @@ New ClassType New1 Lb ArgumentList Rb {
 } 
 | Primary Dot New ClassType New1 Lb Rb {
     $$.var = $5.var ;
-    func_offset += 8 ;
     call_func($$.var, $4.var); 
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
@@ -2925,25 +2922,24 @@ New ClassType New1 Lb ArgumentList Rb {
         add_param(func_params[i]);
     }
     func_params.clear();
-    func_offset += 8 ; $$.var = $4.var ; call_func($$.var, $3.var);
+    $$.var = $4.var ; call_func($$.var, $3.var);
     int sum=8;
     for(auto it:v){
         sum += get_offset(it);
     }
      }
-| New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; call_func($$.var, $3.var); }
+| New TypeArguments ClassType New1 Lb Rb { call_func($$.var, $3.var); }
 |Primary Dot New TypeArguments ClassType New1 Lb ArgumentList Rb  { 
     for(int i=func_params.size()-1;i>=0;i-=1){
         add_param(func_params[i]);
     }
-    func_params.clear();
-    func_offset += 8 ; func_offset += 8 ; call_func($$.var, $5.var);
+    func_params.clear(); call_func($$.var, $5.var);
     int sum=8;
     for(auto it:v){
         sum += get_offset(it);
     }
     }
-| Primary Dot New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; call_func($$.var, $5.var); }
+| Primary Dot New TypeArguments ClassType New1 Lb Rb {  call_func($$.var, $5.var); }
 
 | Name Dot New ClassType New1 Lb ArgumentList Rb {
     for(int i=func_params.size()-1;i>=0;i-=1){
@@ -2951,7 +2947,6 @@ New ClassType New1 Lb ArgumentList Rb {
     }
     func_params.clear();
     Entry c1;
-    func_offset += 8 ;
     $$.var = $5.var ;
     call_func($$.var, $4.var);
     if(THIS == $4.str || $4.str == "Reference Type")
@@ -2985,7 +2980,6 @@ New ClassType New1 Lb ArgumentList Rb {
 } 
 | Name Dot New ClassType New1 Lb Rb {
     $$.var = $5.var ;
-    func_offset += 8 ;
     call_func($$.var, $4.var);
     if(THIS == $4.str || $4.str == "Reference Type")
         head1 = head->find_table($4.str,1);
@@ -3008,13 +3002,13 @@ New ClassType New1 Lb ArgumentList Rb {
         add_param(func_params[i]);
     }
     func_params.clear();
-    func_offset += 8 ; call_func($$.var, $1.var);
+     call_func($$.var, $1.var);
     int sum=8;
     for(auto it:v){
         sum += get_offset(it);
     }
     }
-| Name Dot New TypeArguments ClassType New1 Lb Rb { func_offset += 8 ; call_func($$.var, $1.var); }
+| Name Dot New TypeArguments ClassType New1 Lb Rb { call_func($$.var, $1.var); }
 
 
 |New ClassType New1 TypeArgumentsOrDiamond Lb ArgumentList Rb | New ClassType New1 TypeArgumentsOrDiamond Lb Rb
@@ -3045,7 +3039,7 @@ New PrimitiveType DimExprs Dims {($$).type = ($2).type; ($$).str = ($1).str; str
     }
     $$.var = build_string("n", ++varnum["var"]); alloc_mem($$.var);
 }
-| New ClassOrInterfaceType Dims ArrayInitializer { func_offset += 8 ; ($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
+| New ClassOrInterfaceType Dims ArrayInitializer { ($$).type = ($2).str; ($$).str = ($1).str; strcat($$.str,$2.str); strcat($$.str,$3.str); strcat($$.str,$4.str); ($$).dim1 = lev1.size();
     if(lev.size()!=lev1.size()){
         cerr << "Inappropriate types in line " << yylineno<<endl;  
         YYABORT;
