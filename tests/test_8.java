@@ -1,17 +1,21 @@
-public class Example1 {
-    public class MyClass {
-         int x;
-         int y;
-      }
+public class GFG {
+    int x;
+    int y;
 
-      int addMyClass(MyClass obj) {
-         int sum = obj.x + obj.y;
-         return sum;
-      }
+    GFG(int x, int y, int z){
+        this.x = x;
+        this.y = y*2+this.x+x;
+        y = 2*this.y*y;
+    }
+    int sum(int a, int b){
+        int res = a + b;
+        return res;
+    }
 
-   public static void main(String[] args) {
-         MyClass obj1 = new MyClass() ;
-   		int z = addMyClass(obj1) ;
-        System.out.println(z);
-   }
+    void main(int args){
+        GFG obj = new GFG(4, 9, 3);
+        int ans = 2;
+        System.out.println(obj.y);
+        return;
+    }
 }

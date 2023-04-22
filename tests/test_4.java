@@ -1,13 +1,17 @@
-public class test {
-    int mult(int w, int k){
-        if(w <= 0)
-            return w+1;
-        return mult(w-1, 1)+mult(w-1, 1);
+//Test case to depict the use of static variables
+public class Main
+{
+    static int x = 4;
+    static int y = 6;
+    static int z;
+    int sum(int a, int b, int c) {
+        return a + b + c;
     }
-    //Check for String[]
-	public static void main(int args) {
-        int k = mult(7, 1);
-        System.out.println(k);
-	    return;
+	public static void main() {
+        Main.x = 9;
+        Main.y = 8;
+        z = sum(x, 7, Main.y);
+        System.out.println(Main.x + y - Main.z);
+        return ;
 	}
 }

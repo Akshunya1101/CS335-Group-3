@@ -1,16 +1,15 @@
+//Recursion: Code to find nth fibonacci number
 public class MyClass {
-    public float x;
-    public float y;
-
-    public MyClass(float x, float y) {
-        this.x = x;
-        this.y = y;
+    public static int fibonacci(int n) {
+        if (n <= 1) {
+            return n;
+        }
+        return fibonacci(n-1) + fibonacci(n-2);
     }
-    public static int addMyClass() {
-    MyClass obj = new MyClass(10, 2.5f);
-    float sum = obj.x + (int)obj.y;
-    float z = 1 ;
-    int w = (int)z + (int)obj.y + 1 ;
-    return sum;
+
+    public static int main() {
+    int result = fibonacci(10); // calculate the 10th Fibonacci number
+    System.out.println(result); // prints "55"
+    return 0;
 }
 }

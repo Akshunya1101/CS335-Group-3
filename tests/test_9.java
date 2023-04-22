@@ -1,30 +1,28 @@
-public class GFG {
-    int x;
-    int z;
+class CatalnNumber {
 
-    GFG(int x, int z){
-        this.x = x;
-        this.z = z;
+	// A recursive function to find nth catalan number
+    CatalnNumber(){
 
-        if(x < z)
-            return;
-        else 
-            this.z = x+z;
     }
+	int catalan(int n,int k)
+	{
+		int res = 0;
 
-    static void sub(int a, int b, float c, char d, int e, boolean f, int h,  int i){
-        return;
-    }
-    static int add(int a,int b){
-        return a+b;
-    }
-    static void main(){
-        GFG obj = new GFG(1, 4);
-        obj.x = 2;
-        int a = 20;
-        int b = (24+5)*2*(5+3);
-        int c = a;
-        int k=obj.add(1, 12);
-        System.out.println(b%(c/2));
-    }
+		// Base case
+		if (n <= 1) {
+			return 1;
+		}
+		for (int i = 0; i < n; i++) {
+			res += catalan(i,k) * catalan(n - i - 1,k);
+		}
+		return res;
+	}
+
+	// Driver Code
+	public static void main(String[] args)
+	{
+        CatalnNumber obj = new CatalnNumber();
+        int k = obj.catalan(7,1);
+		System.out.println(k);
+	}
 }

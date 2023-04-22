@@ -1202,6 +1202,7 @@ else{
                 else {
                     add_address("", $1.var, to_string(c1.Offset));
                     ($$).dim1 = c1.Dim.size();
+                    $$.ar = 100;
                 }
             }
         }
@@ -2007,7 +2008,7 @@ MethodHeader MethodBody {
     }
     ttt = "";
     rl = -1;
-    sp_offset[scope_class + "." + head->scope_name] = func_offset ;
+    sp_offset[head->scope_name] = func_offset ;
     string st = head->scope_name ;
     add_label("Return" + scope_func);
     if(st == "main") ac.pb("movq $0, %rax") ;
@@ -2036,12 +2037,7 @@ Identifier Lb {
     scope += " Method";
     flag = true;
     ac.pb("");
-    if(head->scope_name == "main") {
-        add_label(head->scope_name);
-    }
-    else {
-        add_label(scope_class + "." + head->scope_name);
-    }
+    add_label(head->scope_name);
     callee() ;
     
 } FormalParameterList Rb {tables.top()->check(func,$1.str); param_offset("this", 8) ;}
@@ -2061,12 +2057,7 @@ Identifier Lb {
     flag = true;
     tables.top()->check(func,$1.str);
     ac.pb("");
-    if(head->scope_name == "main") {
-        add_label(head->scope_name);
-    }
-    else {
-        add_label(scope_class + "." + head->scope_name);
-    }
+    add_label(head->scope_name);
     callee() ;
     param_offset("this", 8) ;
 }
@@ -3274,7 +3265,7 @@ Name Lb ArgumentList Rb {
             swap(head,head1);
         }
         Entry c1;
-        $$.var = build_string("#", ++varnum["var"]); string temp($1.var); call_func($$.var, scope_class + "." + temp);
+        $$.var = build_string("#", ++varnum["var"]); string temp($1.var); call_func($$.var, temp);
         string st = $$.var ;
         ac.pb("movq %rax, " + mp_func[st]) ;
         vector<Entry> c = head->get($1.type);
@@ -3313,7 +3304,7 @@ Name Lb ArgumentList Rb {
         swap(head,head1);
     }
     add_param($1.var1);
-    $$.var = build_string("#", ++varnum["var"]); string temp($1.var); call_func($$.var, scope_class + "." + temp);
+    $$.var = build_string("#", ++varnum["var"]); string temp($1.var); call_func($$.var, temp);
     string st = $$.var ;
     ac.pb("movq %rax, " + mp_func[st]) ;
     vector<Entry> c = head->get($1.type);
