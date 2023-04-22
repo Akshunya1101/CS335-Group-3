@@ -10,7 +10,11 @@ public class WhileAndDoWhileLoop {
                 System.out.println(10*i + j);
             } while (j++ < 5);
         }
-        for(int k = 12; k >= 4; k -= 2) {
+        for(int k = 12; k >= 4; k--) {
+            if(k==10)
+            continue;
+            if(k==8)
+            break;
             System.out.println(k*k);
         }
     }

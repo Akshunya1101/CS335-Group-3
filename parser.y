@@ -2848,11 +2848,11 @@ StatementExpressionList:
 StatementExpression
 | StatementExpressionList Comma StatementExpression
 BreakStatement:
-Break Identifier Semicol {string temp = findscope(true); go_to("End" + temp + "// Break Statement");}
-| Break Semicol {string temp = findscope(true); go_to("End" + temp + "// Break Statement");}
+Break Identifier Semicol {string temp = findscope(true); go_to("End" + temp);}
+| Break Semicol {string temp = findscope(true); go_to("End" + temp);}
 ContinueStatement:
-Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
-| Continue Semicol {string temp = findscope(false); go_to(findloccont(temp) + "// Continue Statement");}
+Continue Identifier Semicol {string temp = findscope(false); go_to(findloccont(temp));}
+| Continue Semicol {string temp = findscope(false); go_to(findloccont(temp));}
 ReturnStatement:
 Return Expression Semicol {if(!ttt.length()){rl = yylineno; ttt = ($2).type;} string st = $2.var ; ac.pb("movq " + mp_func[st] + ", %rax") ; go_to("Return" + scope_func);}
  | Return Semicol {if(!ttt.length()){rl = yylineno; ttt = "Void";} go_to("Return" + scope_func);}
