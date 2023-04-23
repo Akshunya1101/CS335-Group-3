@@ -39,6 +39,7 @@
     int f3=1, f4=0;
     int reg_flag = 0 ;
     int func_flag = 0 ;
+    int print_flag = 0 ;
     vector<int> err ;
     vector<string> v,v1;
     vector<string> func_params;
@@ -704,6 +705,7 @@
     }
     void add_param(string exp) {
         ac.pb("pushq " + mp_func[exp]);
+        print_flag++ ;
         return;
     }
     void call_func(string exp, string func_name) {
@@ -3247,11 +3249,15 @@ Name Lb ArgumentList Rb {
             }
         }
         // Print Statements
+        if(print_flag%2){
+            ac.pb("subq $8, %rsp") ;
+        }
         ac.pb("movq %rax, %rsi");
         ac.pb("leaq .LC0(%rip), %rax");
         ac.pb("movq %rax, %rdi");
         ac.pb("movq $0, %rax");
         ac.pb("call printf@PLT");
+        print_flag = 0 ;
     }
     else{
         add_param($1.var1);
