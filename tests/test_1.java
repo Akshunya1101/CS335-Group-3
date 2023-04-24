@@ -15,15 +15,16 @@ public class test_1 {
         for(int i=0;i<10;i++){
             for(int j=0;j<10;j++){
                 arr[i][j] = (i+j)*j+1;
-                if(j == 8)
+                if(i == 8)
                     break;
             }
         }
         final int k;
         k = 10;
-        k += 2;
+        // k += 2;
         obj.x = obj.x*2+9;
-        int x1 = func(arr[0][1],arr[1][1]);
+        int x1 = func(2,3);
+        System.out.println(x1);
         if(obj.x >20)
             x1 += 15;
         else
