@@ -2066,10 +2066,10 @@ Identifier Lb {
 | MethodDeclarator Lsb Rsb
 FormalParameterList:
 FormalParameter { string tp1 = tp; for(int i=0;i<l1;i++) tp1 = "array("+tp1+")";
-    if(func){func->Params.push_back(tp1);} param_offset($1.var, get_offset($1.type)) ;
+    if(func){func->Params.push_back(tp1);} param_offset($1.var, get_offset(tp)) ;
  lev.clear(); l1 = 0; lev1.clear();}
 | FormalParameterList Comma FormalParameter { string tp1 = tp; for(int i=0;i<l1;i++) tp1 = "array("+tp1+")";
-    if(func){func->Params.push_back(tp1);} param_offset($3.var, get_offset($3.type)) ;
+    if(func){func->Params.push_back(tp1);} param_offset($3.var, get_offset(tp)) ;
  lev.clear(); l1 = 0; lev1.clear();}
 FormalParameter:
 Type VariableDeclaratorId {

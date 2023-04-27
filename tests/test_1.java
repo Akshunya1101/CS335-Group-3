@@ -2,7 +2,7 @@ public class test_1 {
     int x;
     int y;
     static int z = 0;
-    test_1(int x, int y) {
+    test_1(final int x, int y) {
         this.x = x;
         this.y = y;
     }
@@ -31,7 +31,7 @@ public class test_1 {
             x1 += 10;
         test_1.z = 10;
         System.out.println(x1);
-        System.out.println(z);
+        System.out.println(obj.y);
     }
 
 }
